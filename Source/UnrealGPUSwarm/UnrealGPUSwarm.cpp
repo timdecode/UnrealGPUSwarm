@@ -3,4 +3,17 @@
 #include "UnrealGPUSwarm.h"
 #include "Modules/ModuleManager.h"
 
-IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, UnrealGPUSwarm, "UnrealGPUSwarm" );
+class FUnrealGPUSwarmModule : public IModuleInterface
+{
+	virtual bool IsGameModule() const override
+	{
+		return true;
+	}
+
+	void StartupModule() override {
+		FString ShaderDirectory = FPaths::Combine(FPaths::ProjectDir(), TEXT("Shaders"));
+		AddShaderSourceDirectoryMapping("/ComputeShaderPlugin", ShaderDirectory);
+	}
+};
+
+IMPLEMENT_PRIMARY_GAME_MODULE(FUnrealGPUSwarmModule, UnrealGPUSwarm, "UnrealGPUSwarm");
