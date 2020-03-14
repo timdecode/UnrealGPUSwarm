@@ -14,14 +14,14 @@
 #include "ComputeShaderTestComponent.generated.h"
 
 
-
-BEGIN_GLOBAL_SHADER_PARAMETER_STRUCT(FBoidPosition, )
-SHADER_PARAMETER(FVector, position)
+BEGIN_GLOBAL_SHADER_PARAMETER_STRUCT(FComputeShaderVariableParameters, )
+SHADER_PARAMETER(float, boidSpeed)
+SHADER_PARAMETER(float, boidSpeedVariation)
+SHADER_PARAMETER(float, dt)
+SHADER_PARAMETER(float, totalTime)
+SHADER_PARAMETER(float, neighbourDistance)
 END_GLOBAL_SHADER_PARAMETER_STRUCT()
 
-BEGIN_GLOBAL_SHADER_PARAMETER_STRUCT(FBoidVelocity, )
-SHADER_PARAMETER(FVector, velocity)
-END_GLOBAL_SHADER_PARAMETER_STRUCT()
 
 class FComputeShaderDeclaration : public FGlobalShader
 {
@@ -42,14 +42,22 @@ class FComputeShaderDeclaration : public FGlobalShader
 		bool bShaderHasOutdatedParams = FGlobalShader::Serialize(Ar);
 
 		Ar << positions;
-		Ar << times;
+		Ar << directions;
+
+		Ar << neigbhours;
+		Ar << neighboursBaseIndex;
+		Ar << neighboursCount;
 
 		return bShaderHasOutdatedParams;
 	}
 
 public:
 	FShaderResourceParameter positions;
-	FShaderResourceParameter times;
+	FShaderResourceParameter directions;
+
+	FShaderResourceParameter neigbhours;
+	FShaderResourceParameter neighboursBaseIndex;
+	FShaderResourceParameter neighboursCount;
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )

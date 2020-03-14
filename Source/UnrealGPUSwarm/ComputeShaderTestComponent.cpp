@@ -86,7 +86,6 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 		FRHIComputeShader * rhiComputeShader = cs->GetComputeShader();
 
 		RHICommands.SetUAVParameter(rhiComputeShader, cs->positions.GetBaseIndex(), _positionBufferUAV);
-		RHICommands.SetUAVParameter(rhiComputeShader, cs->times.GetBaseIndex(), _timesBufferUAV);
 
 		RHICommands.SetComputeShader(rhiComputeShader);
 
@@ -103,7 +102,11 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 FComputeShaderDeclaration::FComputeShaderDeclaration(const ShaderMetaType::CompiledShaderInitializerType& Initializer) : FGlobalShader(Initializer)
 {
 	positions.Bind(Initializer.ParameterMap, TEXT("positions"));
-	times.Bind(Initializer.ParameterMap, TEXT("times"));
+	directions.Bind(Initializer.ParameterMap, TEXT("directions"));
+	neigbhours.Bind(Initializer.ParameterMap, TEXT("neigbhours"));
+	neighboursBaseIndex.Bind(Initializer.ParameterMap, TEXT("neighboursBaseIndex"));
+	neighboursCount.Bind(Initializer.ParameterMap, TEXT("neighboursCount"));
+
 }
 
 void FComputeShaderDeclaration::ModifyCompilationEnvironment(const FGlobalShaderPermutationParameters& Parameters, FShaderCompilerEnvironment& OutEnvironment)

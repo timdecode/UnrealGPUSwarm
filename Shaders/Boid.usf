@@ -6,8 +6,47 @@
 // Buffers
 //--------------------------------------------------------------------------------------
 RWStructuredBuffer<float3> positions;         // Point Positions Input Buffer
-RWStructuredBuffer<float> times;
 
+RWStructuredBuffer<float3> direction;
+
+RWStructuredBuffer<uint> neigbhours;
+RWStructuredBuffer<uint> neighboursBaseIndex;
+RWStructuredBuffer<uint> neighboursCount;
+
+//--------------------------------------------------------------------------------------
+// Functions
+//--------------------------------------------------------------------------------------
+float hash( float n )
+{
+	return frac(sin(n)*43758.5453);
+}
+
+// The noise function returns a value in the range -1.0f -> 1.0f
+float noise1( float3 x )
+{
+	float3 p = floor(x);
+	float3 f = frac(x);
+
+	f       = f*f*(3.0-2.0*f);
+	float n = p.x + p.y*57.0 + 113.0*p.z;
+
+	return lerp(lerp(lerp( hash(n+0.0), hash(n+1.0),f.x),
+					lerp( hash(n+57.0), hash(n+58.0),f.x),f.y),
+				lerp(lerp( hash(n+113.0), hash(n+114.0),f.x),
+					lerp( hash(n+170.0), hash(n+171.0),f.x),f.y),f.z);
+}
+
+// CSVariables:
+// float boidSpeed
+// float boidSpeedVariation
+// float dt
+// float totalTime
+// float neighbourDistance
+
+
+//--------------------------------------------------------------------------------------
+// Main
+//--------------------------------------------------------------------------------------
 [numthreads(256, 1, 1)]
 void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
 {
@@ -15,8 +54,51 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
 
     float3 position = positions[index];
     
-	position.z += sin(times[index]); 
-    times[index] += 0.016f;
+	float noiseOffset = hash(float(index));
+
+	float noise = clamp(noise1(CSVariables.totalTime / 100.0 + noiseOffset), -1, 1) * 2.0 - 1.0;
+	float velocity = CSVariables.boidSpeed * (1.0 + noise * CSVariables.boidSpeedVariation);
+
+	float3 separation = float3(0, 0.0, 0);
+	float3 alignment = float3(0.0, 0.0, 0.0);
+	float3 cohesion = float3(0.0, 0.0, 0.0);
+
+	uint nearbyCount = 1;
+
+	uint count = neighboursCount[index];
+	uint baseIndex = neighboursBaseIndex[index];
+
+	for( int i = baseIndex; i < baseIndex + count; ++i )
+	{
+		int otherIndex = neigbhours[i];
+
+		float3 otherPosition = positions[otherIndex];
+
+		if (distance(position, otherPosition) < CSVariables.neighbourDistance)
+		{
+			float3 dir = position - otherPosition;
+			float length = (length(dir));
+			float scaler = clamp(1.0 - length / CSVariables.neighbourDistance, 0.0, 1.0);
+			separation += dir * (scaler / length);
+			
+			alignment += otherPosition;
+			cohesion += otherPosition;
+			nearbyCount++;
+		}
+	}
+
+	float average = 1.0 / nearbyCount;
+	alignment *= average;
+	cohesion *= average;
+	cohesion = normalize(cohesion - position);
+
+	float3 direction = alignment + separation + cohesion;
+
+	float ip = exp(-RotationSpeed * DeltaTime);
+	direction = lerp((direction), normalize(directions[index]), ip);
+
+	position += (direction) * (velocity * CSVariables.dt);
 
 	positions[index] = position;
+	directions[index] = direction;
 }
