@@ -33,35 +33,91 @@ void UComputeShaderTestComponent::BeginPlay()
 
 	FRandomStream rng;
 
+	// positions
 	{
-		TResourceArray<FVector> positionResourceArray;
-		positionResourceArray.Init(FVector::ZeroVector, numBoids);
+		TResourceArray<FVector> resourceArray;
+		resourceArray.Init(FVector::ZeroVector, numBoids);
 
 
-		for (FVector& position : positionResourceArray)
+		for (FVector& position : resourceArray)
 		{
 			position = rng.GetUnitVector() * rng.GetFraction() * spawnRadius;
 		}
 
 		FRHIResourceCreateInfo createInfo;
-		createInfo.ResourceArray = &positionResourceArray;
+		createInfo.ResourceArray = &resourceArray;
 
-		_positionBuffer = RHICreateStructuredBuffer(sizeof(FVector), sizeof(FVector) * numBoids, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
+		const size_t size = sizeof(FVector);
+
+		_positionBuffer = RHICreateStructuredBuffer(size, size * numBoids, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
 		_positionBufferUAV = RHICreateUnorderedAccessView(_positionBuffer, false, false);
 	}
     
+	// directions
 	{
-		TResourceArray<float> timesResourceArray;
-		timesResourceArray.Init(0.0f, numBoids);
+		TResourceArray<FVector> resourceArray;
+		resourceArray.Init(FVector::ZeroVector, numBoids);
 
-		for (float& time : timesResourceArray)
-			time = rng.GetFraction();
+
+		for (FVector& position : resourceArray)
+		{
+			position = rng.GetUnitVector();
+		}
 
 		FRHIResourceCreateInfo createInfo;
-		createInfo.ResourceArray = &timesResourceArray;
+		createInfo.ResourceArray = &resourceArray;
 
-		_timesBuffer = RHICreateStructuredBuffer(sizeof(float), sizeof(float) * numBoids, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
-		_timesBufferUAV = RHICreateUnorderedAccessView(_timesBuffer, false, false);
+		const size_t size = sizeof(FVector);
+
+		_directionsBuffer = RHICreateStructuredBuffer(size, size * numBoids, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
+		_directionsBufferUAV = RHICreateUnorderedAccessView(_directionsBuffer, false, false);
+	}
+
+	// neighbours
+	{
+		TResourceArray<uint32_t> resourceArray;
+		resourceArray.Init(0, numBoids * numNeighbours);
+
+		FRHIResourceCreateInfo createInfo;
+		createInfo.ResourceArray = &resourceArray;
+
+		const size_t size = sizeof(uint32_t);
+
+		_neighboursBuffer = RHICreateStructuredBuffer(size, size * numBoids * numNeighbours, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
+		_neighboursBufferUAV = RHICreateUnorderedAccessView(_neighboursBuffer, false, false);
+	}
+
+	// neighboursBaseIndex
+	{
+		TResourceArray<uint32_t> resourceArray;
+		resourceArray.Init(0, numBoids);
+
+		for (int i = 0; i < numBoids; ++i)
+		{
+			resourceArray[i] = i * numNeighbours;
+		}
+
+		FRHIResourceCreateInfo createInfo;
+		createInfo.ResourceArray = &resourceArray;
+
+		const size_t size = sizeof(uint32_t);
+
+		_neighboursBaseIndex = RHICreateStructuredBuffer(size, size * numBoids, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
+		_neighboursBaseIndexUAV = RHICreateUnorderedAccessView(_neighboursBaseIndex, false, false);
+	}
+
+	// neighboursCount
+	{
+		TResourceArray<uint32_t> resourceArray;
+		resourceArray.Init(0, numBoids);
+
+		FRHIResourceCreateInfo createInfo;
+		createInfo.ResourceArray = &resourceArray;
+
+		const size_t size = sizeof(uint32_t);
+
+		_neighboursCount = RHICreateStructuredBuffer(size, size * numBoids, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
+		_neighboursCountUAV = RHICreateUnorderedAccessView(_neighboursCount, false, false);
 	}
 
 	if (outputPositions.Num() != numBoids)
@@ -86,6 +142,11 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 		FRHIComputeShader * rhiComputeShader = cs->GetComputeShader();
 
 		RHICommands.SetUAVParameter(rhiComputeShader, cs->positions.GetBaseIndex(), _positionBufferUAV);
+		RHICommands.SetUAVParameter(rhiComputeShader, cs->directions.GetBaseIndex(), _directionsBufferUAV);
+
+		RHICommands.SetUAVParameter(rhiComputeShader, cs->neigbhours.GetBaseIndex(), _neighboursBufferUAV);
+		RHICommands.SetUAVParameter(rhiComputeShader, cs->neighboursBaseIndex.GetBaseIndex(), _neighboursBaseIndexUAV);
+		RHICommands.SetUAVParameter(rhiComputeShader, cs->neighboursCount.GetBaseIndex(), _neighboursCountUAV);
 
 		RHICommands.SetComputeShader(rhiComputeShader);
 

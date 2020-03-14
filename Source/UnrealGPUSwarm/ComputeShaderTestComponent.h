@@ -84,6 +84,9 @@ public:
 	int numBoids = 1000;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int numNeighbours = 32;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float spawnRadius = 600.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -94,6 +97,16 @@ protected:
 	FStructuredBufferRHIRef _positionBuffer;
 	FUnorderedAccessViewRHIRef _positionBufferUAV;     // we need a UAV for writing
 
-	FStructuredBufferRHIRef _timesBuffer;
-	FUnorderedAccessViewRHIRef _timesBufferUAV;
+	FStructuredBufferRHIRef _directionsBuffer;
+	FUnorderedAccessViewRHIRef _directionsBufferUAV;
+
+
+	FStructuredBufferRHIRef _neighboursBuffer;
+	FUnorderedAccessViewRHIRef _neighboursBufferUAV;
+
+	FStructuredBufferRHIRef _neighboursBaseIndex;
+	FUnorderedAccessViewRHIRef _neighboursBaseIndexUAV;
+
+	FStructuredBufferRHIRef _neighboursCount;
+	FUnorderedAccessViewRHIRef _neighboursCountUAV;
 };
