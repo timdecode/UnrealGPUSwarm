@@ -1,0 +1,22 @@
+//Since we can't #include private Engine shaders such as Common.ush we have to copy the needed Shaders from the Engine' Shader directory.
+//When this gets chaned in the future, we could change this to #include "/Engine/Private/Common.ush".
+#include "/Engine/Private/Common.ush"
+
+//--------------------------------------------------------------------------------------
+// Buffers
+//--------------------------------------------------------------------------------------
+RWStructuredBuffer<float3> positions;         // Point Positions Input Buffer
+RWStructuredBuffer<float> times;
+
+[numthreads(256, 1, 1)]
+void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
+{
+    int index = ThreadId.x;
+
+    float3 position = positions[index];
+    
+	position.z += sin(times[index]); 
+    times[index] += 0.016f;
+
+	positions[index] = position;
+}
