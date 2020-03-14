@@ -11,6 +11,7 @@
 // [Enqueue render commands using lambdas](https://github.com/EpicGames/UnrealEngine/commit/41f6b93892dcf626a5acc155f7d71c756a5624b0)
 //
 
+IMPLEMENT_GLOBAL_SHADER_PARAMETER_STRUCT(FComputeShaderVariableParameters, "CSVariables");
 
 
 // Sets default values for this component's properties
@@ -147,6 +148,25 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 		RHICommands.SetUAVParameter(rhiComputeShader, cs->neigbhours.GetBaseIndex(), _neighboursBufferUAV);
 		RHICommands.SetUAVParameter(rhiComputeShader, cs->neighboursBaseIndex.GetBaseIndex(), _neighboursBaseIndexUAV);
 		RHICommands.SetUAVParameter(rhiComputeShader, cs->neighboursCount.GetBaseIndex(), _neighboursCountUAV);
+
+		FComputeShaderVariableParameters paramaters;
+		paramaters.boidSpeed = 2.0f;
+		paramaters.boidSpeedVariation = 1.0f;
+		paramaters.dt = DeltaTime;
+		paramaters.totalTime = GetOwner()->GetWorld()->TimeSeconds;
+		paramaters.neighbourDistance = 5.0f;
+
+		auto variablesBuffer = TUniformBufferRef<FComputeShaderVariableParameters>::
+			CreateUniformBufferImmediate(paramaters, UniformBuffer_SingleDraw);
+
+		auto variablesBufferParameter = cs->GetUniformBufferParameter<FComputeShaderVariableParameters>();
+
+		SetUniformBufferParameter(
+			RHICommands,
+			rhiComputeShader,
+			variablesBufferParameter,
+			variablesBuffer);
+
 
 		RHICommands.SetComputeShader(rhiComputeShader);
 
