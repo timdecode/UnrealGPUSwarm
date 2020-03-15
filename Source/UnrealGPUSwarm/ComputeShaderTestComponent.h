@@ -20,6 +20,7 @@ SHADER_PARAMETER(float, boidSpeedVariation)
 SHADER_PARAMETER(float, rotationSpeed)
 SHADER_PARAMETER(float, dt)
 SHADER_PARAMETER(float, totalTime)
+SHADER_PARAMETER(float, separationDistance)
 SHADER_PARAMETER(float, neighbourDistance)
 SHADER_PARAMETER(int, numNeighbours)
 SHADER_PARAMETER(int, numBoids)
@@ -126,6 +127,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float neighbourDistance = 10.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float separationDistance = 3.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float spawnRadius = 600.0f;

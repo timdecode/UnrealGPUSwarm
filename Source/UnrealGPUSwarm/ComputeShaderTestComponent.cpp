@@ -136,12 +136,13 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	float totalTime = GetOwner()->GetWorld()->TimeSeconds;
 
 	FComputeShaderVariableParameters paramaters;
-	paramaters.boidSpeed = 2.0f;
+	paramaters.boidSpeed = 10.0f;
 	paramaters.boidSpeedVariation = 1.0f;
-	paramaters.rotationSpeed = 1.0f;
+	paramaters.rotationSpeed = 4.0f;
 	paramaters.dt = DeltaTime;
 	paramaters.totalTime = totalTime;
 	paramaters.neighbourDistance = neighbourDistance;
+	paramaters.separationDistance = separationDistance;
 	paramaters.numNeighbours = numNeighbours;
 	paramaters.numBoids = numBoids;
 
