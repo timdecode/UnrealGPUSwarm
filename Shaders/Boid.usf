@@ -119,6 +119,8 @@ void UpdateNeighbours(uint3 ThreadId : SV_DispatchThreadID)
 	
 	for (uint i = 0; i < CSVariables.numBoids; ++i)
 	{
+		if (i == index) continue;
+		
 		float3 otherPosition = positions[i];
 		
 		float dist = distance(position, otherPosition);
