@@ -125,6 +125,9 @@ public:
 	int numNeighbours = 32;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float neighbourDistance = 10.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float spawnRadius = 600.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

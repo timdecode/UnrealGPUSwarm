@@ -78,7 +78,7 @@ void UDrawPositionsComponent::_updateInstanceTransforms()
 		FTransform& transform = _instanceTransforms[i];
 
 		transform.SetTranslation(positions[i]);
-		transform.SetScale3D(FVector(0.05f));
+		transform.SetScale3D(FVector(size));
 		transform.SetRotation(FQuat::Identity);
 	}
 

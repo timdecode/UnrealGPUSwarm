@@ -28,6 +28,10 @@ protected:
 	void _initISMC();
 	void _updateInstanceTransforms();
 
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float size = 0.02f;
+
 protected:
 	TArray<FTransform> _instanceTransforms;
 };

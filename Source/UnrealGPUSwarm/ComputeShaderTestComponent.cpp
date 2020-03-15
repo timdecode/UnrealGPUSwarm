@@ -141,9 +141,9 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	paramaters.rotationSpeed = 1.0f;
 	paramaters.dt = DeltaTime;
 	paramaters.totalTime = totalTime;
-	paramaters.neighbourDistance = 5.0f;
+	paramaters.neighbourDistance = neighbourDistance;
 	paramaters.numNeighbours = numNeighbours;
-	parameters.numBoids = numBoids;
+	paramaters.numBoids = numBoids;
 
 	ENQUEUE_RENDER_COMMAND(FComputeShaderRunner)(
 	[&, paramaters](FRHICommandListImmediate& RHICommands)
