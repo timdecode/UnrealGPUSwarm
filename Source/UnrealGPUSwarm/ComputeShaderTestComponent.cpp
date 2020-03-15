@@ -133,10 +133,10 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-
+	float totalTime = GetOwner()->GetWorld()->TimeSeconds;
 
 	ENQUEUE_RENDER_COMMAND(FComputeShaderRunner)(
-	[&](FRHICommandListImmediate& RHICommands)
+	[&, totalTime, DeltaTime](FRHICommandListImmediate& RHICommands)
 	{
 		TShaderMapRef<FComputeShaderDeclaration> cs(GetGlobalShaderMap(ERHIFeatureLevel::SM5));
 
@@ -152,8 +152,9 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 		FComputeShaderVariableParameters paramaters;
 		paramaters.boidSpeed = 2.0f;
 		paramaters.boidSpeedVariation = 1.0f;
+		paramaters.rotationSpeed = 1.0f;
 		paramaters.dt = DeltaTime;
-		paramaters.totalTime = GetOwner()->GetWorld()->TimeSeconds;
+		paramaters.totalTime = totalTime;
 		paramaters.neighbourDistance = 5.0f;
 
 		auto variablesBuffer = TUniformBufferRef<FComputeShaderVariableParameters>::
