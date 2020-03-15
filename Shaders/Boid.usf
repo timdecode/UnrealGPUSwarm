@@ -95,9 +95,9 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
 	float3 direction = alignment + separation + cohesion;
 
 	float ip = exp(-CSVariables.rotationSpeed * CSVariables.dt);
-	direction = lerp((direction), normalize(directions[index]), ip);
+	direction = lerp(direction, normalize(directions[index]), ip);
 
-	position += (direction) * (velocity * CSVariables.dt);
+	position += direction * (velocity * CSVariables.dt);
 
 	positions[index] = position;
 	directions[index] = direction;
