@@ -113,5 +113,29 @@ void UpdateNeighbours(uint3 ThreadId : SV_DispatchThreadID)
 	int index = ThreadId.x;
 
 	float3 position = positions[index];
+	
+	uint baseIndex = neighboursBaseIndex[index];
+	uint count = 0;
+	
+	for (uint i = 0; i < CSVariables.numBoids; ++i)
+	{
+		float3 otherPosition = positions[i];
+		
+		float dist = distance(position, otherPosition);
+		
+		if (dist < CSVariables.neighbourDistance)
+		{
+			neigbhours[baseIndex + count] = i;
+			
+			count++;
+			
+			if (count >= CSVariables.numNeighbours)
+				break;
 
+		}
+	}
+	
+	neighboursCount[index] = count;
 }
+
+

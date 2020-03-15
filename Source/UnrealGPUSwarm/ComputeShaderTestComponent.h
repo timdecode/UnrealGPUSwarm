@@ -21,6 +21,8 @@ SHADER_PARAMETER(float, rotationSpeed)
 SHADER_PARAMETER(float, dt)
 SHADER_PARAMETER(float, totalTime)
 SHADER_PARAMETER(float, neighbourDistance)
+SHADER_PARAMETER(int, numNeighbours)
+SHADER_PARAMETER(int, numBoids)
 END_GLOBAL_SHADER_PARAMETER_STRUCT()
 
 
