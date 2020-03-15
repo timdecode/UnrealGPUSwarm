@@ -63,7 +63,6 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
 	float3 alignment = float3(0.0, 0.0, 0.0);
 	float3 cohesion = float3(0.0, 0.0, 0.0);
 
-	uint nearbyCount = 1;
 
 	uint count = neighboursCount[index];
 	uint baseIndex = neighboursBaseIndex[index];
@@ -74,23 +73,28 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
 
 		float3 otherPosition = positions[otherIndex];
 
-		if (distance(position, otherPosition) < CSVariables.neighbourDistance)
+		alignment += directions[otherIndex];
+		cohesion += otherPosition;
+		
+		if (distance(position, otherPosition) < CSVariables.separationDistance)
 		{
 			float3 dir = position - otherPosition;
 			float size = (length(dir));
-			float scaler = clamp(1.0 - size / CSVariables.neighbourDistance, 0.0, 1.0);
+			float scaler = clamp(1.0 - size / CSVariables.separationDistance, 0.0, 1.0);
 			separation += dir * (scaler / size);
 			
-			alignment += otherPosition;
-			cohesion += otherPosition;
-			nearbyCount++;
+
 		}
 	}
+	
+	if (count > 0)
+	{
+		float average = 1.0 / count;
+		alignment *= average;
+		cohesion *= average;
+		cohesion = normalize(cohesion - position);
+	}
 
-	float average = 1.0 / nearbyCount;
-	alignment *= average;
-	cohesion *= average;
-	cohesion = normalize(cohesion - position);
 
 	float3 direction = alignment + separation + cohesion;
 
