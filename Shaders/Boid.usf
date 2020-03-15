@@ -7,7 +7,7 @@
 //--------------------------------------------------------------------------------------
 RWStructuredBuffer<float3> positions;         // Point Positions Input Buffer
 
-RWStructuredBuffer<float3> direction;
+RWStructuredBuffer<float3> directions;
 
 RWStructuredBuffer<uint> neigbhours;
 RWStructuredBuffer<uint> neighboursBaseIndex;
@@ -68,7 +68,7 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
 	uint count = neighboursCount[index];
 	uint baseIndex = neighboursBaseIndex[index];
 
-	for( int i = baseIndex; i < baseIndex + count; ++i )
+	for( uint i = baseIndex; i < baseIndex + count; ++i )
 	{
 		int otherIndex = neigbhours[i];
 
@@ -77,9 +77,9 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
 		if (distance(position, otherPosition) < CSVariables.neighbourDistance)
 		{
 			float3 dir = position - otherPosition;
-			float length = (length(dir));
-			float scaler = clamp(1.0 - length / CSVariables.neighbourDistance, 0.0, 1.0);
-			separation += dir * (scaler / length);
+			float size = (length(dir));
+			float scaler = clamp(1.0 - size / CSVariables.neighbourDistance, 0.0, 1.0);
+			separation += dir * (scaler / size);
 			
 			alignment += otherPosition;
 			cohesion += otherPosition;
@@ -94,7 +94,7 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
 
 	float3 direction = alignment + separation + cohesion;
 
-	float ip = exp(-RotationSpeed * DeltaTime);
+	float ip = exp(-CSVariables.rotationSpeed * CSVariables.dt);
 	direction = lerp((direction), normalize(directions[index]), ip);
 
 	position += (direction) * (velocity * CSVariables.dt);

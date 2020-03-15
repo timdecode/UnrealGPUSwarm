@@ -17,6 +17,7 @@
 BEGIN_GLOBAL_SHADER_PARAMETER_STRUCT(FComputeShaderVariableParameters, )
 SHADER_PARAMETER(float, boidSpeed)
 SHADER_PARAMETER(float, boidSpeedVariation)
+SHADER_PARAMETER(float, rotationSpeed)
 SHADER_PARAMETER(float, dt)
 SHADER_PARAMETER(float, totalTime)
 SHADER_PARAMETER(float, neighbourDistance)
