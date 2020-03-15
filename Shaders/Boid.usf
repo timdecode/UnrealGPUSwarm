@@ -102,3 +102,16 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
 	positions[index] = position;
 	directions[index] = direction;
 }
+
+//--------------------------------------------------------------------------------------
+// Neighbours
+//--------------------------------------------------------------------------------------
+
+[numthreads(256, 1, 1)]
+void UpdateNeighbours(uint3 ThreadId : SV_DispatchThreadID)
+{
+	int index = ThreadId.x;
+
+	float3 position = positions[index];
+
+}

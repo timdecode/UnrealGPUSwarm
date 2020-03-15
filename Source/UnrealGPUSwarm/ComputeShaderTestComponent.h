@@ -61,6 +61,41 @@ public:
 	FShaderResourceParameter neighboursCount;
 };
 
+class FNeighboursUpdateComputeShaderDeclaration : public FGlobalShader
+{
+	DECLARE_SHADER_TYPE(FComputeShaderDeclaration, Global);
+
+	FNeighboursUpdateComputeShaderDeclaration() {}
+
+	explicit FNeighboursUpdateComputeShaderDeclaration(const ShaderMetaType::CompiledShaderInitializerType& Initializer);
+
+	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters) {
+		return GetMaxSupportedFeatureLevel(Parameters.Platform) >= ERHIFeatureLevel::SM5;
+	};
+
+	static void ModifyCompilationEnvironment(const FGlobalShaderPermutationParameters& Parameters, FShaderCompilerEnvironment& OutEnvironment);
+
+	virtual bool Serialize(FArchive& Ar) override
+	{
+		bool bShaderHasOutdatedParams = FGlobalShader::Serialize(Ar);
+
+		Ar << positions;
+
+		Ar << neigbhours;
+		Ar << neighboursBaseIndex;
+		Ar << neighboursCount;
+
+		return bShaderHasOutdatedParams;
+	}
+
+public:
+	FShaderResourceParameter positions;
+
+	FShaderResourceParameter neigbhours;
+	FShaderResourceParameter neighboursBaseIndex;
+	FShaderResourceParameter neighboursCount;
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UNREALGPUSWARM_API UComputeShaderTestComponent : public UActorComponent
 {

@@ -188,7 +188,6 @@ FComputeShaderDeclaration::FComputeShaderDeclaration(const ShaderMetaType::Compi
 	neigbhours.Bind(Initializer.ParameterMap, TEXT("neigbhours"));
 	neighboursBaseIndex.Bind(Initializer.ParameterMap, TEXT("neighboursBaseIndex"));
 	neighboursCount.Bind(Initializer.ParameterMap, TEXT("neighboursCount"));
-
 }
 
 void FComputeShaderDeclaration::ModifyCompilationEnvironment(const FGlobalShaderPermutationParameters& Parameters, FShaderCompilerEnvironment& OutEnvironment)
@@ -197,4 +196,21 @@ void FComputeShaderDeclaration::ModifyCompilationEnvironment(const FGlobalShader
 	OutEnvironment.CompilerFlags.Add(CFLAG_StandardOptimization);
 }
 
+
+FNeighboursUpdateComputeShaderDeclaration::FNeighboursUpdateComputeShaderDeclaration(const ShaderMetaType::CompiledShaderInitializerType& Initializer)
+{
+	positions.Bind(Initializer.ParameterMap, TEXT("positions"));
+
+	neigbhours.Bind(Initializer.ParameterMap, TEXT("neigbhours"));
+	neighboursBaseIndex.Bind(Initializer.ParameterMap, TEXT("neighboursBaseIndex"));
+	neighboursCount.Bind(Initializer.ParameterMap, TEXT("neighboursCount"));
+}
+
+void FNeighboursUpdateComputeShaderDeclaration::ModifyCompilationEnvironment(const FGlobalShaderPermutationParameters& Parameters, FShaderCompilerEnvironment& OutEnvironment)
+{
+	FGlobalShader::ModifyCompilationEnvironment(Parameters, OutEnvironment);
+	OutEnvironment.CompilerFlags.Add(CFLAG_StandardOptimization);
+}
+
 IMPLEMENT_SHADER_TYPE(, FComputeShaderDeclaration, TEXT("/ComputeShaderPlugin/Boid.usf"), TEXT("MainComputeShader"), SF_Compute);
+IMPLEMENT_SHADER_TYPE(, FNeighboursUpdateComputeShaderDeclaration, TEXT("/ComputeShaderPlugin/Boid.usf"), TEXT("UpdateNeighbours"), SF_Compute);
