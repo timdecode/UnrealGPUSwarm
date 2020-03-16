@@ -137,6 +137,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TArray<FVector> outputPositions;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TArray<FVector> outputDirections;
+
 protected:
 	// GPU side
 	FStructuredBufferRHIRef _positionBuffer;

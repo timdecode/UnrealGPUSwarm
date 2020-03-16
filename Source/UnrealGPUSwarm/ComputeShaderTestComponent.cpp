@@ -126,6 +126,12 @@ void UComputeShaderTestComponent::BeginPlay()
 		const FVector zero(0.0f);
 		outputPositions.Init(zero, numBoids);
 	}
+
+	if (outputDirections.Num() != numBoids)
+	{
+		const FVector zero(0.0f);
+		outputDirections.Init(zero, numBoids);
+	}
 }
 
 // Called every frame
@@ -134,6 +140,8 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	float totalTime = GetOwner()->GetWorld()->TimeSeconds;
+
+	GetOwner()->GetVelocity()
 
 	FComputeShaderVariableParameters paramaters;
 	paramaters.boidSpeed = 10.0f;
@@ -210,10 +218,19 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			DispatchComputeShader(RHICommands, *mainCS, 256, 1, 1);
 
 			// read back the data
-			uint8* data = (uint8*)RHILockStructuredBuffer(_positionBuffer, 0, numBoids * sizeof(FVector), RLM_ReadOnly);
-			FMemory::Memcpy(outputPositions.GetData(), data, numBoids * sizeof(FVector));
+			// positions
+			{
+				uint8* data = (uint8*)RHILockStructuredBuffer(_positionBuffer, 0, numBoids * sizeof(FVector), RLM_ReadOnly);
+				FMemory::Memcpy(outputPositions.GetData(), data, numBoids * sizeof(FVector));
+				RHIUnlockStructuredBuffer(_positionBuffer);
+			}
 
-			RHIUnlockStructuredBuffer(_positionBuffer);
+			// directions
+			{
+				uint8* data = (uint8*)RHILockStructuredBuffer(_directionsBuffer, 0, numBoids * sizeof(FVector), RLM_ReadOnly);
+				FMemory::Memcpy(outputDirections.GetData(), data, numBoids * sizeof(FVector));
+				RHIUnlockStructuredBuffer(_directionsBuffer);
+			}
 		}
 	});
 }
