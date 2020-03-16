@@ -81,7 +81,7 @@ void UDrawPositionsComponent::_updateInstanceTransforms()
 		transform.SetTranslation(positions[i]);
 		transform.SetScale3D(FVector(size));
 
-		FQuat quat = FQuat::FindBetweenVectors(FVector::ForwardVector, directions[i]);
+		FQuat quat = FQuat::FindBetweenVectors(FVector::UpVector, directions[i]);
 		transform.SetRotation(quat);
 	}
 
