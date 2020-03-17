@@ -21,8 +21,6 @@
 // [Useful tutorial on Unreal compute shaders](https://github.com/Temaran/UE4ShaderPluginDemo)
 
 
-IMPLEMENT_GLOBAL_SHADER_PARAMETER_STRUCT(FComputeShaderVariableParameters, "CSVariables");
-
 class FBoidsComputeShader : public FGlobalShader
 {
 public:
@@ -210,52 +208,11 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 	float totalTime = GetOwner()->GetWorld()->TimeSeconds;
 
-	FComputeShaderVariableParameters paramaters;
-	paramaters.boidSpeed = 10.0f;
-	paramaters.boidSpeedVariation = 1.0f;
-	paramaters.rotationSpeed = 40.0f;
-	paramaters.dt = DeltaTime;
-	paramaters.totalTime = totalTime;
-	paramaters.neighbourDistance = neighbourDistance;
-	paramaters.separationDistance = separationDistance;
-	paramaters.numNeighbours = numNeighbours;
-	paramaters.numBoids = numBoids;
-
 	ENQUEUE_RENDER_COMMAND(FComputeShaderRunner)(
-	[&, paramaters, totalTime, DeltaTime](FRHICommandListImmediate& RHICommands)
+	[&, totalTime, DeltaTime](FRHICommandListImmediate& RHICommands)
 	{
 		// find our neighbours
 		{
-			//TShaderMapRef<FNeighboursUpdateComputeShaderDeclaration> neighbourCS(GetGlobalShaderMap(ERHIFeatureLevel::SM5));
-
-
-			//FRHIComputeShader * rhiComputeShader = neighbourCS->GetComputeShader();
-
-			//RHICommands.SetUAVParameter(rhiComputeShader, neighbourCS->positions.GetBaseIndex(), _positionBufferUAV);
-
-			//RHICommands.SetUAVParameter(rhiComputeShader, neighbourCS->neigbhours.GetBaseIndex(), _neighboursBufferUAV);
-			//RHICommands.SetUAVParameter(rhiComputeShader, neighbourCS->neighboursBaseIndex.GetBaseIndex(), _neighboursBaseIndexUAV);
-			//RHICommands.SetUAVParameter(rhiComputeShader, neighbourCS->neighboursCount.GetBaseIndex(), _neighboursCountUAV);
-
-			//auto variablesBuffer = TUniformBufferRef<FComputeShaderVariableParameters>::
-			//	CreateUniformBufferImmediate(paramaters, UniformBuffer_SingleDraw);
-
-			//auto variablesBufferParameter = neighbourCS->GetUniformBufferParameter<FComputeShaderVariableParameters>();
-
-			//SetUniformBufferParameter(
-			//	RHICommands,
-			//	rhiComputeShader,
-			//	variablesBufferParameter,
-			//	variablesBuffer);
-
-
-			//RHICommands.SetComputeShader(rhiComputeShader);
-
-			//DispatchComputeShader(RHICommands, *neighbourCS, 256, 1, 1);
-
-
-
-
 			RHICommands.TransitionResource(
 				EResourceTransitionAccess::ERWBarrier,
 				EResourceTransitionPipeline::EGfxToCompute, 
@@ -314,35 +271,6 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 				parameters,
 				FIntVector(256, 1, 1)
 			);
-
-			/*TShaderMapRef<FComputeShaderDeclaration> mainCS(GetGlobalShaderMap(ERHIFeatureLevel::SM5));
-
-
-			FRHIComputeShader * rhiComputeShader = mainCS->GetComputeShader();
-
-			RHICommands.SetUAVParameter(rhiComputeShader, mainCS->positions.GetBaseIndex(), _positionBufferUAV);
-			RHICommands.SetUAVParameter(rhiComputeShader, mainCS->directions.GetBaseIndex(), _directionsBufferUAV);
-
-			RHICommands.SetUAVParameter(rhiComputeShader, mainCS->neigbhours.GetBaseIndex(), _neighboursBufferUAV);
-			RHICommands.SetUAVParameter(rhiComputeShader, mainCS->neighboursBaseIndex.GetBaseIndex(), _neighboursBaseIndexUAV);
-			RHICommands.SetUAVParameter(rhiComputeShader, mainCS->neighboursCount.GetBaseIndex(), _neighboursCountUAV);
-
-
-			auto variablesBuffer = TUniformBufferRef<FComputeShaderVariableParameters>::
-				CreateUniformBufferImmediate(paramaters, UniformBuffer_SingleDraw);
-
-			auto variablesBufferParameter = mainCS->GetUniformBufferParameter<FComputeShaderVariableParameters>();
-
-			SetUniformBufferParameter(
-				RHICommands,
-				rhiComputeShader,
-				variablesBufferParameter,
-				variablesBuffer);
-
-
-			RHICommands.SetComputeShader(rhiComputeShader);
-
-			DispatchComputeShader(RHICommands, *mainCS, 256, 1, 1);*/
 
 			// read back the data
 			// positions
