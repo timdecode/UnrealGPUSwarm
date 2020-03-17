@@ -66,7 +66,7 @@ public:
 
 class FNeighboursUpdateComputeShaderDeclaration : public FGlobalShader
 {
-	DECLARE_SHADER_TYPE(FComputeShaderDeclaration, Global);
+	DECLARE_SHADER_TYPE(FNeighboursUpdateComputeShaderDeclaration, Global);
 
 	FNeighboursUpdateComputeShaderDeclaration() {}
 

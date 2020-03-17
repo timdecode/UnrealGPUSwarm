@@ -199,6 +199,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			RHICommands.SetUAVParameter(rhiComputeShader, mainCS->neighboursBaseIndex.GetBaseIndex(), _neighboursBaseIndexUAV);
 			RHICommands.SetUAVParameter(rhiComputeShader, mainCS->neighboursCount.GetBaseIndex(), _neighboursCountUAV);
 
+
 			auto variablesBuffer = TUniformBufferRef<FComputeShaderVariableParameters>::
 				CreateUniformBufferImmediate(paramaters, UniformBuffer_SingleDraw);
 
@@ -265,5 +266,5 @@ void FNeighboursUpdateComputeShaderDeclaration::ModifyCompilationEnvironment(con
 	OutEnvironment.CompilerFlags.Add(CFLAG_StandardOptimization);
 }
 
-IMPLEMENT_SHADER_TYPE(, FComputeShaderDeclaration, TEXT("/ComputeShaderPlugin/Boid.usf"), TEXT("MainComputeShader"), SF_Compute);
-IMPLEMENT_SHADER_TYPE(, FNeighboursUpdateComputeShaderDeclaration, TEXT("/ComputeShaderPlugin/Neighbours.usf"), TEXT("MainComputeShader"), SF_Compute);
+IMPLEMENT_GLOBAL_SHADER(FComputeShaderDeclaration, "/ComputeShaderPlugin/Boid.usf", "MainComputeShader", SF_Compute);
+IMPLEMENT_GLOBAL_SHADER(FNeighboursUpdateComputeShaderDeclaration, "/ComputeShaderPlugin/Neighbours.usf", "MainComputeShader", SF_Compute);
