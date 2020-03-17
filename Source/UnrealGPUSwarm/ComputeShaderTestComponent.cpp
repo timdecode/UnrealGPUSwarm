@@ -5,6 +5,14 @@
 
 #include "ShaderParameterUtils.h"
 #include "RHIStaticStates.h"
+#include "Shader.h"
+#include "GlobalShader.h"
+#include "RenderGraphBuilder.h"
+#include "RenderGraphUtils.h"
+#include "ShaderParameterStruct.h"
+#include "UniformBuffer.h"
+#include "RHICommandList.h"
+
 
 // Some useful links
 // -----------------
@@ -22,9 +30,13 @@ public:
 	SHADER_USE_PARAMETER_STRUCT(FBoidsComputeShader, FGlobalShader);
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
-		SHADER_PARAMTER(uint32, dt)
-		SHADER_PARAMTER(uint32, totalTime)
-		SHADER_PARAMTER(float, separationDistance)
+		SHADER_PARAMETER(float, dt)
+		SHADER_PARAMETER(float, totalTime)
+		SHADER_PARAMETER(float, boidSpeed)
+		SHADER_PARAMETER(float, boidSpeedVariation)
+		SHADER_PARAMETER(float, boidRotationSpeed)
+
+		SHADER_PARAMETER(float, separationDistance)
 		SHADER_PARAMETER_UAV(RWBuffer<float3>, positions)
 		SHADER_PARAMETER_UAV(RWBuffer<float3>, directions)
 		SHADER_PARAMETER_UAV(RWBuffer<uint32>, neigbhours)
@@ -48,9 +60,9 @@ public:
 	SHADER_USE_PARAMETER_STRUCT(FNeighboursComputeShader, FGlobalShader);
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
-		SHADER_PARAMTER(uint32, numBoids)
-		SHADER_PARAMTER(uint32, numNeighbours)
-		SHADER_PARAMTER(float, neighbourDistance)
+		SHADER_PARAMETER(uint32, numBoids)
+		SHADER_PARAMETER(uint32, numNeighbours)
+		SHADER_PARAMETER(float, neighbourDistance)
 		SHADER_PARAMETER_UAV(RWBuffer<float3>, positions)
 		SHADER_PARAMETER_UAV(RWBuffer<uint32>, neigbhours)
 		SHADER_PARAMETER_UAV(RWBuffer<uint32>, neighboursBaseIndex)
@@ -240,7 +252,11 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 
 
-			RHICommands.TransitionResource(EResourceTransitionAccess::ERWBarrier, EResourceTransitionPipeline::EGfxToCompute, ComputeShaderOutputUAV);
+			RHICommands.TransitionResource(
+				EResourceTransitionAccess::ERWBarrier,
+				EResourceTransitionPipeline::EGfxToCompute, 
+				_positionBufferUAV
+			);
 			
 			FNeighboursComputeShader::FParameters parameters;
 			parameters.numBoids = numBoids;
@@ -264,7 +280,11 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 		// execute the main compute shader
 		{
-			RHICommands.TransitionResource(EResourceTransitionAccess::ERWBarrier, EResourceTransitionPipeline::EGfxToCompute, ComputeShaderOutputUAV);
+			RHICommands.TransitionResource(
+				EResourceTransitionAccess::ERWBarrier,
+				EResourceTransitionPipeline::EGfxToCompute,
+				_positionBufferUAV
+			);
 
 			FBoidsComputeShader::FParameters parameters;
 			parameters.dt = DeltaTime;
@@ -273,7 +293,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			parameters.boidSpeed = boidSpeed;
 			parameters.boidSpeedVariation = boidSpeedVariation;
 			parameters.separationDistance = separationDistance;
-			parameters.rotationSpeed = rotationSpeed;
+			parameters.boidRotationSpeed = boidRotationSpeed;
 
 			parameters.positions = _positionBufferUAV;
 			parameters.directions = _directionsBufferUAV;

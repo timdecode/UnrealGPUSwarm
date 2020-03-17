@@ -8,8 +8,12 @@
 
 float dt;
 float totalTime;
+
 float boidSpeed;
 float boidSpeedVariation;
+float boidRotationSpeed;
+
+float separationDistance;
 
 RWStructuredBuffer<float3> positions;         // Point Positions Input Buffer
 
@@ -94,7 +98,7 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
         
  //       cohesion += dir;
 
- //       if (dist < CSVariables.separationDistance && dist > 0.0f)
+ //       if (dist < separationDistance && dist > 0.0f)
  //           separation -= (dir / dist) * (CSVariables.separationDistance - dist);
 	//}
 
@@ -113,7 +117,7 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
 
     float3 newDirection = alignment + separation + cohesion;
 
-    float ip = exp(-rotationSpeed * dt);
+    float ip = exp(-boidRotationSpeed * dt);
     newDirection = lerp(newDirection, direction, ip);
 
     newDirection = safeNormal(newDirection, direction);
