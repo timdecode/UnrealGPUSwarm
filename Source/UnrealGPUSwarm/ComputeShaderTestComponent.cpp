@@ -274,7 +274,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 				RHICommands,
 				*computeShader,
 				parameters,
-				FIntVector(256, 0, 0)
+				FIntVector(256, 1, 1)
 			);
 		}
 
