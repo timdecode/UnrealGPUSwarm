@@ -37,11 +37,11 @@ public:
 		SHADER_PARAMETER(float, boidRotationSpeed)
 
 		SHADER_PARAMETER(float, separationDistance)
-		SHADER_PARAMETER_UAV(RWBuffer<float3>, positions)
-		SHADER_PARAMETER_UAV(RWBuffer<float3>, directions)
-		SHADER_PARAMETER_UAV(RWBuffer<uint32>, neigbhours)
-		SHADER_PARAMETER_UAV(RWBuffer<uint32>, neighboursBaseIndex)
-		SHADER_PARAMETER_UAV(RWBuffer<uint32>, neighboursCount)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, positions)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, directions)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neigbhours)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neighboursBaseIndex)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neighboursCount)
 	END_SHADER_PARAMETER_STRUCT()
 
 public:
@@ -63,11 +63,11 @@ public:
 		SHADER_PARAMETER(uint32, numBoids)
 		SHADER_PARAMETER(uint32, numNeighbours)
 		SHADER_PARAMETER(float, neighbourDistance)
-		SHADER_PARAMETER_UAV(RWBuffer<float3>, positions)
-		SHADER_PARAMETER_UAV(RWBuffer<uint32>, neigbhours)
-		SHADER_PARAMETER_UAV(RWBuffer<uint32>, neighboursBaseIndex)
-		SHADER_PARAMETER_UAV(RWBuffer<uint32>, neighboursCount)
-		END_SHADER_PARAMETER_STRUCT()
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, positions)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neigbhours)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neighboursBaseIndex)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neighboursCount)
+	END_SHADER_PARAMETER_STRUCT()
 
 public:
 	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
