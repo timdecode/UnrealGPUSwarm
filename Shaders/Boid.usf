@@ -14,6 +14,7 @@ float boidSpeedVariation;
 float boidRotationSpeed;
 
 float separationDistance;
+float homeInnerRadius;
 
 RWStructuredBuffer<float3> positions;         // Point Positions Input Buffer
 

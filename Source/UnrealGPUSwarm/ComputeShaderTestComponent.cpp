@@ -35,6 +35,7 @@ public:
 		SHADER_PARAMETER(float, boidSpeed)
 		SHADER_PARAMETER(float, boidSpeedVariation)
 		SHADER_PARAMETER(float, boidRotationSpeed)
+		SHADER_PARAMETER(float, homeInnerRadius)
 
 		SHADER_PARAMETER(float, separationDistance)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, positions)
@@ -52,6 +53,9 @@ public:
 };
 
 IMPLEMENT_GLOBAL_SHADER(FBoidsComputeShader, "/ComputeShaderPlugin/Boid.usf", "MainComputeShader", SF_Compute);
+
+
+
 
 class FNeighboursComputeShader : public FGlobalShader
 {
@@ -214,6 +218,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	paramaters.totalTime = totalTime;
 	paramaters.neighbourDistance = neighbourDistance;
 	paramaters.separationDistance = separationDistance;
+	parameters.homeInnerRadius = homeInnerRadius;
 	paramaters.numNeighbours = numNeighbours;
 	paramaters.numBoids = numBoids;
 

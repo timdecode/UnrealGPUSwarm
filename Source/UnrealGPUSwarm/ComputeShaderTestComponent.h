@@ -132,6 +132,9 @@ public:
 	float separationDistance = 3.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float homeInnerRadius = 200.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float boidSpeed = 10.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
