@@ -98,8 +98,6 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
         float3 dir = otherPosition - position;
         float dist = length(dir);
         
-        // cohesion += dir;
-
         if (dist < separationDistance && dist > 0.0f)
             separation -= (dir / dist) * (separationDistance - dist);
     }
