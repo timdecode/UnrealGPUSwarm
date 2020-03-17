@@ -43,6 +43,12 @@ float noise1( float3 x )
 // float totalTime
 // float neighbourDistance
 
+float3 safeNormal(float3 vec)
+{
+    float l = length(vec);
+    
+    return l > 0.0f ? vec / l : float3(0.0f, 0.0f, 0.0f);
+}
 
 //--------------------------------------------------------------------------------------
 // Main
@@ -92,16 +98,19 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
 		float average = 1.0 / count;
 		alignment *= average;
 		cohesion *= average;
-		cohesion = normalize(cohesion - position);
-	}
+        
+        cohesion = safeNormal(cohesion);
+    }
 
 
-	float3 direction = alignment + separation + cohesion;
+    float3 direction = alignment + separation + cohesion;
 
-	float ip = exp(-CSVariables.rotationSpeed * CSVariables.dt);
-	direction = lerp(direction, normalize(directions[index]), ip);
+    float ip = exp(-CSVariables.rotationSpeed * CSVariables.dt);
+    direction = lerp(direction, directions[index], ip);
 
-	position += direction * (velocity * CSVariables.dt);
+    direction = safeNormal(direction);
+    
+    position += direction * (velocity * CSVariables.dt);
 
 	positions[index] = position;
 	directions[index] = direction;
@@ -123,22 +132,25 @@ void UpdateNeighbours(uint3 ThreadId : SV_DispatchThreadID)
 	
 	for (uint i = 0; i < CSVariables.numBoids; ++i)
 	{
-		if (i == index) continue;
+		if (i != index)
+        {
+            float3 otherPosition = positions[i];
 		
-		float3 otherPosition = positions[i];
+            float dist = distance(position, otherPosition);
 		
-		float dist = distance(position, otherPosition);
-		
-		if (dist < CSVariables.neighbourDistance)
-		{
-			neigbhours[baseIndex + count] = i;
+            if (dist < CSVariables.neighbourDistance)
+            {
+                neigbhours[baseIndex + count] = i;
 			
-			count++;
+                count++;
 			
-			if (count >= CSVariables.numNeighbours)
-				break;
+                if (count >= CSVariables.numNeighbours)
+                    break;
 
-		}
+            }
+        }
+		
+
 	}
 	
 	neighboursCount[index] = count;

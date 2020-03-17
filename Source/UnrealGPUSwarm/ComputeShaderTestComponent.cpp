@@ -144,7 +144,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	FComputeShaderVariableParameters paramaters;
 	paramaters.boidSpeed = 10.0f;
 	paramaters.boidSpeedVariation = 1.0f;
-	paramaters.rotationSpeed = 4.0f;
+	paramaters.rotationSpeed = 40.0f;
 	paramaters.dt = DeltaTime;
 	paramaters.totalTime = totalTime;
 	paramaters.neighbourDistance = neighbourDistance;
@@ -163,6 +163,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			FRHIComputeShader * rhiComputeShader = neighbourCS->GetComputeShader();
 
 			RHICommands.SetUAVParameter(rhiComputeShader, neighbourCS->positions.GetBaseIndex(), _positionBufferUAV);
+			RHICommands.SetUAVParameter(rhiComputeShader, neighbourCS->directions.GetBaseIndex(), _directionsBufferUAV);
 
 			RHICommands.SetUAVParameter(rhiComputeShader, neighbourCS->neigbhours.GetBaseIndex(), _neighboursBufferUAV);
 			RHICommands.SetUAVParameter(rhiComputeShader, neighbourCS->neighboursBaseIndex.GetBaseIndex(), _neighboursBaseIndexUAV);
@@ -252,7 +253,7 @@ void FComputeShaderDeclaration::ModifyCompilationEnvironment(const FGlobalShader
 FNeighboursUpdateComputeShaderDeclaration::FNeighboursUpdateComputeShaderDeclaration(const ShaderMetaType::CompiledShaderInitializerType& Initializer)
 {
 	positions.Bind(Initializer.ParameterMap, TEXT("positions"));
-
+	directions.Bind(Initializer.ParameterMap, TEXT("directions"));
 	neigbhours.Bind(Initializer.ParameterMap, TEXT("neigbhours"));
 	neighboursBaseIndex.Bind(Initializer.ParameterMap, TEXT("neighboursBaseIndex"));
 	neighboursCount.Bind(Initializer.ParameterMap, TEXT("neighboursCount"));
