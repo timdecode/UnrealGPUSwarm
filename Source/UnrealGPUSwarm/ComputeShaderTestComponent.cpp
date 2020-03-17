@@ -10,6 +10,8 @@
 // -----------------
 // [Enqueue render commands using lambdas](https://github.com/EpicGames/UnrealEngine/commit/41f6b93892dcf626a5acc155f7d71c756a5624b0)
 //
+// [Useful tutorial on Unreal compute shaders](https://github.com/Temaran/UE4ShaderPluginDemo)
+
 
 IMPLEMENT_GLOBAL_SHADER_PARAMETER_STRUCT(FComputeShaderVariableParameters, "CSVariables");
 
