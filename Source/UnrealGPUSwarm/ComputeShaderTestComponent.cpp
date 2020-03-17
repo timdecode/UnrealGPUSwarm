@@ -218,7 +218,6 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	paramaters.totalTime = totalTime;
 	paramaters.neighbourDistance = neighbourDistance;
 	paramaters.separationDistance = separationDistance;
-	parameters.homeInnerRadius = homeInnerRadius;
 	paramaters.numNeighbours = numNeighbours;
 	paramaters.numBoids = numBoids;
 
@@ -299,6 +298,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			parameters.boidSpeedVariation = boidSpeedVariation;
 			parameters.separationDistance = separationDistance;
 			parameters.boidRotationSpeed = boidRotationSpeed;
+			parameters.homeInnerRadius = homeInnerRadius;
 
 			parameters.positions = _positionBufferUAV;
 			parameters.directions = _directionsBufferUAV;
