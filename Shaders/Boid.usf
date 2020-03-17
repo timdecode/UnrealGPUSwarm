@@ -5,6 +5,12 @@
 //--------------------------------------------------------------------------------------
 // Buffers
 //--------------------------------------------------------------------------------------
+
+float dt;
+float totalTime;
+float boidSpeed;
+float boidSpeedVariation;
+
 RWStructuredBuffer<float3> positions;         // Point Positions Input Buffer
 
 RWStructuredBuffer<float3> directions;
@@ -64,8 +70,8 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
     
 	float noiseOffset = hash(float(index));
 
-	float noise = clamp(noise1(CSVariables.totalTime / 100.0 + noiseOffset), -1, 1) * 2.0 - 1.0;
-	float velocity = CSVariables.boidSpeed * (1.0 + noise * CSVariables.boidSpeedVariation);
+	float noise = clamp(noise1(totalTime / 100.0 + noiseOffset), -1, 1) * 2.0 - 1.0;
+	float velocity = boidSpeed * (1.0 + noise * boidSpeedVariation);
 
     float3 separation = float3(0.0, 0.0, 0.0);
     float3 alignment = float3(0.0, 0.0, 0.0);
@@ -107,12 +113,12 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
 
     float3 newDirection = alignment + separation + cohesion;
 
-    float ip = exp(-CSVariables.rotationSpeed * CSVariables.dt);
+    float ip = exp(-rotationSpeed * dt);
     newDirection = lerp(newDirection, direction, ip);
 
     newDirection = safeNormal(newDirection, direction);
     
-    positions[index] = position + newDirection * (velocity * CSVariables.dt);
+    positions[index] = position + newDirection * (velocity * dt);
     directions[index] = newDirection;
 }
 

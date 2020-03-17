@@ -1,8 +1,15 @@
 #include "/Engine/Private/Common.ush"
 
-RWStructuredBuffer<float3> positions; // Point Positions Input Buffer
 
-RWStructuredBuffer<float3> directions;
+
+
+
+
+uint numBoids;
+uint numNeighbours;
+float neighbourDistance;
+
+RWStructuredBuffer<float3> positions; // Point Positions Input Buffer
 
 RWStructuredBuffer<uint> neigbhours;
 RWStructuredBuffer<uint> neighboursBaseIndex;
@@ -25,7 +32,7 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
     uint baseIndex = neighboursBaseIndex[index];
     uint count = 0;
 	
-    for (uint i = 0; i < CSVariables.numBoids; ++i)
+    for (uint i = 0; i < numBoids; ++i)
     {
         if (i != index)
         {
@@ -33,13 +40,13 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
 		
             float dist = distance(position, otherPosition);
 		
-            if (dist < CSVariables.neighbourDistance)
+            if (dist < neighbourDistance)
             {
                 neigbhours[baseIndex + count] = i;
 			
                 count++;
 			
-                if (count >= CSVariables.numNeighbours)
+                if (count >= numNeighbours)
                     break;
 
             }

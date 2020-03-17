@@ -13,6 +13,57 @@
 
 IMPLEMENT_GLOBAL_SHADER_PARAMETER_STRUCT(FComputeShaderVariableParameters, "CSVariables");
 
+class FBoidsComputeShader : public FGlobalShader
+{
+public:
+	DECLARE_GLOBAL_SHADER(FBoidsComputeShader);
+	SHADER_USE_PARAMETER_STRUCT(FBoidsComputeShader, FGlobalShader);
+
+	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
+		SHADER_PARAMTER(uint32, dt)
+		SHADER_PARAMTER(uint32, totalTime)
+		SHADER_PARAMTER(float, separationDistance)
+		SHADER_PARAMETER_UAV(RWBuffer<float3>, positions)
+		SHADER_PARAMETER_UAV(RWBuffer<float3>, directions)
+		SHADER_PARAMETER_UAV(RWBuffer<uint32>, neigbhours)
+		SHADER_PARAMETER_UAV(RWBuffer<uint32>, neighboursBaseIndex)
+		SHADER_PARAMETER_UAV(RWBuffer<uint32>, neighboursCount)
+	END_SHADER_PARAMETER_STRUCT()
+
+public:
+	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
+	{
+		return IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM5);
+	}
+};
+
+IMPLEMENT_GLOBAL_SHADER(FBoidsComputeShader, "/ComputeShaderPlugin/Boid.usf", "MainComputeShader", SF_Compute);
+
+class FNeighboursComputeShader : public FGlobalShader
+{
+public:
+	DECLARE_GLOBAL_SHADER(FNeighboursComputeShader);
+	SHADER_USE_PARAMETER_STRUCT(FNeighboursComputeShader, FGlobalShader);
+
+	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
+		SHADER_PARAMTER(uint32, numBoids)
+		SHADER_PARAMTER(uint32, numNeighbours)
+		SHADER_PARAMTER(float, neighbourDistance)
+		SHADER_PARAMETER_UAV(RWBuffer<float3>, positions)
+		SHADER_PARAMETER_UAV(RWBuffer<uint32>, neigbhours)
+		SHADER_PARAMETER_UAV(RWBuffer<uint32>, neighboursBaseIndex)
+		SHADER_PARAMETER_UAV(RWBuffer<uint32>, neighboursCount)
+		END_SHADER_PARAMETER_STRUCT()
+
+public:
+	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
+	{
+		return IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM5);
+	}
+};
+
+IMPLEMENT_GLOBAL_SHADER(FNeighboursComputeShader, "/ComputeShaderPlugin/Neighbours.usf", "MainComputeShader", SF_Compute);
+
 
 // Sets default values for this component's properties
 UComputeShaderTestComponent::UComputeShaderTestComponent() 
@@ -153,41 +204,91 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	paramaters.numBoids = numBoids;
 
 	ENQUEUE_RENDER_COMMAND(FComputeShaderRunner)(
-	[&, paramaters](FRHICommandListImmediate& RHICommands)
+	[&, paramaters, totalTime, DeltaTime](FRHICommandListImmediate& RHICommands)
 	{
 		// find our neighbours
 		{
-			TShaderMapRef<FNeighboursUpdateComputeShaderDeclaration> neighbourCS(GetGlobalShaderMap(ERHIFeatureLevel::SM5));
+			//TShaderMapRef<FNeighboursUpdateComputeShaderDeclaration> neighbourCS(GetGlobalShaderMap(ERHIFeatureLevel::SM5));
 
 
-			FRHIComputeShader * rhiComputeShader = neighbourCS->GetComputeShader();
+			//FRHIComputeShader * rhiComputeShader = neighbourCS->GetComputeShader();
 
-			RHICommands.SetUAVParameter(rhiComputeShader, neighbourCS->positions.GetBaseIndex(), _positionBufferUAV);
+			//RHICommands.SetUAVParameter(rhiComputeShader, neighbourCS->positions.GetBaseIndex(), _positionBufferUAV);
 
-			RHICommands.SetUAVParameter(rhiComputeShader, neighbourCS->neigbhours.GetBaseIndex(), _neighboursBufferUAV);
-			RHICommands.SetUAVParameter(rhiComputeShader, neighbourCS->neighboursBaseIndex.GetBaseIndex(), _neighboursBaseIndexUAV);
-			RHICommands.SetUAVParameter(rhiComputeShader, neighbourCS->neighboursCount.GetBaseIndex(), _neighboursCountUAV);
+			//RHICommands.SetUAVParameter(rhiComputeShader, neighbourCS->neigbhours.GetBaseIndex(), _neighboursBufferUAV);
+			//RHICommands.SetUAVParameter(rhiComputeShader, neighbourCS->neighboursBaseIndex.GetBaseIndex(), _neighboursBaseIndexUAV);
+			//RHICommands.SetUAVParameter(rhiComputeShader, neighbourCS->neighboursCount.GetBaseIndex(), _neighboursCountUAV);
 
-			auto variablesBuffer = TUniformBufferRef<FComputeShaderVariableParameters>::
-				CreateUniformBufferImmediate(paramaters, UniformBuffer_SingleDraw);
+			//auto variablesBuffer = TUniformBufferRef<FComputeShaderVariableParameters>::
+			//	CreateUniformBufferImmediate(paramaters, UniformBuffer_SingleDraw);
 
-			auto variablesBufferParameter = neighbourCS->GetUniformBufferParameter<FComputeShaderVariableParameters>();
+			//auto variablesBufferParameter = neighbourCS->GetUniformBufferParameter<FComputeShaderVariableParameters>();
 
-			SetUniformBufferParameter(
+			//SetUniformBufferParameter(
+			//	RHICommands,
+			//	rhiComputeShader,
+			//	variablesBufferParameter,
+			//	variablesBuffer);
+
+
+			//RHICommands.SetComputeShader(rhiComputeShader);
+
+			//DispatchComputeShader(RHICommands, *neighbourCS, 256, 1, 1);
+
+
+
+
+			RHICommands.TransitionResource(EResourceTransitionAccess::ERWBarrier, EResourceTransitionPipeline::EGfxToCompute, ComputeShaderOutputUAV);
+			
+			FNeighboursComputeShader::FParameters parameters;
+			parameters.numBoids = numBoids;
+			parameters.numNeighbours = numNeighbours;
+			parameters.neighbourDistance = neighbourDistance;
+
+			parameters.positions = _positionBufferUAV;
+			parameters.neigbhours = _neighboursBufferUAV;
+			parameters.neighboursBaseIndex = _neighboursBaseIndexUAV;
+			parameters.neighboursCount = _neighboursCountUAV;
+
+
+			TShaderMapRef<FNeighboursComputeShader> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
+			FComputeShaderUtils::Dispatch(
 				RHICommands,
-				rhiComputeShader,
-				variablesBufferParameter,
-				variablesBuffer);
-
-
-			RHICommands.SetComputeShader(rhiComputeShader);
-
-			DispatchComputeShader(RHICommands, *neighbourCS, 256, 1, 1);
+				*computeShader,
+				parameters,
+				FIntVector(256, 0, 0)
+			);
 		}
 
 		// execute the main compute shader
 		{
-			TShaderMapRef<FComputeShaderDeclaration> mainCS(GetGlobalShaderMap(ERHIFeatureLevel::SM5));
+			RHICommands.TransitionResource(EResourceTransitionAccess::ERWBarrier, EResourceTransitionPipeline::EGfxToCompute, ComputeShaderOutputUAV);
+
+			FBoidsComputeShader::FParameters parameters;
+			parameters.dt = DeltaTime;
+			parameters.totalTime = totalTime;
+			parameters.separationDistance = separationDistance;
+			parameters.boidSpeed = boidSpeed;
+			parameters.boidSpeedVariation = boidSpeedVariation;
+			parameters.separationDistance = separationDistance;
+			parameters.rotationSpeed = rotationSpeed;
+
+			parameters.positions = _positionBufferUAV;
+			parameters.directions = _directionsBufferUAV;
+			parameters.neigbhours = _neighboursBufferUAV;
+			parameters.neighboursBaseIndex = _neighboursBaseIndexUAV;
+			parameters.neighboursCount = _neighboursCountUAV;
+
+
+			TShaderMapRef<FBoidsComputeShader> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
+			FComputeShaderUtils::Dispatch(
+				RHICommands,
+				*computeShader,
+				parameters,
+				FIntVector(256, 0, 0)
+			);
+
+			/*TShaderMapRef<FComputeShaderDeclaration> mainCS(GetGlobalShaderMap(ERHIFeatureLevel::SM5));
 
 
 			FRHIComputeShader * rhiComputeShader = mainCS->GetComputeShader();
@@ -214,7 +315,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 			RHICommands.SetComputeShader(rhiComputeShader);
 
-			DispatchComputeShader(RHICommands, *mainCS, 256, 1, 1);
+			DispatchComputeShader(RHICommands, *mainCS, 256, 1, 1);*/
 
 			// read back the data
 			// positions
@@ -234,37 +335,5 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	});
 }
 
-FComputeShaderDeclaration::FComputeShaderDeclaration(const ShaderMetaType::CompiledShaderInitializerType& Initializer) 
-	: FGlobalShader(Initializer)
-{
-	positions.Bind(Initializer.ParameterMap, TEXT("positions"));
-	directions.Bind(Initializer.ParameterMap, TEXT("directions"));
-	neigbhours.Bind(Initializer.ParameterMap, TEXT("neigbhours"));
-	neighboursBaseIndex.Bind(Initializer.ParameterMap, TEXT("neighboursBaseIndex"));
-	neighboursCount.Bind(Initializer.ParameterMap, TEXT("neighboursCount"));
-}
-
-void FComputeShaderDeclaration::ModifyCompilationEnvironment(const FGlobalShaderPermutationParameters& Parameters, FShaderCompilerEnvironment& OutEnvironment)
-{
-	FGlobalShader::ModifyCompilationEnvironment(Parameters, OutEnvironment);
-	OutEnvironment.CompilerFlags.Add(CFLAG_StandardOptimization);
-}
 
 
-FNeighboursUpdateComputeShaderDeclaration::FNeighboursUpdateComputeShaderDeclaration(const ShaderMetaType::CompiledShaderInitializerType& Initializer) 
-	: FGlobalShader(Initializer)
-{
-	positions.Bind(Initializer.ParameterMap, TEXT("positions"));
-	neigbhours.Bind(Initializer.ParameterMap, TEXT("neigbhours"));
-	neighboursBaseIndex.Bind(Initializer.ParameterMap, TEXT("neighboursBaseIndex"));
-	neighboursCount.Bind(Initializer.ParameterMap, TEXT("neighboursCount"));
-}
-
-void FNeighboursUpdateComputeShaderDeclaration::ModifyCompilationEnvironment(const FGlobalShaderPermutationParameters& Parameters, FShaderCompilerEnvironment& OutEnvironment)
-{
-	FGlobalShader::ModifyCompilationEnvironment(Parameters, OutEnvironment);
-	OutEnvironment.CompilerFlags.Add(CFLAG_StandardOptimization);
-}
-
-IMPLEMENT_GLOBAL_SHADER(FComputeShaderDeclaration, "/ComputeShaderPlugin/Boid.usf", "MainComputeShader", SF_Compute);
-IMPLEMENT_GLOBAL_SHADER(FNeighboursUpdateComputeShaderDeclaration, "/ComputeShaderPlugin/Neighbours.usf", "MainComputeShader", SF_Compute);
