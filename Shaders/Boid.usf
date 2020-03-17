@@ -125,7 +125,7 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
     
     float3 homeUrge = float3(0.0f, 0.0f, 0.0f);
 
-    if (distFromHome > 100.0f)
+    if (distFromHome > homeInnerRadius)
         homeUrge = safeNormal(home - position, float3(0.0f, 0.0f, 0.0f));
 
     
