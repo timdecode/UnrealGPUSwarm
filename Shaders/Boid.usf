@@ -79,7 +79,7 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
 
     float3 separation = float3(0.0, 0.0, 0.0);
     float3 alignment = float3(0.0, 0.0, 0.0);
-	float3 cohesion = float3(0.0, 0.0, 0.0);
+	float3 neighboursCentre = float3(0.0, 0.0, 0.0);
 
 
 	uint count = neighboursCount[index];
@@ -92,6 +92,7 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
 
         float3 otherPosition = positions[otherIndex];
 
+        neighboursCentre += otherPosition;
 		
         float3 dir = otherPosition - position;
         float dist = length(dir);
@@ -102,7 +103,9 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
             separation -= (dir / dist) * (separationDistance - dist);
     }
 
-    
+    // cohesion
+    neighboursCentre *= (count > 0 ? (1.0f / float(count)) : 0.0f);
+    float3 cohesion = neighboursCentre - position;
     
     // directions
     for (uint i = baseIndex; i < baseIndex + count; ++i)
@@ -114,11 +117,19 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
 	
     alignment = safeNormal(alignment, direction);
 
+    // home
     float3 home = float3(0.0f, 0.0f, 0.0f);
     
-    float3 homeUrge = safeNormal(home - position, float3(0.0f, 0.0f, 0.0f));
+    float distFromHome = distance(home, position);
+    
+    float3 homeUrge = float3(0.0f, 0.0f, 0.0f);
 
-    float3 newDirection = alignment + separation + cohesion + homeUrge;
+    if (distFromHome > 100.0f)
+        homeUrge = safeNormal(home - position, float3(0.0f, 0.0f, 0.0f));
+
+    
+
+    float3 newDirection = alignment + separation + 0.2f * cohesion + 0.1f * homeUrge;
 
     float ip = exp(-boidRotationSpeed * dt);
     newDirection = lerp(newDirection, direction, ip);
