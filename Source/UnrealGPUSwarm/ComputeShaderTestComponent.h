@@ -143,10 +143,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float spawnRadius = 600.0f;
 
-	UPROPERTY()
 	TArray<FVector> outputPositions;
 
-	UPROPERTY()
 	TArray<FVector> outputDirections;
 
 protected:
