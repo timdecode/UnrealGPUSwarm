@@ -43,12 +43,13 @@ float noise1( float3 x )
 // float totalTime
 // float neighbourDistance
 
-float3 safeNormal(float3 vec)
+float3 safeNormal(float3 vec, float3 safe)
 {
     float l = length(vec);
     
-    return l > 0.0f ? vec / l : float3(0.0f, 0.0f, 0.0f);
+    return l > 0.0f ? vec / l : safe;
 }
+
 
 //--------------------------------------------------------------------------------------
 // Main
@@ -58,102 +59,63 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
 {
     int index = ThreadId.x;
 
-    float3 position = positions[index];
+    const float3 position = positions[index];
+    const float3 direction = directions[index];
     
 	float noiseOffset = hash(float(index));
 
 	float noise = clamp(noise1(CSVariables.totalTime / 100.0 + noiseOffset), -1, 1) * 2.0 - 1.0;
 	float velocity = CSVariables.boidSpeed * (1.0 + noise * CSVariables.boidSpeedVariation);
 
-	float3 separation = float3(0, 0.0, 0);
-	float3 alignment = float3(0.0, 0.0, 0.0);
+    float3 separation = float3(0.0, 0.0, 0.0);
+    float3 alignment = float3(0.0, 0.0, 0.0);
 	float3 cohesion = float3(0.0, 0.0, 0.0);
 
 
 	uint count = neighboursCount[index];
 	uint baseIndex = neighboursBaseIndex[index];
 
-	for( uint i = baseIndex; i < baseIndex + count; ++i )
-	{
-		int otherIndex = neigbhours[i];
+    // positions
+	//for( uint i = baseIndex; i < baseIndex + count; ++i )
+	//{
+	//	int otherIndex = neigbhours[i];
 
-		float3 otherPosition = positions[otherIndex];
+	//	float3 otherPosition = positions[otherIndex];
 
-		alignment += directions[otherIndex];
-		cohesion += otherPosition;
 		
-		if (distance(position, otherPosition) < CSVariables.separationDistance)
-		{
-			float3 dir = position - otherPosition;
-			float size = (length(dir));
-			float scaler = clamp(1.0 - size / CSVariables.separationDistance, 0.0, 1.0);
-			separation += dir * (scaler / size);
-			
-
-		}
-	}
-	
-	if (count > 0)
-	{
-		float average = 1.0 / count;
-		alignment *= average;
-		cohesion *= average;
+ //       float3 dir = otherPosition - position;
+ //       float dist = length(dir);
         
-        cohesion = safeNormal(cohesion);
+ //       cohesion += dir;
+
+ //       if (dist < CSVariables.separationDistance && dist > 0.0f)
+ //           separation -= (dir / dist) * (CSVariables.separationDistance - dist);
+	//}
+
+    
+    
+    // directions
+    for (uint i = baseIndex; i < baseIndex + count; ++i)
+    {
+        int otherIndex = neigbhours[i];
+
+        alignment += directions[otherIndex];
     }
+	
+    alignment = safeNormal(alignment, direction);
 
 
-    float3 direction = alignment + separation + cohesion;
+    float3 newDirection = alignment + separation + cohesion;
 
     float ip = exp(-CSVariables.rotationSpeed * CSVariables.dt);
-    direction = lerp(direction, directions[index], ip);
+    newDirection = lerp(newDirection, direction, ip);
 
-    direction = safeNormal(direction);
+    newDirection = safeNormal(newDirection, direction);
     
-    position += direction * (velocity * CSVariables.dt);
-
-	positions[index] = position;
-	directions[index] = direction;
+    positions[index] = position + newDirection * (velocity * CSVariables.dt);
+    directions[index] = newDirection;
 }
 
-//--------------------------------------------------------------------------------------
-// Neighbours
-//--------------------------------------------------------------------------------------
 
-[numthreads(256, 1, 1)]
-void UpdateNeighbours(uint3 ThreadId : SV_DispatchThreadID)
-{
-	int index = ThreadId.x;
-
-	float3 position = positions[index];
-	
-	uint baseIndex = neighboursBaseIndex[index];
-	uint count = 0;
-	
-	for (uint i = 0; i < CSVariables.numBoids; ++i)
-	{
-		if (i != index)
-        {
-            float3 otherPosition = positions[i];
-		
-            float dist = distance(position, otherPosition);
-		
-            if (dist < CSVariables.neighbourDistance)
-            {
-                neigbhours[baseIndex + count] = i;
-			
-                count++;
-			
-                if (count >= CSVariables.numNeighbours)
-                    break;
-
-            }
-        }
-		
-
-	}
-	
-	neighboursCount[index] = count;
-}
 
 

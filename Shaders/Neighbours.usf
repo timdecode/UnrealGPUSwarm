@@ -1,0 +1,50 @@
+#include "/Engine/Private/Common.ush"
+
+RWStructuredBuffer<float3> positions; // Point Positions Input Buffer
+
+RWStructuredBuffer<float3> directions;
+
+RWStructuredBuffer<uint> neigbhours;
+RWStructuredBuffer<uint> neighboursBaseIndex;
+RWStructuredBuffer<uint> neighboursCount;
+
+float3 safeNormal(float3 vec)
+{
+    float l = length(vec);
+    
+    return l > 0.0f ? vec / l : float3(0.0f, 0.0f, 0.0f);
+}
+
+[numthreads(256, 1, 1)]
+void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
+{
+    int index = ThreadId.x;
+
+    float3 position = positions[index];
+	
+    uint baseIndex = neighboursBaseIndex[index];
+    uint count = 0;
+	
+    for (uint i = 0; i < CSVariables.numBoids; ++i)
+    {
+        if (i != index)
+        {
+            float3 otherPosition = positions[i];
+		
+            float dist = distance(position, otherPosition);
+		
+            if (dist < CSVariables.neighbourDistance)
+            {
+                neigbhours[baseIndex + count] = i;
+			
+                count++;
+			
+                if (count >= CSVariables.numNeighbours)
+                    break;
+
+            }
+        }
+    }
+	
+    neighboursCount[index] = count;
+}

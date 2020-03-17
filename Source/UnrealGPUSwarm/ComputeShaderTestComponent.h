@@ -83,7 +83,6 @@ class FNeighboursUpdateComputeShaderDeclaration : public FGlobalShader
 		bool bShaderHasOutdatedParams = FGlobalShader::Serialize(Ar);
 
 		Ar << positions;
-		Ar << directions;
 
 		Ar << neigbhours;
 		Ar << neighboursBaseIndex;
@@ -94,7 +93,6 @@ class FNeighboursUpdateComputeShaderDeclaration : public FGlobalShader
 
 public:
 	FShaderResourceParameter positions;
-	FShaderResourceParameter directions;
 
 	FShaderResourceParameter neigbhours;
 	FShaderResourceParameter neighboursBaseIndex;

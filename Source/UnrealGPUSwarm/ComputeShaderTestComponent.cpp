@@ -163,7 +163,6 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			FRHIComputeShader * rhiComputeShader = neighbourCS->GetComputeShader();
 
 			RHICommands.SetUAVParameter(rhiComputeShader, neighbourCS->positions.GetBaseIndex(), _positionBufferUAV);
-			RHICommands.SetUAVParameter(rhiComputeShader, neighbourCS->directions.GetBaseIndex(), _directionsBufferUAV);
 
 			RHICommands.SetUAVParameter(rhiComputeShader, neighbourCS->neigbhours.GetBaseIndex(), _neighboursBufferUAV);
 			RHICommands.SetUAVParameter(rhiComputeShader, neighbourCS->neighboursBaseIndex.GetBaseIndex(), _neighboursBaseIndexUAV);
@@ -234,7 +233,8 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	});
 }
 
-FComputeShaderDeclaration::FComputeShaderDeclaration(const ShaderMetaType::CompiledShaderInitializerType& Initializer) : FGlobalShader(Initializer)
+FComputeShaderDeclaration::FComputeShaderDeclaration(const ShaderMetaType::CompiledShaderInitializerType& Initializer) 
+	: FGlobalShader(Initializer)
 {
 	positions.Bind(Initializer.ParameterMap, TEXT("positions"));
 	directions.Bind(Initializer.ParameterMap, TEXT("directions"));
@@ -250,10 +250,10 @@ void FComputeShaderDeclaration::ModifyCompilationEnvironment(const FGlobalShader
 }
 
 
-FNeighboursUpdateComputeShaderDeclaration::FNeighboursUpdateComputeShaderDeclaration(const ShaderMetaType::CompiledShaderInitializerType& Initializer)
+FNeighboursUpdateComputeShaderDeclaration::FNeighboursUpdateComputeShaderDeclaration(const ShaderMetaType::CompiledShaderInitializerType& Initializer) 
+	: FGlobalShader(Initializer)
 {
 	positions.Bind(Initializer.ParameterMap, TEXT("positions"));
-	directions.Bind(Initializer.ParameterMap, TEXT("directions"));
 	neigbhours.Bind(Initializer.ParameterMap, TEXT("neigbhours"));
 	neighboursBaseIndex.Bind(Initializer.ParameterMap, TEXT("neighboursBaseIndex"));
 	neighboursCount.Bind(Initializer.ParameterMap, TEXT("neighboursCount"));
@@ -266,4 +266,4 @@ void FNeighboursUpdateComputeShaderDeclaration::ModifyCompilationEnvironment(con
 }
 
 IMPLEMENT_SHADER_TYPE(, FComputeShaderDeclaration, TEXT("/ComputeShaderPlugin/Boid.usf"), TEXT("MainComputeShader"), SF_Compute);
-IMPLEMENT_SHADER_TYPE(, FNeighboursUpdateComputeShaderDeclaration, TEXT("/ComputeShaderPlugin/Boid.usf"), TEXT("UpdateNeighbours"), SF_Compute);
+IMPLEMENT_SHADER_TYPE(, FNeighboursUpdateComputeShaderDeclaration, TEXT("/ComputeShaderPlugin/Neighbours.usf"), TEXT("MainComputeShader"), SF_Compute);
