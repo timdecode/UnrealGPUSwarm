@@ -3,15 +3,12 @@
 
 struct DynamicHashedGrid
 {
-    RWStructuredBuffer<uint> cellIndexBuffer;
-    RWStructuredBuffer<uint> cellOffsetBuffer;
+    RWStructuredBuffer<uint> particleIndexBuffer;   
+    RWStructuredBuffer<uint> cellIndexBuffer;   
+    RWStructuredBuffer<uint> cellOffsetBuffer; 
 
     float cellSize;
-}
-
-
-
-
+} hashedGrid;
 
 uint numBoids;
 uint numNeighbours;
@@ -22,6 +19,32 @@ RWStructuredBuffer<float3> positions; // Point Positions Input Buffer
 RWStructuredBuffer<uint> neigbhours;
 RWStructuredBuffer<uint> neighboursBaseIndex;
 RWStructuredBuffer<uint> neighboursCount;
+
+[numthreads(256, 1, 1)]
+void CreateUnsortedList(uint3 ThreadId : SV_DispatchThreadID)
+{
+    uint particleIndex = particleIndexBuffer[ThreadId.x];
+
+    float3 position = positions[particleIndex];
+    int32 cellIndex = floor(position / hashedGrid.cellSize);
+
+    uint flatCellIndex = getFlatCellIndex(cellIndex);
+
+    hashedGrid.cellIndexBuffer[particleIndex] = flatCellIndex;
+}
+
+[numthreads(256, 1, 1)]
+void CreateOffsetList(uint3 ThreadId : SV_DispatchThreadID)
+{
+    uint particleIndex = particleIndexBuffer[ThreadId.x];
+    uint cellIndex = hashedGrid.cellIndexBuffer[particleIndex];
+
+    InterlocedMin(hashedGrid.cellOffsetBuffer[cellIndex], ThreadId.x);
+}
+
+
+
+
 
 float distanceSqrd(float3 a, float3 b)
 {
