@@ -1,6 +1,14 @@
 #include "/Engine/Private/Common.ush"
 
 
+struct DynamicHashedGrid
+{
+    RWStructuredBuffer<uint> cellIndexBuffer;
+    RWStructuredBuffer<uint> cellOffsetBuffer;
+
+    float cellSize;
+}
+
 
 
 
