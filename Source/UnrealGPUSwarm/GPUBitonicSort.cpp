@@ -12,29 +12,60 @@
 #include "UniformBuffer.h"
 #include "RHICommandList.h"
 
-class FBitonicSort_dispatchSort : public FGlobalShader
+class FBitonicSort_sort : public FGlobalShader
 {
 public:
-	DECLARE_GLOBAL_SHADER(FBoidsComputeShader);
-	SHADER_USE_PARAMETER_STRUCT(FBoidsComputeShader, FGlobalShader);
+	DECLARE_GLOBAL_SHADER(FBitonicSort_sort);
+	SHADER_USE_PARAMETER_STRUCT(FBitonicSort_sort, FGlobalShader);
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
 		SHADER_PARAMETER(int3, job_params)
 		SHADER_PARAMETER(uint, itemCount) // the number of particles
 
-		// counterBuffer
-		// indirectBuffers
-		SHADER_PARAMETER(float, boidSpeed)
-		SHADER_PARAMETER(float, boidSpeedVariation)
-		SHADER_PARAMETER(float, boidRotationSpeed)
-		SHADER_PARAMETER(float, homeInnerRadius)
+		SHADER_PARAMETER_UAV(StructuredBuffer<float>, comparisonBuffer)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint>, indexBuffer)
+	END_SHADER_PARAMETER_STRUCT()
 
-		SHADER_PARAMETER(float, separationDistance)
-		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, positions)
-		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, directions)
-		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neigbhours)
-		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neighboursBaseIndex)
-		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neighboursCount)
+public:
+	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
+	{
+		return IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM5);
+	}
+};
+
+class FBitonicSort_sortInner : public FGlobalShader
+{
+public:
+	DECLARE_GLOBAL_SHADER(FBitonicSort_sortInner);
+	SHADER_USE_PARAMETER_STRUCT(FBitonicSort_sortInner, FGlobalShader);
+
+	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
+		SHADER_PARAMETER(int3, job_params)
+		SHADER_PARAMETER(uint, itemCount) // the number of particles
+
+		SHADER_PARAMETER_UAV(StructuredBuffer<float>, comparisonBuffer)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint>, indexBuffer)
+	END_SHADER_PARAMETER_STRUCT()
+
+public:
+	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
+	{
+		return IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM5);
+	}
+};
+
+class FBitonicSort_sortStep : public FGlobalShader
+{
+public:
+	DECLARE_GLOBAL_SHADER(FBitonicSort_sortStep);
+	SHADER_USE_PARAMETER_STRUCT(FBitonicSort_sortStep, FGlobalShader);
+
+	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
+		SHADER_PARAMETER(int3, job_params)
+		SHADER_PARAMETER(uint, itemCount) // the number of particles
+
+		SHADER_PARAMETER_UAV(StructuredBuffer<float>, comparisonBuffer)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint>, indexBuffer)
 		END_SHADER_PARAMETER_STRUCT()
 
 public:
@@ -47,11 +78,10 @@ public:
 
 void FGPUBitonicSort::sort(
 	uint32_t maxSize, 
+	uint32_t numItems,
 	FStructuredBufferRHIRef comparisionBuffer_read, 
-	FStructuredBufferRHIRef countBuffer_read, 
-	uint32_t counterReadOffset,
     FStructuredBufferRHIRef indexBuffer_write,
     FRHICommandListImmediate commands)
 {
-	RHICreateUniformBuffer()
+	
 }

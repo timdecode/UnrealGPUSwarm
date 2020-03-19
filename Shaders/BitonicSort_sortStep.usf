@@ -27,7 +27,6 @@
 //--------------------------------------------------------------------------------------
 // Structured Buffers
 //--------------------------------------------------------------------------------------
-ByteAddressBuffer counterBuffer;
 StructuredBuffer<float> comparisonBuffer;
 RWStructuredBuffer<uint> indexBuffer;
 

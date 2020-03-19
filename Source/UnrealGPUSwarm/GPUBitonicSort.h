@@ -16,10 +16,9 @@ public:
 	// Sort data on the GPU with bitonic sorting.
 	void sort(
 		uint32_t maxSize,
+		uint32_t numItems,
 		FStructuredBufferRHIRef comparisionBuffer_read,
-		FStructuredBufferRHIRef countBuffer_read,
-		uint32_t counterReadOffset,
-        FStructuredBufferRHIRef indexBuffer_write,
-        FRHICommandListImmediate commands
-		);
+		FStructuredBufferRHIRef indexBuffer_write,
+		FRHICommandListImmediate commands
+	);
 };
