@@ -19,6 +19,6 @@ public:
 		uint32_t numItems,
 		FStructuredBufferRHIRef comparisionBuffer_read,
 		FStructuredBufferRHIRef indexBuffer_write,
-		FRHICommandListImmediate commands
+		FRHICommandListImmediate& commands
 	);
 };
