@@ -20,27 +20,27 @@ RWStructuredBuffer<uint> neigbhours;
 RWStructuredBuffer<uint> neighboursBaseIndex;
 RWStructuredBuffer<uint> neighboursCount;
 
-[numthreads(256, 1, 1)]
-void CreateUnsortedList(uint3 ThreadId : SV_DispatchThreadID)
-{
-    uint particleIndex = particleIndexBuffer[ThreadId.x];
+//[numthreads(256, 1, 1)]
+//void CreateUnsortedList(uint3 ThreadId : SV_DispatchThreadID)
+//{
+//    uint particleIndex = hashedGrid.particleIndexBuffer[ThreadId.x];
 
-    float3 position = positions[particleIndex];
-    int32 cellIndex = floor(position / hashedGrid.cellSize);
+//    float3 position = positions[particleIndex];
+//    uint3 cellIndex = floor(position / hashedGrid.cellSize);
 
-    uint flatCellIndex = getFlatCellIndex(cellIndex);
+//    uint flatCellIndex = getFlatCellIndex(cellIndex);
 
-    hashedGrid.cellIndexBuffer[particleIndex] = flatCellIndex;
-}
+//    hashedGrid.cellIndexBuffer[particleIndex] = flatCellIndex;
+//}
 
-[numthreads(256, 1, 1)]
-void CreateOffsetList(uint3 ThreadId : SV_DispatchThreadID)
-{
-    uint particleIndex = particleIndexBuffer[ThreadId.x];
-    uint cellIndex = hashedGrid.cellIndexBuffer[particleIndex];
+//[numthreads(256, 1, 1)]
+//void CreateOffsetList(uint3 ThreadId : SV_DispatchThreadID)
+//{
+//    uint particleIndex = particleIndexBuffer[ThreadId.x];
+//    uint cellIndex = hashedGrid.cellIndexBuffer[particleIndex];
 
-    InterlocedMin(hashedGrid.cellOffsetBuffer[cellIndex], ThreadId.x);
-}
+//    InterlocedMin(hashedGrid.cellOffsetBuffer[cellIndex], ThreadId.x);
+//}
 
 
 

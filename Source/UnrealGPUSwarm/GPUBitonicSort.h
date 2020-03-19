@@ -8,7 +8,7 @@
 #include "GPUBitonicSort.generated.h"
 
 USTRUCT(BlueprintType)
-struct LIFEBRUSH_API FGPUBitonicSort
+struct UNREALGPUSWARM_API FGPUBitonicSort
 {
 	GENERATED_BODY()
 
@@ -18,6 +18,6 @@ public:
 		uint32_t maxSize,
 		FStructuredBufferRHIRef comparisionBuffer_read,
 		FStructuredBufferRHIRef countBuffer_read,
-		uint32_t counterReadOffset,
+		uint32_t counterReadOffset
 		);
 };
