@@ -79,9 +79,24 @@ public:
 void FGPUBitonicSort::sort(
 	uint32_t maxSize, 
 	uint32_t numItems,
-	FStructuredBufferRHIRef comparisionBuffer_read, 
+	FStructuredBufferRHIRef comparisonBuffer_read, 
     FStructuredBufferRHIRef indexBuffer_write,
-    FRHICommandListImmediate commands)
+    FRHICommandListImmediate& commands)
 {
-	
+	{
+		FBitonicSort_sort::FParameters parameters;
+
+		parameters.itemCount = numItems;
+
+		parameters.comparisonBuffer = comparisonBuffer_read;
+		parameters.indexBuffer = indexBuffer_write;
+
+		TShaderMapRef<FBitonicSort_sort> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
+		FComputeShaderUtils::Dispatch(
+			commands,
+			*computeShader,
+			parameters,
+			FIntVector(numItems, 1, 1)
+		);
+	}
 }
