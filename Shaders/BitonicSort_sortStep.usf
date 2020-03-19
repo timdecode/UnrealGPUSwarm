@@ -35,7 +35,7 @@ RWStructuredBuffer<uint> indexBuffer;
 void main(uint3 Gid	: SV_GroupID,
 	uint3 GTid : SV_GroupThreadID)
 {
-	uint NumElements = counterBuffer.Load(counterReadOffset);
+	uint NumElements = itemCount;
 
 	uint4 tgp;
 

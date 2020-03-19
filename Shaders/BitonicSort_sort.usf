@@ -19,7 +19,7 @@
 // THE SOFTWARE.
 //
 
-#include "/Engine/Private/Common.ush"
+#include "/Engine/Private/Common.usf"
 
 #include "BitonicSort_constants.usf"
 
@@ -40,7 +40,6 @@
 //--------------------------------------------------------------------------------------
 // Structured Buffers
 //--------------------------------------------------------------------------------------
-ByteAddressBuffer(counterBuffer, 0);
 StructuredBuffer<float> comparisonBuffer;
 RWStructuredBuffer<uint> indexBuffer;
 
@@ -56,7 +55,7 @@ void main(uint3 Gid	: SV_GroupID,
 	uint3 GTid : SV_GroupThreadID,
 	uint	GI : SV_GroupIndex)
 {
-	uint NumElements = counterBuffer.Load(counterReadOffset);
+    uint NumElements = itemCount;
 
 	uint GlobalBaseIndex = (Gid.x * SORT_SIZE) + GTid.x;
 	uint LocalBaseIndex = GI;

@@ -3,5 +3,5 @@
 cbuffer SortConstants
 {
     int3 job_params;
-    uint counterReadOffset;
+    uint itemCount;
 }
