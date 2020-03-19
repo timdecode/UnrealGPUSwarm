@@ -7,11 +7,17 @@
 
 #include "GPUBitonicSort.generated.h"
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class UNREALGPUSWARM_API UDrawPositionsComponent : public UActorComponent
+USTRUCT(BlueprintType)
+struct LIFEBRUSH_API FGPUBitonicSort
 {
 	GENERATED_BODY()
 
-public:	
-
+public:
+	// Sort data on the GPU with bitonic sorting.
+	void sort(
+		uint32_t maxSize,
+		FStructuredBufferRHIRef comparisionBuffer_read,
+		FStructuredBufferRHIRef countBuffer_read,
+		uint32_t counterReadOffset,
+		);
 };
