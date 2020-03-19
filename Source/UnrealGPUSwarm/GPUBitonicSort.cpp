@@ -8,7 +8,9 @@ void FGPUBitonicSort::sort(
 	uint32_t maxSize, 
 	FStructuredBufferRHIRef comparisionBuffer_read, 
 	FStructuredBufferRHIRef countBuffer_read, 
-	uint32_t counterReadOffset)
+	uint32_t counterReadOffset,
+    FStructuredBufferRHIRef indexBuffer_write,
+    FRHICommandListImmediate commands)
 {
 
 }
