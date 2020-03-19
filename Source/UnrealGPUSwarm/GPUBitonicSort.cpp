@@ -66,7 +66,7 @@ public:
 
 		SHADER_PARAMETER_UAV(StructuredBuffer<float>, comparisonBuffer)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint>, indexBuffer)
-		END_SHADER_PARAMETER_STRUCT()
+	END_SHADER_PARAMETER_STRUCT()
 
 public:
 	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
