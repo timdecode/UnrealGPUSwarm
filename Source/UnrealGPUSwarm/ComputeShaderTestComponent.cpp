@@ -293,6 +293,8 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	ENQUEUE_RENDER_COMMAND(FComputeShaderRunner)(
 	[&, totalTime, DeltaTime](FRHICommandListImmediate& RHICommands)
 	{
+		const uint32_t gridSize = gridDimensions.X * gridDimensions.Y * gridDimensions.Z;
+
 		// calculate the unsorted cell index buffer
 		{
 			RHICommands.TransitionResource(
@@ -300,9 +302,6 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 				EResourceTransitionPipeline::EGfxToCompute, 
 				_cellIndexBufferUAV
 			);
-
-			const uint32_t gridSize = gridDimensions.X * gridDimensions.Y * gridDimensions.Z;
-
 			
 			FNeighbours_createUnsortedList_CS::FParameters parameters;
 			parameters.numBoids = numBoids;
@@ -320,6 +319,22 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 				parameters,
 				FIntVector(256, 1, 1)
 			);
+		}
+
+		// sort the cell index buffer
+		{
+			FGPUBitonicSort gpuBitonicSort;
+
+			gpuBitonicSort.sort(
+				numBoids,
+				numBoids,
+				_cellIndexBufferUAV,
+				_particleIndexBufferUAV
+			);
+		}
+
+		{
+
 		}
 
 		// find our neighbours

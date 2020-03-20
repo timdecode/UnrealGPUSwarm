@@ -2,7 +2,7 @@
 
 
 uint cellOffsetBufferSize;
-StructuredBuffer<uint> particleIndexBuffer;   
+RWStructuredBuffer<uint> particleIndexBuffer;
 RWStructuredBuffer<uint> cellIndexBuffer;   
 RWStructuredBuffer<uint> cellOffsetBuffer; 
 
@@ -43,7 +43,7 @@ void createUnsortedList(uint3 ThreadId : SV_DispatchThreadID)
 }
 
 //[numthreads(256, 1, 1)]
-//void CreateOffsetList(uint3 ThreadId : SV_DispatchThreadID)
+//void createOffsetList(uint3 ThreadId : SV_DispatchThreadID)
 //{
 //    uint particleIndex = particleIndexBuffer[ThreadId.x];
 //    uint cellIndex = cellIndexBuffer[particleIndex];
