@@ -73,33 +73,88 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
 {
     int index = ThreadId.x;
 
-    float3 position = positions[index];
+    float3 position_a = positions[index];
 	
     uint baseIndex = neighboursBaseIndex[index];
     uint count = 0;
     
     const float neighbourDistanceSqrd = neighbourDistance * neighbourDistance;
 	
-    for (uint i = 0; i < numBoids; ++i)
-    {
-        if (i != index)
-        {
-            float3 otherPosition = positions[i];
-            
-            float distSqrd = distanceSqrd(position, otherPosition);
-		
-            if (distSqrd < neighbourDistanceSqrd)
-            {
-                neigbhours[baseIndex + count] = i;
-			
-                count++;
-			
-                if (count >= numNeighbours)
-                    break;
 
+    int3 cellIndex = floor(position_a / cellSize);
+
+    for(int i = -1; i <= 1; ++i)
+    {
+        for(int j = -1; j <= 1; ++j)
+        {
+            for(int k = -1; k <= 1; ++k)
+            {
+                int3 neighborIndex = cellIndex + int3(i, j, k);
+                uint flatNeighborIndex = GetFlatCellIndex(neighborIndex);
+
+                // look up the offset to the cell:
+                uint neighborIterator = cellOffsetBuffer[flatNeighborIndex];
+
+                // iterate through particles in the neighbour cell (if iterator offset is valid)
+                while(neighborIterator != 0xFFFFFFFF && neighborIterator < particleCount)
+                {
+                    uint particleIndexB = particleIndexBuffer[neighborIterator];
+
+                    if(cellIndexBuffer[particleIndexB] != flatNeighborIndex)
+                        break; // we hit the end of this neighbourhood list
+
+                    float3 position_b = positions[particleIndexB];
+
+                    float dist = distanceSqrd(position_b, position_a);
+
+                    if( dist < neighbourDistanceSqrd )
+                    {
+                        neigbhours[baseIndex + count] = particleIndexB;
+
+                        count++;
+                    }
+
+                    neighborIterator++;  // iterate...
+                }
             }
         }
     }
 	
     neighboursCount[index] = count;
 }
+
+//[numthreads(256, 1, 1)]
+//void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
+//{
+//    int index = ThreadId.x;
+
+//    float3 position = positions[index];
+	
+//    uint baseIndex = neighboursBaseIndex[index];
+//    uint count = 0;
+    
+//    const float neighbourDistanceSqrd = neighbourDistance * neighbourDistance;
+	
+//    for (uint i = 0; i < numBoids; ++i)
+//    {
+//        if (i != index)
+//        {
+//            float3 otherPosition = positions[i];
+            
+//            float distSqrd = distanceSqrd(position, otherPosition);
+		
+//            if (distSqrd < neighbourDistanceSqrd)
+//            {
+//                neigbhours[baseIndex + count] = i;
+			
+//                count++;
+			
+//                if (count >= numNeighbours)
+//                    break;
+
+//            }
+//        }
+//    }
+	
+//    neighboursCount[index] = count;
+//}
