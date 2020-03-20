@@ -130,6 +130,13 @@ public:
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neighboursBaseIndex)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neighboursCount)
 
+		SHADER_PARAMETER(float, cellSize)
+		SHADER_PARAMETER(uint32, cellOffsetBufferSize)
+
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, particleIndexBuffer)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, cellIndexBuffer)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, cellOffsetBuffer)
+
 	END_SHADER_PARAMETER_STRUCT()
 
 public:
@@ -399,6 +406,9 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			parameters.neigbhours = _neighboursBufferUAV;
 			parameters.neighboursBaseIndex = _neighboursBaseIndexUAV;
 			parameters.neighboursCount = _neighboursCountUAV;
+
+			parameters.cellOffsetBuffer = _cellOffsetBufferUAV;
+			parameters.particleIndexBuffer = _particleIndexBufferUAV;
 
 
 			TShaderMapRef<FNeighboursComputeShader> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));

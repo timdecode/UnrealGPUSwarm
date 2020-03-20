@@ -90,24 +90,24 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
             for(int k = -1; k <= 1; ++k)
             {
                 int3 neighborIndex = cellIndex + int3(i, j, k);
-                uint flatNeighborIndex = GetFlatCellIndex(neighborIndex);
+                uint flatNeighborIndex = getFlatCellIndex(neighborIndex);
 
                 // look up the offset to the cell:
                 uint neighborIterator = cellOffsetBuffer[flatNeighborIndex];
 
                 // iterate through particles in the neighbour cell (if iterator offset is valid)
-                while(neighborIterator != 0xFFFFFFFF && neighborIterator < particleCount)
+                while(neighborIterator != 0xFFFFFFFF && neighborIterator < numBoids)
                 {
                     uint particleIndexB = particleIndexBuffer[neighborIterator];
 
-                    if(cellIndexBuffer[particleIndexB] != flatNeighborIndex)
+                    if (cellIndexBuffer[particleIndexB] != flatNeighborIndex || count >= numNeighbours)
                         break; // we hit the end of this neighbourhood list
 
                     float3 position_b = positions[particleIndexB];
 
                     float dist = distanceSqrd(position_b, position_a);
 
-                    if( dist < neighbourDistanceSqrd )
+                    if( dist < neighbourDistanceSqrd)
                     {
                         neigbhours[baseIndex + count] = particleIndexB;
 
