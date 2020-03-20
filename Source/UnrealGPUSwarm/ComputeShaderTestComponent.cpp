@@ -67,6 +67,7 @@ public:
 		SHADER_PARAMETER(uint32, numBoids)
 		SHADER_PARAMETER(float, cellSize)
 		SHADER_PARAMETER(uint32, cellOffsetBufferSize)
+		SHADER_PARAMETER_UAV(StructuredBuffer<float3>, positions)
 		SHADER_PARAMETER_UAV(StructuredBuffer<uint32>, particleIndexBuffer)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, cellIndexBuffer)
 	END_SHADER_PARAMETER_STRUCT()
@@ -307,6 +308,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			parameters.numBoids = numBoids;
 			parameters.cellSize = numNeighbours;
 			parameters.cellOffsetBufferSize = gridSize;
+			parameters.positions = _positionBufferUAV;
 			parameters.particleIndexBuffer = _particleIndexBufferUAV;
 			parameters.cellIndexBuffer = _cellIndexBufferUAV;
 
