@@ -13,6 +13,8 @@
 #include "UniformBuffer.h"
 #include "RHICommandList.h"
 
+#include "GPUBitonicSort.h"
+
 
 // Some useful links
 // -----------------
@@ -356,7 +358,8 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 				numBoids,
 				numBoids,
 				_cellIndexBufferUAV,
-				_particleIndexBufferUAV
+				_particleIndexBufferUAV,
+				RHICommands
 			);
 		}
 

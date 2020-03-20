@@ -48,7 +48,7 @@ void createOffsetList(uint3 ThreadId : SV_DispatchThreadID)
     uint particleIndex = particleIndexBuffer[ThreadId.x];
     uint cellIndex = cellIndexBuffer[particleIndex];
 
-    InterlocedMin(cellOffsetBuffer[cellIndex], ThreadId.x);
+    InterlockedMin(cellOffsetBuffer[cellIndex], ThreadId.x);
 }
 
 
