@@ -19,8 +19,8 @@ public:
 	SHADER_USE_PARAMETER_STRUCT(FBitonicSort_sort, FGlobalShader);
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
-		SHADER_PARAMETER(int3, job_params)
-		SHADER_PARAMETER(uint, itemCount) // the number of particles
+		SHADER_PARAMETER(FIntVector, job_params)
+		SHADER_PARAMETER(uint32_t, itemCount) // the number of particles
 
 		SHADER_PARAMETER_UAV(StructuredBuffer<float>, comparisonBuffer)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint>, indexBuffer)
@@ -32,6 +32,12 @@ public:
 		return IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM5);
 	}
 };
+
+IMPLEMENT_GLOBAL_SHADER(FBitonicSort_sort, "/ComputeShaderPlugin/BitonicSort_sort.usf", "main", SF_Compute);
+
+
+
+
 
 class FBitonicSort_sortInner : public FGlobalShader
 {
@@ -41,7 +47,7 @@ public:
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
 		SHADER_PARAMETER(FIntVector, job_params)
-		SHADER_PARAMETER(uint, itemCount) // the number of particles
+		SHADER_PARAMETER(uint32_t, itemCount) // the number of particles
 
 		SHADER_PARAMETER_UAV(StructuredBuffer<float>, comparisonBuffer)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint>, indexBuffer)
@@ -53,6 +59,13 @@ public:
 		return IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM5);
 	}
 };
+
+IMPLEMENT_GLOBAL_SHADER(FBitonicSort_sortInner, "/ComputeShaderPlugin/BitonicSort_sortInner.usf", "main", SF_Compute);
+
+
+
+
+
 
 class FBitonicSort_sortStep : public FGlobalShader
 {
@@ -61,8 +74,8 @@ public:
 	SHADER_USE_PARAMETER_STRUCT(FBitonicSort_sortStep, FGlobalShader);
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
-		SHADER_PARAMETER(int3, job_params)
-		SHADER_PARAMETER(uint, itemCount) // the number of particles
+		SHADER_PARAMETER(FIntVector, job_params)
+		SHADER_PARAMETER(uint32_t, itemCount) // the number of particles
 
 		SHADER_PARAMETER_UAV(StructuredBuffer<float>, comparisonBuffer)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint>, indexBuffer)
@@ -75,12 +88,18 @@ public:
 	}
 };
 
+IMPLEMENT_GLOBAL_SHADER(FBitonicSort_sortStep, "/ComputeShaderPlugin/BitonicSort_sortStep.usf", "main", SF_Compute);
+
+
+
+
+
 
 void FGPUBitonicSort::sort(
-	uint32_t maxSize, 
+	uint32_t maxCount, 
 	uint32_t numItems,
-	FStructuredBufferRHIRef comparisonBuffer_read, 
-    FStructuredBufferRHIRef indexBuffer_write,
+	FUnorderedAccessViewRHIRef comparisonBuffer_read,
+	FUnorderedAccessViewRHIRef indexBuffer_write,
     FRHICommandListImmediate& commands)
 {
 	int threadCount = ((numItems - 1) >> 9) + 1;
@@ -95,13 +114,13 @@ void FGPUBitonicSort::sort(
 		parameters.comparisonBuffer = comparisonBuffer_read;
 		parameters.indexBuffer = indexBuffer_write;
 
-		unsigned int numThreadGroups = ((maxSize - 1) >> 9) + 1;
+		unsigned int numThreadGroups = ((maxCount - 1) >> 9) + 1;
 
 		//assert(numThreadGroups <= 1024);
 
 		if (numThreadGroups > 1)
 		{
-			bDone = false;
+			done = false;
 		}
 
 		TShaderMapRef<FBitonicSort_sort> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
@@ -111,16 +130,14 @@ void FGPUBitonicSort::sort(
 			parameters,
 			FIntVector(threadCount, 1, 1)
 		);
-
-		// TODO: need barrier
 	}
 
 	int presorted = 512;
-	while (!bDone)
+	while (!done)
 	{
 		// Incremental sorting:
 
-		bDone = true;
+		done = true;
 
 
 
@@ -130,7 +147,7 @@ void FGPUBitonicSort::sort(
 		if (maxCount > (uint32_t)presorted)
 		{
 			if (maxCount > (uint32_t)presorted * 2)
-				bDone = false;
+				done = false;
 
 			uint32_t pow2 = presorted;
 			while (pow2 < maxCount)
@@ -138,7 +155,7 @@ void FGPUBitonicSort::sort(
 			numThreadGroups = pow2 >> 9;
 		}
 
-		FIntVector jab_params;
+		FIntVector job_params;
 
 		// step-sort
 		uint32_t nMergeSize = presorted * 2;
@@ -146,25 +163,25 @@ void FGPUBitonicSort::sort(
 		{
 
 
-			job_params.x = nMergeSubSize;
+			job_params.X = nMergeSubSize;
 			if (nMergeSubSize == nMergeSize >> 1)
 			{
-				job_params.y = (2 * nMergeSubSize - 1);
-				job_params.z = -1;
+				job_params.Y = (2 * nMergeSubSize - 1);
+				job_params.Z = -1;
 			}
 			else
 			{
-				job_params.y = nMergeSubSize;
-				job_params.z = 1;
+				job_params.Y = nMergeSubSize;
+				job_params.Z = 1;
 			}
 
-			FBitonicSort_sortStep::FParameters sortparameters;
+			FBitonicSort_sortStep::FParameters parameters;
 
-			sortparameters.itemCount = numItems;
-			sortparameters.comparisonBuffer = comparisonBuffer_read;
-			sortparameters.indexBuffer = indexBuffer_write;
+			parameters.itemCount = numItems;
+			parameters.comparisonBuffer = comparisonBuffer_read;
+			parameters.indexBuffer = indexBuffer_write;
 
-			sortparameters.job_params = job_params;
+			parameters.job_params = job_params;
 
 			TShaderMapRef<FBitonicSort_sortStep> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
 			FComputeShaderUtils::Dispatch(
@@ -173,9 +190,6 @@ void FGPUBitonicSort::sort(
 				parameters,
 				FIntVector(numThreadGroups, 1, 1)
 			);
-
-
-			device->Barrier(&GPUBarrier::Memory(), 1, cmd);
 		}
 
 		{
@@ -198,11 +212,4 @@ void FGPUBitonicSort::sort(
 
 		presorted *= 2;
 	}
-
-	device->UnbindUAVs(0, arraysize(uavs), cmd);
-	device->UnbindResources(0, arraysize(resources), cmd);
-
-
-	device->EventEnd(cmd)
-
 }

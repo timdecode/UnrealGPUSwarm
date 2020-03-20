@@ -17,8 +17,8 @@ public:
 	void sort(
 		uint32_t maxSize,
 		uint32_t numItems,
-		FStructuredBufferRHIRef comparisionBuffer_read,
-		FStructuredBufferRHIRef indexBuffer_write,
+		FUnorderedAccessViewRHIRef comparisionBuffer_read,
+		FUnorderedAccessViewRHIRef indexBuffer_write,
 		FRHICommandListImmediate& commands
 	);
 };

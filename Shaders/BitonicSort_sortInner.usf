@@ -20,7 +20,7 @@
 // THE SOFTWARE.
 //
 
-#include "ShaderInterop_GPUSortLib.h"
+#include "/Engine/Private/Common.ush"
 
 #include "BitonicSort_constants.usf"
 
