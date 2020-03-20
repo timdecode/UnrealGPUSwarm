@@ -110,6 +110,26 @@ public:
 
 IMPLEMENT_GLOBAL_SHADER(FNeighbours_createOffsetList_CS, "/ComputeShaderPlugin/Neighbours.usf", "createOffsetList", SF_Compute);
 
+class FNeighbours_resetCellOffsetBuffer_CS : public FGlobalShader
+{
+public:
+	DECLARE_GLOBAL_SHADER(FNeighbours_resetCellOffsetBuffer_CS);
+	SHADER_USE_PARAMETER_STRUCT(FNeighbours_resetCellOffsetBuffer_CS, FGlobalShader);
+
+	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
+		SHADER_PARAMETER(uint32, cellOffsetBufferSize)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, cellOffsetBuffer)
+	END_SHADER_PARAMETER_STRUCT()
+
+public:
+	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
+	{
+		return IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM5);
+	}
+};
+
+IMPLEMENT_GLOBAL_SHADER(FNeighbours_resetCellOffsetBuffer_CS, "/ComputeShaderPlugin/Neighbours.usf", "resetCellOffsetBuffer", SF_Compute);
+
 
 
 
@@ -278,9 +298,6 @@ void UComputeShaderTestComponent::BeginPlay()
 		TResourceArray<uint32_t> resourceArray;
 		resourceArray.Init(0, numBoids);
 
-		for( int i = 0; i < numBoids; ++i )
-			resourceArray[i] = i;
-
 		FRHIResourceCreateInfo createInfo;
 		createInfo.ResourceArray = &resourceArray;
 
@@ -319,6 +336,15 @@ void UComputeShaderTestComponent::BeginPlay()
 	}
 }
 
+static FIntVector groupSize(int numElements)
+{
+	const int threadCount = 256;
+
+	int count = ((numElements - 1) / threadCount) + 1;
+
+	return FIntVector(count, 1, 1);
+}
+
 // Called every frame
 void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
@@ -341,7 +367,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			
 			FNeighbours_createUnsortedList_CS::FParameters parameters;
 			parameters.numBoids = numBoids;
-			parameters.cellSize = numNeighbours;
+			parameters.cellSize = gridCellSize;
 			parameters.cellOffsetBufferSize = gridSize;
 			parameters.positions = _positionBufferUAV;
 			parameters.particleIndexBuffer = _particleIndexBufferUAV;
@@ -353,7 +379,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 				RHICommands,
 				*computeShader,
 				parameters,
-				FIntVector(256, 1, 1)
+				groupSize(numBoids)
 			);
 		}
 
@@ -370,10 +396,26 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			);
 		}
 
+		// reset the cell offset buffer
+		{
+			FNeighbours_resetCellOffsetBuffer_CS::FParameters parameters;
+			parameters.cellOffsetBufferSize = gridSize;
+			parameters.cellOffsetBuffer = _cellOffsetBufferUAV;
+
+			TShaderMapRef<FNeighbours_resetCellOffsetBuffer_CS> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
+			FComputeShaderUtils::Dispatch(
+				RHICommands,
+				*computeShader,
+				parameters,
+				groupSize(gridSize)
+			);
+		}
+
+		// build the cell offset buffer
 		{
 			FNeighbours_createOffsetList_CS::FParameters parameters;
 			parameters.numBoids = numBoids;
-			parameters.cellSize = numNeighbours;
+			parameters.cellSize = gridCellSize;
 			parameters.cellOffsetBufferSize = gridSize;
 			parameters.particleIndexBuffer = _particleIndexBufferUAV;
 			parameters.cellIndexBuffer = _cellIndexBufferUAV;
@@ -385,7 +427,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 				RHICommands,
 				*computeShader,
 				parameters,
-				FIntVector(256, 1, 1)
+				groupSize(numBoids)
 			);
 		}
 
@@ -420,7 +462,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 				RHICommands,
 				*computeShader,
 				parameters,
-				FIntVector(256, 1, 1)
+				groupSize(numBoids)
 			);
 		}
 
@@ -454,7 +496,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 				RHICommands,
 				*computeShader,
 				parameters,
-				FIntVector(256, 1, 1)
+				groupSize(numBoids)
 			);
 
 			// read back the data

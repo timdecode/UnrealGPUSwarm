@@ -51,7 +51,11 @@ void createOffsetList(uint3 ThreadId : SV_DispatchThreadID)
     InterlockedMin(cellOffsetBuffer[cellIndex], ThreadId.x);
 }
 
-
+[numthreads(256, 1, 1)]
+void resetCellOffsetBuffer(uint3 ThreadId : SV_DispatchThreadID)
+{
+    cellOffsetBuffer[ThreadId.x] = 0x7FFFFFFF;
+}
 
 
 
