@@ -195,9 +195,11 @@ void UComputeShaderTestComponent::BeginPlay()
 		resourceArray.Init(FVector::ZeroVector, numBoids);
 
 
+		FVector origin = -FVector(gridDimensions) * gridCellSize * 0.5f;
+
 		for (FVector& position : resourceArray)
 		{
-			position = rng.GetUnitVector() * rng.GetFraction() * spawnRadius;
+			position = rng.GetUnitVector() * rng.GetFraction() * spawnRadius + origin;
 		}
 
 		FRHIResourceCreateInfo createInfo;
@@ -473,7 +475,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			parameters.neighboursBaseIndex = _neighboursBaseIndexUAV;
 			parameters.neighboursCount = _neighboursCountUAV;
 
-			parameters.cellSize = numNeighbours;
+			parameters.cellSize = gridCellSize;
 			parameters.cellOffsetBufferSize = gridSize;
 
 			parameters.cellOffsetBuffer = _cellOffsetBufferUAV;
