@@ -67,8 +67,8 @@ public:
 		SHADER_PARAMETER(uint32, numBoids)
 		SHADER_PARAMETER(float, cellSize)
 		SHADER_PARAMETER(uint32, cellOffsetBufferSize)
-		SHADER_PARAMETER_UAV(StructuredBuffer<float3>, positions)
-		SHADER_PARAMETER_UAV(StructuredBuffer<uint32>, particleIndexBuffer)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, positions)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, particleIndexBuffer)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, cellIndexBuffer)
 	END_SHADER_PARAMETER_STRUCT()
 
@@ -80,6 +80,33 @@ public:
 };
 
 IMPLEMENT_GLOBAL_SHADER(FNeighbours_createUnsortedList_CS, "/ComputeShaderPlugin/Neighbours.usf", "createUnsortedList", SF_Compute);
+
+
+
+
+class FNeighbours_createOffsetList_CS : public FGlobalShader
+{
+public:
+	DECLARE_GLOBAL_SHADER(FNeighbours_createOffsetList_CS);
+	SHADER_USE_PARAMETER_STRUCT(FNeighbours_createOffsetList_CS, FGlobalShader);
+
+	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
+		SHADER_PARAMETER(uint32, numBoids)
+		SHADER_PARAMETER(float, cellSize)
+		SHADER_PARAMETER(uint32, cellOffsetBufferSize)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, particleIndexBuffer)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, cellIndexBuffer)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, cellOffsetBuffer)
+	END_SHADER_PARAMETER_STRUCT()
+
+public:
+	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
+	{
+		return IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM5);
+	}
+};
+
+IMPLEMENT_GLOBAL_SHADER(FNeighbours_createOffsetList_CS, "/ComputeShaderPlugin/Neighbours.usf", "createOffsetList", SF_Compute);
 
 
 
@@ -334,7 +361,22 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 		}
 
 		{
+			FNeighbours_createOffsetList_CS::FParameters parameters;
+			parameters.numBoids = numBoids;
+			parameters.cellSize = numNeighbours;
+			parameters.cellOffsetBufferSize = gridSize;
+			parameters.particleIndexBuffer = _particleIndexBufferUAV;
+			parameters.cellIndexBuffer = _cellIndexBufferUAV;
+			parameters.cellOffsetBuffer = _cellOffsetBufferUAV;
 
+
+			TShaderMapRef<FNeighbours_createOffsetList_CS> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
+			FComputeShaderUtils::Dispatch(
+				RHICommands,
+				*computeShader,
+				parameters,
+				FIntVector(256, 1, 1)
+			);
 		}
 
 		// find our neighbours

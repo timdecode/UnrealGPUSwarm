@@ -42,14 +42,14 @@ void createUnsortedList(uint3 ThreadId : SV_DispatchThreadID)
    cellIndexBuffer[particleIndex] = flatCellIndex;
 }
 
-//[numthreads(256, 1, 1)]
-//void createOffsetList(uint3 ThreadId : SV_DispatchThreadID)
-//{
-//    uint particleIndex = particleIndexBuffer[ThreadId.x];
-//    uint cellIndex = cellIndexBuffer[particleIndex];
+[numthreads(256, 1, 1)]
+void createOffsetList(uint3 ThreadId : SV_DispatchThreadID)
+{
+    uint particleIndex = particleIndexBuffer[ThreadId.x];
+    uint cellIndex = cellIndexBuffer[particleIndex];
 
-//    InterlocedMin(cellOffsetBuffer[cellIndex], ThreadId.x);
-//}
+    InterlocedMin(cellOffsetBuffer[cellIndex], ThreadId.x);
+}
 
 
 
