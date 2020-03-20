@@ -381,6 +381,12 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 				parameters,
 				groupSize(numBoids)
 			);
+
+			RHICommands.TransitionResource(
+				EResourceTransitionAccess::ERWBarrier,
+				EResourceTransitionPipeline::EGfxToCompute,
+				_cellIndexBufferUAV
+			);
 		}
 
 		// sort the cell index buffer
@@ -393,6 +399,12 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 				_cellIndexBufferUAV,
 				_particleIndexBufferUAV,
 				RHICommands
+			);
+
+			RHICommands.TransitionResource(
+				EResourceTransitionAccess::ERWBarrier,
+				EResourceTransitionPipeline::EGfxToCompute,
+				_particleIndexBufferUAV
 			);
 		}
 
@@ -408,6 +420,12 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 				*computeShader,
 				parameters,
 				groupSize(gridSize)
+			);
+
+			RHICommands.TransitionResource(
+				EResourceTransitionAccess::ERWBarrier,
+				EResourceTransitionPipeline::EGfxToCompute,
+				_cellOffsetBufferUAV
 			);
 		}
 
@@ -428,6 +446,12 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 				*computeShader,
 				parameters,
 				groupSize(numBoids)
+			);
+
+			RHICommands.TransitionResource(
+				EResourceTransitionAccess::ERWBarrier,
+				EResourceTransitionPipeline::EGfxToCompute,
+				_cellOffsetBufferUAV
 			);
 		}
 
