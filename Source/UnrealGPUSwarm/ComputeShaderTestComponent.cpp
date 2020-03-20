@@ -69,6 +69,8 @@ public:
 		SHADER_PARAMETER(uint32, numBoids)
 		SHADER_PARAMETER(float, cellSize)
 		SHADER_PARAMETER(uint32, cellOffsetBufferSize)
+		SHADER_PARAMETER(FVector, gridOrigin)
+
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, positions)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, particleIndexBuffer)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, cellIndexBuffer)
@@ -152,6 +154,7 @@ public:
 
 		SHADER_PARAMETER(float, cellSize)
 		SHADER_PARAMETER(uint32, cellOffsetBufferSize)
+		SHADER_PARAMETER(FVector, gridOrigin)
 
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, particleIndexBuffer)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, cellIndexBuffer)
@@ -195,11 +198,10 @@ void UComputeShaderTestComponent::BeginPlay()
 		resourceArray.Init(FVector::ZeroVector, numBoids);
 
 
-		FVector origin = -FVector(gridDimensions) * gridCellSize * 0.5f;
 
 		for (FVector& position : resourceArray)
 		{
-			position = rng.GetUnitVector() * rng.GetFraction() * spawnRadius + origin;
+			position = rng.GetUnitVector() * rng.GetFraction() * spawnRadius;
 		}
 
 		FRHIResourceCreateInfo createInfo;
@@ -358,6 +360,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	[&, totalTime, DeltaTime](FRHICommandListImmediate& RHICommands)
 	{
 		const uint32_t gridSize = gridDimensions.X * gridDimensions.Y * gridDimensions.Z;
+		const FVector gridOrigin = -FVector(gridDimensions) * gridCellSize * 0.5f;
 
 		// calculate the unsorted cell index buffer
 		{
@@ -371,6 +374,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			parameters.numBoids = numBoids;
 			parameters.cellSize = gridCellSize;
 			parameters.cellOffsetBufferSize = gridSize;
+			parameters.gridOrigin = gridOrigin;
 			parameters.positions = _positionBufferUAV;
 			parameters.particleIndexBuffer = _particleIndexBufferUAV;
 			parameters.cellIndexBuffer = _cellIndexBufferUAV;
@@ -477,6 +481,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 			parameters.cellSize = gridCellSize;
 			parameters.cellOffsetBufferSize = gridSize;
+			parameters.gridOrigin = gridOrigin;
 
 			parameters.cellOffsetBuffer = _cellOffsetBufferUAV;
 			parameters.cellIndexBuffer = _cellIndexBufferUAV;
