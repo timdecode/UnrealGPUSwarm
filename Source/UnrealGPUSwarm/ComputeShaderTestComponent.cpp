@@ -407,7 +407,11 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			parameters.neighboursBaseIndex = _neighboursBaseIndexUAV;
 			parameters.neighboursCount = _neighboursCountUAV;
 
+			parameters.cellSize = numNeighbours;
+			parameters.cellOffsetBufferSize = gridSize;
+
 			parameters.cellOffsetBuffer = _cellOffsetBufferUAV;
+			parameters.cellIndexBuffer = _cellIndexBufferUAV;
 			parameters.particleIndexBuffer = _particleIndexBufferUAV;
 
 
