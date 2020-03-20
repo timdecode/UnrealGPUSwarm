@@ -22,11 +22,12 @@
 
 #include "/Engine/Private/Common.ush"
 
-#include "BitonicSort_constants.usf"
-
 //--------------------------------------------------------------------------------------
 // Structured Buffers
 //--------------------------------------------------------------------------------------
+int3 job_params;
+uint itemCount;
+
 StructuredBuffer<float> comparisonBuffer;
 RWStructuredBuffer<uint> indexBuffer;
 

@@ -1,7 +1,0 @@
-#include "/Engine/Private/Common.ush"
-
-cbuffer SortConstants
-{
-    int3 job_params;
-    uint itemCount;
-}

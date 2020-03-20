@@ -21,7 +21,8 @@
 
 #include "/Engine/Private/Common.ush"
 
-#include "BitonicSort_constants.usf"
+int3 job_params;
+uint itemCount;
 
 RWByteAddressBuffer indirectBuffers;
 

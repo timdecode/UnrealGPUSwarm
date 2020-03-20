@@ -19,9 +19,7 @@
 // THE SOFTWARE.
 //
 
-#include "/Engine/Private/Common.usf"
-
-#include "BitonicSort_constants.usf"
+#include "/Engine/Private/Common.ush"
 
 #define SORT_SIZE 512
 
@@ -40,6 +38,9 @@
 //--------------------------------------------------------------------------------------
 // Structured Buffers
 //--------------------------------------------------------------------------------------
+int3 job_params;
+uint itemCount;
+
 StructuredBuffer<float> comparisonBuffer;
 RWStructuredBuffer<uint> indexBuffer;
 
