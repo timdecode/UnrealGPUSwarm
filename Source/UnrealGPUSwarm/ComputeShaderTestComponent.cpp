@@ -55,6 +55,35 @@ IMPLEMENT_GLOBAL_SHADER(FBoidsComputeShader, "/ComputeShaderPlugin/Boid.usf", "M
 
 
 
+
+
+class FNeighbours_createUnsortedList_CS : public FGlobalShader
+{
+public:
+	DECLARE_GLOBAL_SHADER(FNeighbours_createUnsortedList_CS);
+	SHADER_USE_PARAMETER_STRUCT(FNeighbours_createUnsortedList_CS, FGlobalShader);
+
+	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
+		SHADER_PARAMETER(uint32, numBoids)
+		SHADER_PARAMETER(float, cellSize)
+		SHADER_PARAMETER(uint32, cellOffsetBufferSize)
+		SHADER_PARAMETER_UAV(StructuredBuffer<uint32>, particleIndexBuffer)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, cellIndexBuffer)
+	END_SHADER_PARAMETER_STRUCT()
+
+public:
+	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
+	{
+		return IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM5);
+	}
+};
+
+IMPLEMENT_GLOBAL_SHADER(FNeighbours_createUnsortedList_CS, "/ComputeShaderPlugin/Neighbours.usf", "createUnsortedList", SF_Compute);
+
+
+
+
+
 class FNeighboursComputeShader : public FGlobalShader
 {
 public:
@@ -65,10 +94,12 @@ public:
 		SHADER_PARAMETER(uint32, numBoids)
 		SHADER_PARAMETER(uint32, numNeighbours)
 		SHADER_PARAMETER(float, neighbourDistance)
+
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, positions)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neigbhours)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neighboursBaseIndex)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neighboursCount)
+
 	END_SHADER_PARAMETER_STRUCT()
 
 public:
@@ -188,6 +219,56 @@ void UComputeShaderTestComponent::BeginPlay()
 		_neighboursCountUAV = RHICreateUnorderedAccessView(_neighboursCount, false, false);
 	}
 
+	// particleIndexBuffer
+	{
+		TResourceArray<uint32_t> resourceArray;
+		resourceArray.Init(0, numBoids);
+
+		for( int i = 0; i < numBoids; ++i )
+			resourceArray[i] = i;
+
+		FRHIResourceCreateInfo createInfo;
+		createInfo.ResourceArray = &resourceArray;
+
+		const size_t size = sizeof(uint32_t);
+
+		_particleIndexBuffer = RHICreateStructuredBuffer(size, size * numBoids, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
+		_particleIndexBufferUAV = RHICreateUnorderedAccessView(_particleIndexBuffer, false, false);
+	}
+
+	// cellIndexBuffer
+	{
+		TResourceArray<uint32_t> resourceArray;
+		resourceArray.Init(0, numBoids);
+
+		for( int i = 0; i < numBoids; ++i )
+			resourceArray[i] = i;
+
+		FRHIResourceCreateInfo createInfo;
+		createInfo.ResourceArray = &resourceArray;
+
+		const size_t size = sizeof(uint32_t);
+
+		_cellIndexBuffer = RHICreateStructuredBuffer(size, size * numBoids, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
+		_cellIndexBufferUAV = RHICreateUnorderedAccessView(_cellIndexBuffer, false, false);
+	}
+	
+	// cellOffsetBuffer
+	{
+		const size_t size = sizeof(uint32_t);
+		const size_t gridSize = gridDimensions.X * gridDimensions.Y * gridDimensions.Z;
+
+		TResourceArray<uint32_t> resourceArray;
+		resourceArray.Init(0, gridSize);
+
+		FRHIResourceCreateInfo createInfo;
+		createInfo.ResourceArray = &resourceArray;
+
+		_cellOffsetBuffer = RHICreateStructuredBuffer(size, gridSize * size, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
+		_cellOffsetBufferUAV = RHICreateUnorderedAccessView(_cellOffsetBuffer, false, false);
+	}
+
+
 	if (outputPositions.Num() != numBoids)
 	{
 		const FVector zero(0.0f);
@@ -211,6 +292,34 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	ENQUEUE_RENDER_COMMAND(FComputeShaderRunner)(
 	[&, totalTime, DeltaTime](FRHICommandListImmediate& RHICommands)
 	{
+		// calculate the unsorted cell index buffer
+		{
+			RHICommands.TransitionResource(
+				EResourceTransitionAccess::ERWBarrier,
+				EResourceTransitionPipeline::EGfxToCompute, 
+				_cellIndexBufferUAV
+			);
+
+			const uint32_t gridSize = gridDimensions.X * gridDimensions.Y * gridDimensions.Z;
+
+			
+			FNeighbours_createUnsortedList_CS::FParameters parameters;
+			parameters.numBoids = numBoids;
+			parameters.cellSize = numNeighbours;
+			parameters.cellOffsetBufferSize = gridSize;
+			parameters.particleIndexBuffer = _particleIndexBufferUAV;
+			parameters.cellIndexBuffer = _cellIndexBufferUAV;
+
+
+			TShaderMapRef<FNeighbours_createUnsortedList_CS> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
+			FComputeShaderUtils::Dispatch(
+				RHICommands,
+				*computeShader,
+				parameters,
+				FIntVector(256, 1, 1)
+			);
+		}
+
 		// find our neighbours
 		{
 			RHICommands.TransitionResource(

@@ -1,14 +1,13 @@
 #include "/Engine/Private/Common.ush"
 
 
-struct DynamicHashedGrid
-{
-    RWStructuredBuffer<uint> particleIndexBuffer;   
-    RWStructuredBuffer<uint> cellIndexBuffer;   
-    RWStructuredBuffer<uint> cellOffsetBuffer; 
+uint cellOffsetBufferSize;
+StructuredBuffer<uint> particleIndexBuffer;   
+RWStructuredBuffer<uint> cellIndexBuffer;   
+RWStructuredBuffer<uint> cellOffsetBuffer; 
 
-    float cellSize;
-} hashedGrid;
+float cellSize;
+
 
 uint numBoids;
 uint numNeighbours;
@@ -20,26 +19,36 @@ RWStructuredBuffer<uint> neigbhours;
 RWStructuredBuffer<uint> neighboursBaseIndex;
 RWStructuredBuffer<uint> neighboursCount;
 
-//[numthreads(256, 1, 1)]
-//void CreateUnsortedList(uint3 ThreadId : SV_DispatchThreadID)
-//{
-//    uint particleIndex = hashedGrid.particleIndexBuffer[ThreadId.x];
+uint getFlatCellIndex(uint3 cellIndex)
+{
+    const uint p1 = 73856093; // some large primes
+    const uint p2 = 19349663;
+    const uint p3 = 83492791;
+    int n = p1 * cellIndex.x ^ p2*cellIndex.y ^ p3*cellIndex.z;
+    n %= cellOffsetBufferSize;
+    return n;
+}
 
-//    float3 position = positions[particleIndex];
-//    uint3 cellIndex = floor(position / hashedGrid.cellSize);
+[numthreads(256, 1, 1)]
+void createUnsortedList(uint3 ThreadId : SV_DispatchThreadID)
+{
+   uint particleIndex = particleIndexBuffer[ThreadId.x];
 
-//    uint flatCellIndex = getFlatCellIndex(cellIndex);
+   float3 position = positions[particleIndex];
+   uint3 cellIndex = floor(position / cellSize);
 
-//    hashedGrid.cellIndexBuffer[particleIndex] = flatCellIndex;
-//}
+   uint flatCellIndex = getFlatCellIndex(cellIndex);
+
+   cellIndexBuffer[particleIndex] = flatCellIndex;
+}
 
 //[numthreads(256, 1, 1)]
 //void CreateOffsetList(uint3 ThreadId : SV_DispatchThreadID)
 //{
 //    uint particleIndex = particleIndexBuffer[ThreadId.x];
-//    uint cellIndex = hashedGrid.cellIndexBuffer[particleIndex];
+//    uint cellIndex = cellIndexBuffer[particleIndex];
 
-//    InterlocedMin(hashedGrid.cellOffsetBuffer[cellIndex], ThreadId.x);
+//    InterlocedMin(cellOffsetBuffer[cellIndex], ThreadId.x);
 //}
 
 

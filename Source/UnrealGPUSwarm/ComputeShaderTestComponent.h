@@ -60,11 +60,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float spawnRadius = 600.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FIntVector gridDimensions = FIntVector(256, 256, 256);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float gridCellSize = 5.0;
+
 	TArray<FVector> outputPositions;
 
 	TArray<FVector> outputDirections;
 
 protected:
+	
+
 	// GPU side
 	FStructuredBufferRHIRef _positionBuffer;
 	FUnorderedAccessViewRHIRef _positionBufferUAV;     // we need a UAV for writing
@@ -81,4 +89,15 @@ protected:
 
 	FStructuredBufferRHIRef _neighboursCount;
 	FUnorderedAccessViewRHIRef _neighboursCountUAV;
+
+
+	// Hashed grid data structures
+	FStructuredBufferRHIRef _particleIndexBuffer;
+	FUnorderedAccessViewRHIRef _particleIndexBufferUAV;
+
+	FStructuredBufferRHIRef _cellIndexBuffer;
+	FUnorderedAccessViewRHIRef _cellIndexBufferUAV;
+
+	FStructuredBufferRHIRef _cellOffsetBuffer;
+	FUnorderedAccessViewRHIRef _cellOffsetBufferUAV;
 };
