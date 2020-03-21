@@ -355,9 +355,10 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	float totalTime = GetOwner()->GetWorld()->TimeSeconds;
+	const float dt = FMath::Min(1 / 60.0f, DeltaTime);
 
 	ENQUEUE_RENDER_COMMAND(FComputeShaderRunner)(
-	[&, totalTime, DeltaTime](FRHICommandListImmediate& RHICommands)
+	[&, totalTime, dt](FRHICommandListImmediate& RHICommands)
 	{
 		const uint32_t gridSize = gridDimensions.X * gridDimensions.Y * gridDimensions.Z;
 
@@ -503,7 +504,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			);
 
 			FBoidsComputeShader::FParameters parameters;
-			parameters.dt = DeltaTime;
+			parameters.dt = dt;
 			parameters.totalTime = totalTime;
 			parameters.separationDistance = separationDistance;
 			parameters.boidSpeed = boidSpeed;
