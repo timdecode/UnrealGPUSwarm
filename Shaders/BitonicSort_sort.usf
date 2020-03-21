@@ -41,7 +41,7 @@
 int3 job_params;
 uint itemCount;
 
-StructuredBuffer<uint> comparisonBuffer;
+RWStructuredBuffer<uint> comparisonBuffer;
 RWStructuredBuffer<uint> indexBuffer;
 
 //--------------------------------------------------------------------------------------

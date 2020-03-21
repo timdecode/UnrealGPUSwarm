@@ -22,7 +22,7 @@ public:
 		SHADER_PARAMETER(FIntVector, job_params)
 		SHADER_PARAMETER(uint32_t, itemCount) // the number of particles
 
-		SHADER_PARAMETER_UAV(StructuredBuffer<uint>, comparisonBuffer)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint>, comparisonBuffer)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint>, indexBuffer)
 	END_SHADER_PARAMETER_STRUCT()
 
@@ -49,7 +49,7 @@ public:
 		SHADER_PARAMETER(FIntVector, job_params)
 		SHADER_PARAMETER(uint32_t, itemCount) // the number of particles
 
-		SHADER_PARAMETER_UAV(StructuredBuffer<uint>, comparisonBuffer)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint>, comparisonBuffer)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint>, indexBuffer)
 	END_SHADER_PARAMETER_STRUCT()
 
@@ -178,10 +178,11 @@ void FGPUBitonicSort::sort(
 			FBitonicSort_sortStep::FParameters parameters;
 
 			parameters.itemCount = numItems;
+			parameters.job_params = job_params;
+
 			parameters.comparisonBuffer = comparisonBuffer_read;
 			parameters.indexBuffer = indexBuffer_write;
 
-			parameters.job_params = job_params;
 
 			TShaderMapRef<FBitonicSort_sortStep> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
 			FComputeShaderUtils::Dispatch(
