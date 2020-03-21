@@ -19,7 +19,7 @@ RWStructuredBuffer<uint> neigbhours;
 RWStructuredBuffer<uint> neighboursBaseIndex;
 RWStructuredBuffer<uint> neighboursCount;
 
-uint getFlatCellIndex(uint3 cellIndex)
+uint getFlatCellIndex(int3 cellIndex)
 {
     const uint p1 = 73856093; // some large primes
     const uint p2 = 19349663;
@@ -35,7 +35,7 @@ void createUnsortedList(uint3 ThreadId : SV_DispatchThreadID)
    uint particleIndex = particleIndexBuffer[ThreadId.x];
 
    float3 position = positions[particleIndex] - gridOrigin;
-   uint3 cellIndex = floor(position / cellSize);
+   int3 cellIndex = floor(position / cellSize);
 
    uint flatCellIndex = getFlatCellIndex(cellIndex);
 
