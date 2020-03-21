@@ -41,8 +41,8 @@ public:
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, positions)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, directions)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neigbhours)
-		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neighboursBaseIndex)
-		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neighboursCount)
+		SHADER_PARAMETER_UAV(StructuredBuffer<uint32>, neighboursBaseIndex)
+		SHADER_PARAMETER_UAV(StructuredBuffer<uint32>, neighboursCount)
 	END_SHADER_PARAMETER_STRUCT()
 
 public:
@@ -132,6 +132,25 @@ public:
 
 IMPLEMENT_GLOBAL_SHADER(FNeighbours_resetCellOffsetBuffer_CS, "/ComputeShaderPlugin/Neighbours.usf", "resetCellOffsetBuffer", SF_Compute);
 
+class FNeighbours_resetParticleIndexBuffer_CS : public FGlobalShader
+{
+public:
+	DECLARE_GLOBAL_SHADER(FNeighbours_resetParticleIndexBuffer_CS);
+	SHADER_USE_PARAMETER_STRUCT(FNeighbours_resetParticleIndexBuffer_CS, FGlobalShader);
+
+	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
+		SHADER_PARAMETER(uint32, numBoids)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, particleIndexBuffer)
+	END_SHADER_PARAMETER_STRUCT()
+
+public:
+	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
+	{
+		return IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM5);
+	}
+};
+
+IMPLEMENT_GLOBAL_SHADER(FNeighbours_resetParticleIndexBuffer_CS, "/ComputeShaderPlugin/Neighbours.usf", "resetParticleIndexBuffer", SF_Compute);
 
 
 
@@ -355,25 +374,36 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	float totalTime = GetOwner()->GetWorld()->TimeSeconds;
-	const float dt = FMath::Min(1 / 60.0f, DeltaTime);
+	const float dt = FMath::Min(1.0f / 60.0f, DeltaTime);
 
 	ENQUEUE_RENDER_COMMAND(FComputeShaderRunner)(
 	[&, totalTime, dt](FRHICommandListImmediate& RHICommands)
 	{
-		const uint32_t gridSize = gridDimensions.X * gridDimensions.Y * gridDimensions.Z;
+		const uint32_t cellOffsetBufferSize = gridDimensions.X * gridDimensions.Y * gridDimensions.Z;
+
+		// reset the particle index buffer
+		{
+			FNeighbours_resetParticleIndexBuffer_CS::FParameters parameters;
+			parameters.numBoids = numBoids;
+			parameters.particleIndexBuffer = _particleIndexBufferUAV;
+
+			TShaderMapRef<FNeighbours_resetParticleIndexBuffer_CS> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
+			FComputeShaderUtils::Dispatch(
+				RHICommands,
+				*computeShader,
+				parameters,
+				groupSize(numBoids)
+			);
+		}
 
 		// calculate the unsorted cell index buffer
 		{
-			RHICommands.TransitionResource(
-				EResourceTransitionAccess::ERWBarrier,
-				EResourceTransitionPipeline::EGfxToCompute, 
-				_cellIndexBufferUAV
-			);
+
 			
 			FNeighbours_createUnsortedList_CS::FParameters parameters;
 			parameters.numBoids = numBoids;
 			parameters.cellSize = gridCellSize;
-			parameters.cellOffsetBufferSize = gridSize;
+			parameters.cellOffsetBufferSize = cellOffsetBufferSize;
 			parameters.positions = _positionBufferUAV;
 			parameters.particleIndexBuffer = _particleIndexBufferUAV;
 			parameters.cellIndexBuffer = _cellIndexBufferUAV;
@@ -387,11 +417,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 				groupSize(numBoids)
 			);
 
-			RHICommands.TransitionResource(
-				EResourceTransitionAccess::ERWBarrier,
-				EResourceTransitionPipeline::EGfxToCompute,
-				_cellIndexBufferUAV
-			);
+
 		}
 
 		// sort the cell index buffer
@@ -416,7 +442,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 		// reset the cell offset buffer
 		{
 			FNeighbours_resetCellOffsetBuffer_CS::FParameters parameters;
-			parameters.cellOffsetBufferSize = gridSize;
+			parameters.cellOffsetBufferSize = cellOffsetBufferSize;
 			parameters.cellOffsetBuffer = _cellOffsetBufferUAV;
 
 			TShaderMapRef<FNeighbours_resetCellOffsetBuffer_CS> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
@@ -424,14 +450,9 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 				RHICommands,
 				*computeShader,
 				parameters,
-				groupSize(gridSize)
+				groupSize(cellOffsetBufferSize)
 			);
 
-			RHICommands.TransitionResource(
-				EResourceTransitionAccess::ERWBarrier,
-				EResourceTransitionPipeline::EGfxToCompute,
-				_cellOffsetBufferUAV
-			);
 		}
 
 		// build the cell offset buffer
@@ -439,7 +460,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			FNeighbours_createOffsetList_CS::FParameters parameters;
 			parameters.numBoids = numBoids;
 			parameters.cellSize = gridCellSize;
-			parameters.cellOffsetBufferSize = gridSize;
+			parameters.cellOffsetBufferSize = cellOffsetBufferSize;
 			parameters.particleIndexBuffer = _particleIndexBufferUAV;
 			parameters.cellIndexBuffer = _cellIndexBufferUAV;
 			parameters.cellOffsetBuffer = _cellOffsetBufferUAV;
@@ -453,20 +474,12 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 				groupSize(numBoids)
 			);
 
-			RHICommands.TransitionResource(
-				EResourceTransitionAccess::ERWBarrier,
-				EResourceTransitionPipeline::EGfxToCompute,
-				_cellOffsetBufferUAV
-			);
+
 		}
 
 		// find our neighbours
 		{
-			RHICommands.TransitionResource(
-				EResourceTransitionAccess::ERWBarrier,
-				EResourceTransitionPipeline::EGfxToCompute, 
-				_positionBufferUAV
-			);
+
 			
 			FNeighboursComputeShader::FParameters parameters;
 			parameters.numBoids = numBoids;
@@ -479,7 +492,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			parameters.neighboursCount = _neighboursCountUAV;
 
 			parameters.cellSize = gridCellSize;
-			parameters.cellOffsetBufferSize = gridSize;
+			parameters.cellOffsetBufferSize = cellOffsetBufferSize;
 
 			parameters.cellOffsetBuffer = _cellOffsetBufferUAV;
 			parameters.cellIndexBuffer = _cellIndexBufferUAV;
@@ -497,11 +510,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 		// execute the main compute shader
 		{
-			RHICommands.TransitionResource(
-				EResourceTransitionAccess::ERWBarrier,
-				EResourceTransitionPipeline::EGfxToCompute,
-				_positionBufferUAV
-			);
+
 
 			FBoidsComputeShader::FParameters parameters;
 			parameters.dt = dt;
