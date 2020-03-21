@@ -360,7 +360,6 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	[&, totalTime, DeltaTime](FRHICommandListImmediate& RHICommands)
 	{
 		const uint32_t gridSize = gridDimensions.X * gridDimensions.Y * gridDimensions.Z;
-		const FVector gridOrigin = FVector::ZeroVector;// -FVector(gridDimensions) * gridCellSize * 0.5f;
 
 		// calculate the unsorted cell index buffer
 		{
@@ -374,7 +373,6 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			parameters.numBoids = numBoids;
 			parameters.cellSize = gridCellSize;
 			parameters.cellOffsetBufferSize = gridSize;
-			parameters.gridOrigin = gridOrigin;
 			parameters.positions = _positionBufferUAV;
 			parameters.particleIndexBuffer = _particleIndexBufferUAV;
 			parameters.cellIndexBuffer = _cellIndexBufferUAV;
@@ -481,7 +479,6 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 			parameters.cellSize = gridCellSize;
 			parameters.cellOffsetBufferSize = gridSize;
-			parameters.gridOrigin = gridOrigin;
 
 			parameters.cellOffsetBuffer = _cellOffsetBufferUAV;
 			parameters.cellIndexBuffer = _cellIndexBufferUAV;

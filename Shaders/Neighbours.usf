@@ -1,6 +1,5 @@
 #include "/Engine/Private/Common.ush"
 
-float3 gridOrigin;
 uint cellOffsetBufferSize;
 RWStructuredBuffer<uint> particleIndexBuffer;
 RWStructuredBuffer<uint> cellIndexBuffer;   
@@ -34,7 +33,7 @@ void createUnsortedList(uint3 ThreadId : SV_DispatchThreadID)
 {
    uint particleIndex = particleIndexBuffer[ThreadId.x];
 
-   float3 position = positions[particleIndex] - gridOrigin;
+   float3 position = positions[particleIndex];
    int3 cellIndex = floor(position / cellSize);
 
    uint flatCellIndex = getFlatCellIndex(cellIndex);
@@ -77,7 +76,7 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
 {
     int index = ThreadId.x;
 
-    float3 position_a = positions[index] - gridOrigin;
+    float3 position_a = positions[index];
 	
     uint baseIndex = neighboursBaseIndex[index];
     uint count = 0;
@@ -107,7 +106,7 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
                     if (cellIndexBuffer[particleIndexB] != flatNeighborIndex || count >= numNeighbours)
                         break; // we hit the end of this neighbourhood list
 
-                    float3 position_b = positions[particleIndexB] - gridOrigin;
+                    float3 position_b = positions[particleIndexB];
 
                     float dist = distanceSqrd(position_b, position_a);
 
