@@ -113,7 +113,7 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
 
                     float dist = distanceSqrd(position_b, position_a);
 
-                    if( dist < neighbourDistanceSqrd)
+                    if( dist < neighbourDistanceSqrd && particleIndexB != index)
                     {
                         neigbhours[baseIndex + count] = particleIndexB;
 
