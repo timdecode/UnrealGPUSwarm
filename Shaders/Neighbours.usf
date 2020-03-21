@@ -1,5 +1,8 @@
 #include "/Engine/Private/Common.ush"
 
+// This code is inspired by this blog post on dynamic hashed grids for scalable fluid simulations:
+// https://wickedengine.net/2018/05/21/scalabe-gpu-fluid-simulation/
+
 uint cellOffsetBufferSize;
 RWStructuredBuffer<uint> particleIndexBuffer;
 RWStructuredBuffer<uint> cellIndexBuffer;   
