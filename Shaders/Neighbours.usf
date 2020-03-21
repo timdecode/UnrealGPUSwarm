@@ -9,7 +9,7 @@ RWStructuredBuffer<uint> cellIndexBuffer;
 RWStructuredBuffer<uint> cellOffsetBuffer; 
 
 float cellSize;
-
+static const float cellSizeReciprocal = 1.0f / 20.0f;
 
 uint numBoids;
 uint numNeighbours;
@@ -21,33 +21,76 @@ RWStructuredBuffer<uint> neigbhours;
 RWStructuredBuffer<uint> neighboursBaseIndex;
 RWStructuredBuffer<uint> neighboursCount;
 
+float timMod(float x, float y)
+{
+    return x - y * floor(x / y);
+}
+
 uint getFlatCellIndex(int3 cellIndex)
 {
+
     const uint p1 = 73856093; // some large primes
     const uint p2 = 19349663;
     const uint p3 = 83492791;
-    int n = p1 * cellIndex.x ^ p2*cellIndex.y ^ p3*cellIndex.z;
-    n %= cellOffsetBufferSize;
+    //int n = p1 * cellIndex.x ^ p2*cellIndex.y ^ p3*cellIndex.z;
+    int n = cellIndex.x + cellIndex.y * 64 + cellIndex.z * 64 * 64;
+    
+    n = timMod(n, cellOffsetBufferSize);
+
     return n;
+}
+
+int3 positionToCellIndex(float3 position)
+{
+    //int3 index;
+    
+    //position *= cellSizeReciprocal;
+    
+    //index.x = position.x < 0.0f ? position.x - 1 : position.x;
+    //index.y = position.y < 0.0f ? position.y - 1 : position.y;
+    //index.z = position.z < 0.0f ? position.z - 1 : position.z;
+    
+    //return index;
+    return floor(position * cellSizeReciprocal);
 }
 
 [numthreads(256, 1, 1)]
 void createUnsortedList(uint3 ThreadId : SV_DispatchThreadID)
+{  
+    if (ThreadId.x >= numBoids)
+        return;
+    
+    uint particleIndex = particleIndexBuffer[ThreadId.x];
+
+    float3 position = positions[particleIndex];
+    int3 cellIndex = positionToCellIndex(position);
+
+    uint flatCellIndex = getFlatCellIndex(cellIndex);
+
+    cellIndexBuffer[particleIndex] = flatCellIndex;
+}
+
+[numthreads(256, 1, 1)]
+void resetParticleIndexBuffer(uint3 ThreadId : SV_DispatchThreadID)
 {
-   uint particleIndex = particleIndexBuffer[ThreadId.x];
+    if (ThreadId.x >= numBoids)
+        return;
+    
+    uint particleIndex = particleIndexBuffer[ThreadId.x];
 
-   float3 position = positions[particleIndex];
-   int3 cellIndex = floor(position / cellSize);
-
-   uint flatCellIndex = getFlatCellIndex(cellIndex);
-
-   cellIndexBuffer[particleIndex] = flatCellIndex;
+    particleIndexBuffer[particleIndex] = particleIndex;
 }
 
 [numthreads(256, 1, 1)]
 void createOffsetList(uint3 ThreadId : SV_DispatchThreadID)
 {
+    if (ThreadId.x >= numBoids)
+        return;
+    
+  
     uint particleIndex = particleIndexBuffer[ThreadId.x];
+   
+
     uint cellIndex = cellIndexBuffer[particleIndex];
 
     InterlockedMin(cellOffsetBuffer[cellIndex], ThreadId.x);
@@ -56,6 +99,9 @@ void createOffsetList(uint3 ThreadId : SV_DispatchThreadID)
 [numthreads(256, 1, 1)]
 void resetCellOffsetBuffer(uint3 ThreadId : SV_DispatchThreadID)
 {
+    if (ThreadId.x >= cellOffsetBufferSize)
+        return;
+    
     cellOffsetBuffer[ThreadId.x] = 0xFFFFFFFF;
 }
 
@@ -77,6 +123,10 @@ float3 safeNormal(float3 vec)
 [numthreads(256, 1, 1)]
 void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
 {
+    if (ThreadId.x >= numBoids)
+        return;
+    
+    
     int index = ThreadId.x;
 
     float3 position_a = positions[index];
@@ -87,7 +137,7 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
     const float neighbourDistanceSqrd = neighbourDistance * neighbourDistance;
 	
 
-    int3 cellIndex = floor(position_a / cellSize);
+    int3 cellIndex = positionToCellIndex(position_a);
 
     for(int i = -1; i <= 1; ++i)
     {
