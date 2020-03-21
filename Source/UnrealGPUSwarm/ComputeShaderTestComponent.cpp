@@ -360,7 +360,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	[&, totalTime, DeltaTime](FRHICommandListImmediate& RHICommands)
 	{
 		const uint32_t gridSize = gridDimensions.X * gridDimensions.Y * gridDimensions.Z;
-		const FVector gridOrigin = -FVector(gridDimensions) * gridCellSize * 0.5f;
+		const FVector gridOrigin = FVector::ZeroVector;// -FVector(gridDimensions) * gridCellSize * 0.5f;
 
 		// calculate the unsorted cell index buffer
 		{
