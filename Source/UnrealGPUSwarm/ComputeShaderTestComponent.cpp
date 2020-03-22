@@ -36,13 +36,27 @@ public:
 		SHADER_PARAMETER(float, boidSpeedVariation)
 		SHADER_PARAMETER(float, boidRotationSpeed)
 		SHADER_PARAMETER(float, homeInnerRadius)
-
 		SHADER_PARAMETER(float, separationDistance)
+		SHADER_PARAMETER(float, neighbourhoodDistance)
+
+		SHADER_PARAMETER(float, homeUrge)
+		SHADER_PARAMETER(float, separationUrge)
+		SHADER_PARAMETER(float, cohesionUrge)
+		SHADER_PARAMETER(float, alignmentUrge)
+
+
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, positions)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, directions)
-		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neigbhours)
-		SHADER_PARAMETER_UAV(StructuredBuffer<uint32>, neighboursBaseIndex)
-		SHADER_PARAMETER_UAV(StructuredBuffer<uint32>, neighboursCount)
+
+		SHADER_PARAMETER(uint32, numParticles)
+		SHADER_PARAMETER(float, cellSizeReciprocal)
+		SHADER_PARAMETER(uint32, cellOffsetBufferSize)
+		SHADER_PARAMETER(FIntVector, gridDimensions)
+
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, particleIndexBuffer)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, cellIndexBuffer)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, cellOffsetBuffer)
+		
 	END_SHADER_PARAMETER_STRUCT()
 
 public:
@@ -52,7 +66,7 @@ public:
 	}
 };
 
-IMPLEMENT_GLOBAL_SHADER(FBoidsComputeShader, "/ComputeShaderPlugin/Boid.usf", "MainComputeShader", SF_Compute);
+IMPLEMENT_GLOBAL_SHADER(FBoidsComputeShader, "/ComputeShaderPlugin/Boid.usf", "GridNeighboursBoidUpdate", SF_Compute);
 
 
 
@@ -488,32 +502,32 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 		{
 
 			
-			FNeighboursComputeShader::FParameters parameters;
-			parameters.numNeighbours = numNeighbours;
-			parameters.neighbourDistance = neighbourDistance;
+			// FNeighboursComputeShader::FParameters parameters;
+			// parameters.numNeighbours = numNeighbours;
+			// parameters.neighbourDistance = neighbourDistance;
 
-			parameters.positions = _positionBufferUAV;
-			parameters.neigbhours = _neighboursBufferUAV;
-			parameters.neighboursBaseIndex = _neighboursBaseIndexUAV;
-			parameters.neighboursCount = _neighboursCountUAV;
+			// parameters.neigbhours = _neighboursBufferUAV;
+			// parameters.neighboursBaseIndex = _neighboursBaseIndexUAV;
+			// parameters.neighboursCount = _neighboursCountUAV;
 
-			parameters.numParticles = numBoids;
-			parameters.cellSizeReciprocal = 1.0f / gridCellSize;
-			parameters.cellOffsetBufferSize = cellOffsetBufferSize;
-			parameters.gridDimensions = gridDimensions;
+			// parameters.numParticles = numBoids;
+			// parameters.cellSizeReciprocal = 1.0f / gridCellSize;
+			// parameters.cellOffsetBufferSize = cellOffsetBufferSize;
+			// parameters.gridDimensions = gridDimensions;
 
-			parameters.cellOffsetBuffer = _cellOffsetBufferUAV;
-			parameters.cellIndexBuffer = _cellIndexBufferUAV;
-			parameters.particleIndexBuffer = _particleIndexBufferUAV;
+			// parameters.positions = _positionBufferUAV;
+			// parameters.cellOffsetBuffer = _cellOffsetBufferUAV;
+			// parameters.cellIndexBuffer = _cellIndexBufferUAV;
+			// parameters.particleIndexBuffer = _particleIndexBufferUAV;
 
 
-			TShaderMapRef<FNeighboursComputeShader> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
-			FComputeShaderUtils::Dispatch(
-				RHICommands,
-				*computeShader,
-				parameters,
-				groupSize(numBoids)
-			);
+			// TShaderMapRef<FNeighboursComputeShader> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
+			// FComputeShaderUtils::Dispatch(
+			// 	RHICommands,
+			// 	*computeShader,
+			// 	parameters,
+			// 	groupSize(numBoids)
+			// );
 		}
 
 		if (false)
@@ -554,12 +568,23 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			parameters.separationDistance = separationDistance;
 			parameters.boidRotationSpeed = boidRotationSpeed;
 			parameters.homeInnerRadius = homeInnerRadius;
+			parameters.neighbourhoodDistance = neighbourDistance;
+
+			parameters.homeUrge = homeUrge;
+			parameters.separationUrge = separationUrge;
+			parameters.cohesionUrge = cohesionUrge;
+			parameters.alignmentUrge = alignmentUrge;
+
+			parameters.numParticles = numBoids;
+			parameters.cellSizeReciprocal = 1.0f / gridCellSize;
+			parameters.cellOffsetBufferSize = cellOffsetBufferSize;
+			parameters.gridDimensions = gridDimensions;
 
 			parameters.positions = _positionBufferUAV;
 			parameters.directions = _directionsBufferUAV;
-			parameters.neigbhours = _neighboursBufferUAV;
-			parameters.neighboursBaseIndex = _neighboursBaseIndexUAV;
-			parameters.neighboursCount = _neighboursCountUAV;
+			parameters.cellOffsetBuffer = _cellOffsetBufferUAV;
+			parameters.cellIndexBuffer = _cellIndexBufferUAV;
+			parameters.particleIndexBuffer = _particleIndexBufferUAV;
 			
 
 

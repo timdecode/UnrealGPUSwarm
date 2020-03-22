@@ -58,6 +58,18 @@ public:
 	float boidRotationSpeed = 10.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float homeUrge = 0.1f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float separationUrge = 0.1f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float cohesionUrge = 0.01f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float alignmentUrge = 0.1f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float spawnRadius = 600.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

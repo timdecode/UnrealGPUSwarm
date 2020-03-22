@@ -2,6 +2,8 @@
 //When this gets chaned in the future, we could change this to #include "/Engine/Private/Common.ush".
 #include "/Engine/Private/Common.ush"
 
+#include "HashedGrid.usf"
+
 //--------------------------------------------------------------------------------------
 // Buffers
 //--------------------------------------------------------------------------------------
@@ -13,19 +15,31 @@ float boidSpeed;
 float boidSpeedVariation;
 float boidRotationSpeed;
 
+float neighbourhoodDistance;
+
 float separationDistance;
 float homeInnerRadius;
 
-RWStructuredBuffer<float3> positions;         // Point Positions Input Buffer
+float homeUrge;
+float separationUrge;
+float cohesionUrge;
+float alignmentUrge;
 
 RWStructuredBuffer<float3> directions;
 
-RWStructuredBuffer<uint> neigbhours;
-RWStructuredBuffer<uint> neighboursBaseIndex;
-RWStructuredBuffer<uint> neighboursCount;
 
+float distanceSqrd(float3 a, float3 b)
+{
+    float3 dir = a - b;
+    return dot(dir, dir);
+}
 
-
+float3 safeNormal(float3 vec)
+{
+    float l = length(vec);
+    
+    return l > 0.0f ? vec / l : float3(0.0f, 0.0f, 0.0f);
+}
 
 
 //--------------------------------------------------------------------------------------
@@ -69,13 +83,93 @@ float3 safeNormal(float3 vec, float3 safe)
 //--------------------------------------------------------------------------------------
 // Main
 //--------------------------------------------------------------------------------------
+//[numthreads(256, 1, 1)]
+//void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
+//{
+//    int index = ThreadId.x;
+
+//    if( index >= numParticles )
+//        return;
+
+//    const float3 position = positions[index];
+//    const float3 direction = directions[index];
+    
+//	float noiseOffset = hash(float(index));
+
+//	float noise = clamp(noise1(totalTime / 100.0 + noiseOffset), -1, 1) * 2.0 - 1.0;
+//	float velocity = boidSpeed * (1.0 + noise * boidSpeedVariation);
+
+//    float3 separation = float3(0.0, 0.0, 0.0);
+//    float3 alignment = float3(0.0, 0.0, 0.0);
+//	float3 neighboursCentre = float3(0.0, 0.0, 0.0);
+
+
+//	uint count = neighboursCount[index];
+//	uint baseIndex = neighboursBaseIndex[index];
+
+//    // positions
+//    for (uint i = baseIndex; i < baseIndex + count; ++i)
+//    {
+//        int otherIndex = neigbhours[i];
+
+//        float3 otherPosition = positions[otherIndex];
+
+//        neighboursCentre += otherPosition;
+		
+//        alignment += directions[otherIndex];
+
+//        float3 dir = otherPosition - position;
+//        float dist = length(dir);
+        
+//        if (dist < separationDistance && dist > 0.0f)
+//            separation -= (dir / dist) * (separationDistance - dist);
+//    }
+
+//    // cohesion
+//    neighboursCentre *= (count > 0 ? (1.0f / float(count)) : 0.0f);
+//    float3 cohesion = neighboursCentre - position;
+
+	
+//    alignment = safeNormal(alignment, direction);
+
+//    // home
+//    float3 home = float3(0.0f, 0.0f, 0.0f);
+    
+//    float distFromHome = distance(home, position);
+    
+//    float3 homeUrge = float3(0.0f, 0.0f, 0.0f);
+
+//    if (distFromHome > homeInnerRadius)
+//        homeUrge = safeNormal(home - position, float3(0.0f, 0.0f, 0.0f));
+
+    
+
+//    float3 newDirection = alignment + separation + 0.2f * cohesion + 0.1f * homeUrge;
+
+//    float ip = exp(-boidRotationSpeed * dt);
+//    newDirection = lerp(newDirection, direction, ip);
+
+//    newDirection = safeNormal(newDirection, direction);
+    
+//    positions[index] = position + newDirection * (velocity * dt);
+//    directions[index] = newDirection;
+//}
+
 [numthreads(256, 1, 1)]
-void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
+void GridNeighboursBoidUpdate(uint3 ThreadId : SV_DispatchThreadID)
 {
+    if (ThreadId.x >= numParticles)
+        return;
+
+
+
     int index = ThreadId.x;
 
-    const float3 position = positions[index];
-    const float3 direction = directions[index];
+    if( index >= numParticles )
+        return;
+
+    const float3 position_a = positions[index];
+    const float3 direction_a = directions[index];
     
 	float noiseOffset = hash(float(index));
 
@@ -86,63 +180,97 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
     float3 alignment = float3(0.0, 0.0, 0.0);
 	float3 neighboursCentre = float3(0.0, 0.0, 0.0);
 
+    const float neighbourDistanceSqrd = neighbourhoodDistance * neighbourhoodDistance;
 
-	uint count = neighboursCount[index];
-	uint baseIndex = neighboursBaseIndex[index];
-
-    // positions
-    for (uint i = baseIndex; i < baseIndex + count; ++i)
+    int3 cellIndex = positionToCellIndex(position_a);
+    uint count = 0;
+    
+    for(int i = -1; i <= 1; ++i)
     {
-        int otherIndex = neigbhours[i];
+        for(int j = -1; j <= 1; ++j)
+        {
+            for(int k = -1; k <= 1; ++k)
+            {
+                int3 neighborIndex = cellIndex + int3(i, j, k);
+                uint flatNeighborIndex = getFlatCellIndex(neighborIndex);
 
-        float3 otherPosition = positions[otherIndex];
+                // look up the offset to the cell:
+                uint neighborIterator = cellOffsetBuffer[flatNeighborIndex];
 
-        neighboursCentre += otherPosition;
-		
-        float3 dir = otherPosition - position;
-        float dist = length(dir);
-        
-        if (dist < separationDistance && dist > 0.0f)
-            separation -= (dir / dist) * (separationDistance - dist);
+                // iterate through particles in the neighbour cell (if iterator offset is valid)
+                while(neighborIterator != 0xFFFFFFFF && neighborIterator < numParticles)
+                {
+                    uint particleIndexB = particleIndexBuffer[neighborIterator];
+
+                    if (cellIndexBuffer[particleIndexB] != flatNeighborIndex)
+                        break; // we hit the end of this neighbourhood list
+
+                    float3 position_b = positions[particleIndexB];
+
+                    float dist = distanceSqrd(position_b, position_a);
+
+                    if( dist < neighbourDistanceSqrd && particleIndexB != index)
+                    {
+                        neighboursCentre += position_b;
+                        
+                        count++;
+                        
+                        alignment += directions[particleIndexB];
+
+                        float3 dir = position_b - position_a;
+                        float dist = length(dir);
+                        
+                        if (dist < separationDistance && dist > 0.0f)
+                            separation -= (dir / dist) * (separationDistance - dist);
+                    }
+
+                    neighborIterator++;  // iterate...
+                }
+            }
+        }
     }
 
     // cohesion
-    neighboursCentre *= (count > 0 ? (1.0f / float(count)) : 0.0f);
-    float3 cohesion = neighboursCentre - position;
-    
-    // directions
-    for (uint i = baseIndex; i < baseIndex + count; ++i)
-    {
-        int otherIndex = neigbhours[i];
+    float3 cohesion;
 
-        alignment += directions[otherIndex];
+    if (count > 0)
+    {
+        neighboursCentre *= 1.0f / float(count);
+        float3 cohesion = neighboursCentre - position_a;
+        
+        cohesion = safeNormal(cohesion);
     }
+    else
+        cohesion = float3(0.0f, 0.0f, 0.0f);
+
+
 	
-    alignment = safeNormal(alignment, direction);
+    alignment = safeNormal(alignment, direction_a);
 
     // home
     float3 home = float3(0.0f, 0.0f, 0.0f);
     
-    float distFromHome = distance(home, position);
+    float distFromHome = distance(home, position_a);
     
-    float3 homeUrge = float3(0.0f, 0.0f, 0.0f);
+    float3 homeDir = float3(0.0f, 0.0f, 0.0f);
 
     if (distFromHome > homeInnerRadius)
-        homeUrge = safeNormal(home - position, float3(0.0f, 0.0f, 0.0f));
+        homeDir = safeNormal(home - position_a, float3(0.0f, 0.0f, 0.0f));
 
     
 
-    float3 newDirection = alignment + separation + 0.2f * cohesion + 0.1f * homeUrge;
+    float3 newDirection = alignment * alignmentUrge
+     + separation * separationUrge
+     + cohesion * cohesionUrge
+     + homeDir * homeUrge;
+    
+    newDirection = safeNormal(newDirection, direction_a);
 
     float ip = exp(-boidRotationSpeed * dt);
-    newDirection = lerp(newDirection, direction, ip);
-
-    newDirection = safeNormal(newDirection, direction);
+    newDirection = lerp(newDirection, direction_a, ip);
     
-    positions[index] = position + newDirection * (velocity * dt);
+    positions[index] = position_a + newDirection * (velocity * dt);
     directions[index] = newDirection;
 }
-
-
 
 
