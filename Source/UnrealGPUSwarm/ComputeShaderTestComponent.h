@@ -83,14 +83,14 @@ public:
 	TArray<FVector4> outputDirections;
 
 protected:
-	
+	unsigned int dualBufferCount = 0;
 
 	// GPU side
-	FStructuredBufferRHIRef _positionBuffer;
-	FUnorderedAccessViewRHIRef _positionBufferUAV;     // we need a UAV for writing
+	FStructuredBufferRHIRef _positionBuffer[2];
+	FUnorderedAccessViewRHIRef _positionBufferUAV[2];     // we need a UAV for writing
 
-	FStructuredBufferRHIRef _directionsBuffer;
-	FUnorderedAccessViewRHIRef _directionsBufferUAV;
+	FStructuredBufferRHIRef _directionsBuffer[2];
+	FUnorderedAccessViewRHIRef _directionsBufferUAV[2];
 
 	FStructuredBufferRHIRef _newDirectionsBuffer;
 	FUnorderedAccessViewRHIRef _newDirectionsBufferUAV;

@@ -99,6 +99,11 @@ public:
 
 IMPLEMENT_GLOBAL_SHADER(FBoids_integratePosition_CS, "/ComputeShaderPlugin/Boid.usf", "IntegrateBoidPosition", SF_Compute);
 
+
+
+
+
+
 class FBoids_rearrangePositions_CS : public FGlobalShader
 {
 public:
@@ -110,6 +115,8 @@ public:
 
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, positions)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, directions)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, positions_other)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, directions_other)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, particleIndexBuffer)
 	END_SHADER_PARAMETER_STRUCT()
 
@@ -279,8 +286,11 @@ void UComputeShaderTestComponent::BeginPlay()
 
 		const size_t size = sizeof(FVector4);
 
-		_positionBuffer = RHICreateStructuredBuffer(size, size * numBoids, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
-		_positionBufferUAV = RHICreateUnorderedAccessView(_positionBuffer, false, false);
+		for( int i = 0; i < 2; ++i )
+		{
+			_positionBuffer[i] = RHICreateStructuredBuffer(size, size * numBoids, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
+			_positionBufferUAV[i] = RHICreateUnorderedAccessView(_positionBuffer[i], false, false);
+		}
 	}
     
 	// directions
@@ -301,8 +311,12 @@ void UComputeShaderTestComponent::BeginPlay()
 
 		const size_t size = sizeof(FVector4);
 
-		_directionsBuffer = RHICreateStructuredBuffer(size, size * numBoids, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
-		_directionsBufferUAV = RHICreateUnorderedAccessView(_directionsBuffer, false, false);
+		for( int i = 0; i < 2; ++i )
+		{
+			_directionsBuffer[i] = RHICreateStructuredBuffer(size, size * numBoids, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
+			_directionsBufferUAV[i] = RHICreateUnorderedAccessView(_directionsBuffer[i], false, false);
+		}
+
 
 		_newDirectionsBuffer = RHICreateStructuredBuffer(size, size * numBoids, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
 		_newDirectionsBufferUAV = RHICreateUnorderedAccessView(_newDirectionsBuffer, false, false);
@@ -437,6 +451,9 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	{
 		const uint32_t cellOffsetBufferSize = gridDimensions.X * gridDimensions.Y * gridDimensions.Z;
 
+		auto& positionsBufferUAV = _positionBufferUAV[dualBufferCount];
+		auto& directionsBufferUAV = _directionsBufferUAV[dualBufferCount];
+
 		// calculate the unsorted cell index buffer
 		{
 			FHashedGrid_createUnsortedList_CS::FParameters parameters;
@@ -444,7 +461,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			parameters.cellSizeReciprocal = 1.0f / gridCellSize;
 			parameters.cellOffsetBufferSize = cellOffsetBufferSize;
 			parameters.gridDimensions = gridDimensions;
-			parameters.positions = _positionBufferUAV;
+			parameters.positions = positionsBufferUAV;
 			parameters.particleIndexBuffer = _particleIndexBufferUAV;
 			parameters.cellIndexBuffer = _cellIndexBufferUAV;
 
@@ -543,7 +560,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			// parameters.cellOffsetBufferSize = cellOffsetBufferSize;
 			// parameters.gridDimensions = gridDimensions;
 
-			// parameters.positions = _positionBufferUAV;
+			// parameters.positions = positionBufferUAV;
 			// parameters.cellOffsetBuffer = _cellOffsetBufferUAV;
 			// parameters.cellIndexBuffer = _cellIndexBufferUAV;
 			// parameters.particleIndexBuffer = _particleIndexBufferUAV;
@@ -606,8 +623,8 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			parameters.cellOffsetBufferSize = cellOffsetBufferSize;
 			parameters.gridDimensions = gridDimensions;
 
-			parameters.positions = _positionBufferUAV;
-			parameters.directions = _directionsBufferUAV;
+			parameters.positions = positionsBufferUAV;
+			parameters.directions = directionsBufferUAV;
 			parameters.newDirections = _newDirectionsBufferUAV;
 			parameters.cellOffsetBuffer = _cellOffsetBufferUAV;
 			parameters.cellIndexBuffer = _cellIndexBufferUAV;
@@ -633,8 +650,8 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 			parameters.numParticles = numBoids;
 
-			parameters.positions = _positionBufferUAV;
-			parameters.directions = _directionsBufferUAV;
+			parameters.positions = positionsBufferUAV;
+			parameters.directions = directionsBufferUAV;
 			parameters.newDirections = _newDirectionsBufferUAV;
 
 			TShaderMapRef<FBoids_integratePosition_CS> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
@@ -650,27 +667,40 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 		{
 			FBoids_rearrangePositions_CS::FParameters parameters;
 
-			parameters.positions = _positionBufferUAV;
-			parameters.directions = _directionsBufferUAV;
+			parameters.positions = positionsBufferUAV;
+			parameters.directions = directionsBufferUAV;
+
+			parameters.positions_other = _positionBufferUAV[(dualBufferCount + 1) % 2];
+			parameters.directions_other = _directionsBufferUAV[(dualBufferCount + 1) % 2];
+
 			parameters.particleIndexBuffer = _particleIndexBufferUAV;
 			parameters.numParticles = numBoids;
-		}
 
-		{
-			// read back the data
-			// positions
-			{
-				uint8* data = (uint8*)RHILockStructuredBuffer(_positionBuffer, 0, numBoids * sizeof(FVector4), RLM_ReadOnly);
-				FMemory::Memcpy(outputPositions.GetData(), data, numBoids * sizeof(FVector4));
-				RHIUnlockStructuredBuffer(_positionBuffer);
-			}
+			TShaderMapRef<FBoids_rearrangePositions_CS> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
+			FComputeShaderUtils::Dispatch(
+				RHICommands,
+				*computeShader,
+				parameters,
+				groupSize(numBoids)
+			);
 
-			// directions
-			{
-				uint8* data = (uint8*)RHILockStructuredBuffer(_directionsBuffer, 0, numBoids * sizeof(FVector4), RLM_ReadOnly);
-				FMemory::Memcpy(outputDirections.GetData(), data, numBoids * sizeof(FVector4));
-				RHIUnlockStructuredBuffer(_directionsBuffer);
-			}
+			//// read back the data
+			//// positions
+			//{
+			//	uint8* data = (uint8*)RHILockStructuredBuffer(_positionBuffer[dualBufferCount], 0, numBoids * sizeof(FVector4), RLM_ReadOnly);
+			//	FMemory::Memcpy(outputPositions.GetData(), data, numBoids * sizeof(FVector4));
+			//	RHIUnlockStructuredBuffer(_positionBuffer[dualBufferCount]);
+			//}
+
+			//// directions
+			//{
+			//	uint8* data = (uint8*)RHILockStructuredBuffer(_directionsBuffer[dualBufferCount], 0, numBoids * sizeof(FVector4), RLM_ReadOnly);
+			//	FMemory::Memcpy(outputDirections.GetData(), data, numBoids * sizeof(FVector4));
+			//	RHIUnlockStructuredBuffer(_directionsBuffer[dualBufferCount]);
+			//}
+
+			// rotate our buffers
+			dualBufferCount = (dualBufferCount + 1) % 2;
 		}
 	});
 }

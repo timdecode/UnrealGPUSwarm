@@ -25,8 +25,12 @@ float separationUrge;
 float cohesionUrge;
 float alignmentUrge;
 
+RWStructuredBuffer<float4> positions_other;
 RWStructuredBuffer<float4> directions;
+RWStructuredBuffer<float4> directions_other;
+
 RWStructuredBuffer<float4> newDirections;
+
 
 
 float distanceSqrd(float3 a, float3 b)
@@ -296,17 +300,20 @@ void rearrangePositions(uint3 ThreadId : SV_DispatchThreadID)
     if (index >= numParticles)
         return;
     
-    while( particleIndexBuffer[index] != index )
-    {
-        uint oldIndex = particleIndexBuffer[particleIndexBuffer[index]];
-        float4 oldPosition = positions[particleIndexBuffer[index]];
-        float4 oldDirection = directions[particleIndexBuffer[index]];
+    positions_other[index] = positions[particleIndexBuffer[index]];
+    directions_other[index] = directions[particleIndexBuffer[index]];
+    
+    //while( particleIndexBuffer[index] != index )
+    //{
+    //    uint oldIndex = particleIndexBuffer[particleIndexBuffer[index]];
+    //    float4 oldPosition = positions[particleIndexBuffer[index]];
+    //    float4 oldDirection = directions[particleIndexBuffer[index]];
         
-        positions[particleIndexBuffer[index]] = positions[index];
-        particleIndexBuffer[particleIndexBuffer[index]] = particleIndexBuffer[index];
+    //    positions[particleIndexBuffer[index]] = positions[index];
+    //    particleIndexBuffer[particleIndexBuffer[index]] = particleIndexBuffer[index];
         
-        particleIndexBuffer[index] = oldIndex;
-        positions[index] = oldPosition;
-        directions[index] = oldDirection;
-    }
+    //    particleIndexBuffer[index] = oldIndex;
+    //    positions[index] = oldPosition;
+    //    directions[index] = oldDirection;
+    //}
 }
