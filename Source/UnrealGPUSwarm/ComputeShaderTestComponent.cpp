@@ -475,21 +475,21 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 		// sort the cell index buffer
 		{
-		 //	FGPUBitonicSort gpuBitonicSort;
+		 	FGPUBitonicSort gpuBitonicSort;
 
-		 //	gpuBitonicSort.sort(
-			//	numBoids,
-			//	numBoids,
-			//	_cellIndexBufferUAV,
-			//	_particleIndexBufferUAV,
-			//	RHICommands
-			//);
+		 	gpuBitonicSort.sort(
+				numBoids,
+				numBoids,
+				_cellIndexBufferUAV,
+				_particleIndexBufferUAV,
+				RHICommands
+			);
 
-			//RHICommands.TransitionResource(
-			//	EResourceTransitionAccess::ERWBarrier,
-			//	EResourceTransitionPipeline::EGfxToCompute,
-			//	_particleIndexBufferUAV
-			//);
+			RHICommands.TransitionResource(
+				EResourceTransitionAccess::ERWBarrier,
+				EResourceTransitionPipeline::EGfxToCompute,
+				_particleIndexBufferUAV
+			);
 
 
 		}
