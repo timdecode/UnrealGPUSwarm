@@ -55,7 +55,7 @@ void createUnsortedList(uint3 ThreadId : SV_DispatchThreadID)
     if (ThreadId.x >= numParticles)
         return;
     
-    uint particleIndex = particleIndexBuffer[ThreadId.x];
+    uint particleIndex = ThreadId.x;
 
     float3 position = positions[particleIndex];
     int3 cellIndex = positionToCellIndex(position);
@@ -71,9 +71,7 @@ void resetParticleIndexBuffer(uint3 ThreadId : SV_DispatchThreadID)
     if (ThreadId.x >= numParticles)
         return;
     
-    uint particleIndex = particleIndexBuffer[ThreadId.x];
-
-    particleIndexBuffer[particleIndex] = particleIndex;
+    particleIndexBuffer[ThreadId.x] = ThreadId.x;
 }
 
 [numthreads(256, 1, 1)]
