@@ -682,22 +682,22 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 				*computeShader,
 				parameters,
 				groupSize(numBoids)
-			);
+			); 
 
-			//// read back the data
-			//// positions
-			//{
-			//	uint8* data = (uint8*)RHILockStructuredBuffer(_positionBuffer[dualBufferCount], 0, numBoids * sizeof(FVector4), RLM_ReadOnly);
-			//	FMemory::Memcpy(outputPositions.GetData(), data, numBoids * sizeof(FVector4));
-			//	RHIUnlockStructuredBuffer(_positionBuffer[dualBufferCount]);
-			//}
+			// read back the data
+			// positions
+			{
+				uint8* data = (uint8*)RHILockStructuredBuffer(_positionBuffer[dualBufferCount], 0, numBoids * sizeof(FVector4), RLM_ReadOnly);
+				FMemory::Memcpy(outputPositions.GetData(), data, numBoids * sizeof(FVector4));
+				RHIUnlockStructuredBuffer(_positionBuffer[dualBufferCount]);
+			}
 
-			//// directions
-			//{
-			//	uint8* data = (uint8*)RHILockStructuredBuffer(_directionsBuffer[dualBufferCount], 0, numBoids * sizeof(FVector4), RLM_ReadOnly);
-			//	FMemory::Memcpy(outputDirections.GetData(), data, numBoids * sizeof(FVector4));
-			//	RHIUnlockStructuredBuffer(_directionsBuffer[dualBufferCount]);
-			//}
+			// directions
+			{
+				uint8* data = (uint8*)RHILockStructuredBuffer(_directionsBuffer[dualBufferCount], 0, numBoids * sizeof(FVector4), RLM_ReadOnly);
+				FMemory::Memcpy(outputDirections.GetData(), data, numBoids * sizeof(FVector4));
+				RHIUnlockStructuredBuffer(_directionsBuffer[dualBufferCount]);
+			}
 
 			// rotate our buffers
 			dualBufferCount = (dualBufferCount + 1) % 2;
