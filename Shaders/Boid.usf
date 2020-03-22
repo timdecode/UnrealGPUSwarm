@@ -171,10 +171,10 @@ void GridNeighboursBoidUpdate(uint3 ThreadId : SV_DispatchThreadID)
 
     float3 separation = float3(0.0, 0.0, 0.0);
     float3 alignment = float3(0.0, 0.0, 0.0);
-    float3 neighboursCentre = float3(0.0, 0.0, 0.0);
+    float3 neighboursCentre = position_a;
 
     int3 cellIndex = positionToCellIndex(position_a);
-    uint count = 0;
+    uint count = 1;
     
     for(int i = -1; i <= 1; ++i)
     {
