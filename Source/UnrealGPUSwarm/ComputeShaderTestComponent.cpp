@@ -99,6 +99,29 @@ public:
 
 IMPLEMENT_GLOBAL_SHADER(FBoids_integratePosition_CS, "/ComputeShaderPlugin/Boid.usf", "IntegrateBoidPosition", SF_Compute);
 
+class FBoids_rearrangePositions_CS : public FGlobalShader
+{
+public:
+	DECLARE_GLOBAL_SHADER(FBoids_rearrangePositions_CS);
+	SHADER_USE_PARAMETER_STRUCT(FBoids_rearrangePositions_CS, FGlobalShader);
+
+	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
+		SHADER_PARAMETER(uint32, numParticles)
+
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, positions)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, directions)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, particleIndexBuffer)
+	END_SHADER_PARAMETER_STRUCT()
+
+public:
+	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
+	{
+		return IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM5);
+	}
+};
+
+IMPLEMENT_GLOBAL_SHADER(FBoids_rearrangePositions_CS, "/ComputeShaderPlugin/Boid.usf", "rearrangePositions", SF_Compute);
+
 
 
 
@@ -621,7 +644,19 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 				parameters,
 				groupSize(numBoids)
 			);
-		
+		}
+
+		// rearrange positions for better cache-coherence on the next run
+		{
+			FBoids_rearrangePositions_CS::FParameters parameters;
+
+			parameters.positions = _positionBufferUAV;
+			parameters.directions = _directionsBufferUAV;
+			parameters.particleIndexBuffer = _particleIndexBufferUAV;
+			parameters.numParticles = numBoids;
+		}
+
+		{
 			// read back the data
 			// positions
 			{

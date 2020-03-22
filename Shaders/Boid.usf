@@ -182,7 +182,7 @@ void GridNeighboursBoidUpdate(uint3 ThreadId : SV_DispatchThreadID)
         {
             for(int k = -1; k <= 1; ++k)
             {
-                int3 neighborIndex = cellIndex + int3(i, j, k);
+                int3 neighborIndex = cellIndex + int3(k, j, i);
                 uint flatNeighborIndex = getFlatCellIndex(neighborIndex);
 
                 // look up the offset to the cell:
@@ -288,4 +288,25 @@ void IntegrateBoidPosition(uint3 ThreadId : SV_DispatchThreadID)
     positions[index].xyz = positions[index].xyz + direction * (velocity * dt);
 }
 
+[numthreads(256, 1, 1)]
+void rearrangePositions(uint3 ThreadId : SV_DispatchThreadID)
+{
+    int index = ThreadId.x;
 
+    if (index >= numParticles)
+        return;
+    
+    while( particleIndexBuffer[index] != index )
+    {
+        uint oldIndex = particleIndexBuffer[particleIndexBuffer[index]];
+        float4 oldPosition = positions[particleIndexBuffer[index]];
+        float4 oldDirection = directions[particleIndexBuffer[index]];
+        
+        positions[particleIndexBuffer[index]] = positions[index];
+        particleIndexBuffer[particleIndexBuffer[index]] = particleIndexBuffer[index];
+        
+        particleIndexBuffer[index] = oldIndex;
+        positions[index] = oldPosition;
+        directions[index] = oldDirection;
+    }
+}
