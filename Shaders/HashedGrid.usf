@@ -14,7 +14,7 @@ RWStructuredBuffer<uint> particleIndexBuffer;
 RWStructuredBuffer<uint> cellIndexBuffer;   
 RWStructuredBuffer<uint> cellOffsetBuffer; 
 
-RWStructuredBuffer<float3> positions; 
+RWStructuredBuffer<float4> positions; 
 
 float timMod(float x, float y)
 {

@@ -45,8 +45,8 @@ public:
 		SHADER_PARAMETER(float, alignmentUrge)
 
 
-		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, positions)
-		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, directions)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, positions)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, directions)
 
 		SHADER_PARAMETER(uint32, numParticles)
 		SHADER_PARAMETER(float, cellSizeReciprocal)
@@ -85,7 +85,7 @@ public:
 		SHADER_PARAMETER(uint32, cellOffsetBufferSize)
 		SHADER_PARAMETER(FIntVector, gridDimensions)
 
-		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, positions)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, positions)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, particleIndexBuffer)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, cellIndexBuffer)
 	END_SHADER_PARAMETER_STRUCT()
@@ -181,7 +181,7 @@ public:
 		SHADER_PARAMETER(uint32, numNeighbours)
 		SHADER_PARAMETER(float, neighbourDistance)
 
-		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, positions)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, positions)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neigbhours)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neighboursBaseIndex)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neighboursCount)
@@ -229,12 +229,13 @@ void UComputeShaderTestComponent::BeginPlay()
 
 	// positions
 	{
-		TResourceArray<FVector> resourceArray;
-		resourceArray.Init(FVector::ZeroVector, numBoids);
+		TResourceArray<FVector4> resourceArray;
+		const FVector4 zero(0.0f);
+		resourceArray.Init(zero, numBoids);
 
 
 
-		for (FVector& position : resourceArray)
+		for (FVector4& position : resourceArray)
 		{
 			position = rng.GetUnitVector() * rng.GetFraction() * spawnRadius;
 		}
@@ -242,7 +243,7 @@ void UComputeShaderTestComponent::BeginPlay()
 		FRHIResourceCreateInfo createInfo;
 		createInfo.ResourceArray = &resourceArray;
 
-		const size_t size = sizeof(FVector);
+		const size_t size = sizeof(FVector4);
 
 		_positionBuffer = RHICreateStructuredBuffer(size, size * numBoids, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
 		_positionBufferUAV = RHICreateUnorderedAccessView(_positionBuffer, false, false);
@@ -250,11 +251,13 @@ void UComputeShaderTestComponent::BeginPlay()
     
 	// directions
 	{
-		TResourceArray<FVector> resourceArray;
-		resourceArray.Init(FVector::ZeroVector, numBoids);
+		TResourceArray<FVector4> resourceArray;
+		const FVector4 zero(0.0f);
+
+		resourceArray.Init(zero, numBoids);
 
 
-		for (FVector& position : resourceArray)
+		for (FVector4& position : resourceArray)
 		{
 			position = rng.GetUnitVector();
 		}
@@ -262,7 +265,7 @@ void UComputeShaderTestComponent::BeginPlay()
 		FRHIResourceCreateInfo createInfo;
 		createInfo.ResourceArray = &resourceArray;
 
-		const size_t size = sizeof(FVector);
+		const size_t size = sizeof(FVector4);
 
 		_directionsBuffer = RHICreateStructuredBuffer(size, size * numBoids, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
 		_directionsBufferUAV = RHICreateUnorderedAccessView(_directionsBuffer, false, false);
@@ -599,15 +602,15 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			// read back the data
 			// positions
 			{
-				uint8* data = (uint8*)RHILockStructuredBuffer(_positionBuffer, 0, numBoids * sizeof(FVector), RLM_ReadOnly);
-				FMemory::Memcpy(outputPositions.GetData(), data, numBoids * sizeof(FVector));
+				uint8* data = (uint8*)RHILockStructuredBuffer(_positionBuffer, 0, numBoids * sizeof(FVector4), RLM_ReadOnly);
+				FMemory::Memcpy(outputPositions.GetData(), data, numBoids * sizeof(FVector4));
 				RHIUnlockStructuredBuffer(_positionBuffer);
 			}
 
 			// directions
 			{
-				uint8* data = (uint8*)RHILockStructuredBuffer(_directionsBuffer, 0, numBoids * sizeof(FVector), RLM_ReadOnly);
-				FMemory::Memcpy(outputDirections.GetData(), data, numBoids * sizeof(FVector));
+				uint8* data = (uint8*)RHILockStructuredBuffer(_directionsBuffer, 0, numBoids * sizeof(FVector4), RLM_ReadOnly);
+				FMemory::Memcpy(outputDirections.GetData(), data, numBoids * sizeof(FVector4));
 				RHIUnlockStructuredBuffer(_directionsBuffer);
 			}
 		}

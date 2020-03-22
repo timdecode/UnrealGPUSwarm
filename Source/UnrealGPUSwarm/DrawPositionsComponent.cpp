@@ -59,8 +59,8 @@ void UDrawPositionsComponent::_updateInstanceTransforms()
 
 	if (!boidsComponent) return;
 
-	TArray<FVector>& positions = boidsComponent->outputPositions;
-	TArray<FVector>& directions = boidsComponent->outputDirections;
+	TArray<FVector4>& positions = boidsComponent->outputPositions;
+	TArray<FVector4>& directions = boidsComponent->outputDirections;
 
 	// resize up/down the ismc
 	int toAdd = FMath::Max(0, positions.Num() - ismc->GetInstanceCount());
@@ -78,10 +78,10 @@ void UDrawPositionsComponent::_updateInstanceTransforms()
 	{
 		FTransform& transform = _instanceTransforms[i];
 
-		transform.SetTranslation(positions[i]);
+		transform.SetTranslation(FVector(positions[i]));
 		transform.SetScale3D(FVector(size));
 
-		FQuat quat = FQuat::FindBetweenVectors(FVector::UpVector, directions[i]);
+		FQuat quat = FQuat::FindBetweenVectors(FVector::UpVector, FVector(directions[i]));
 		transform.SetRotation(quat);
 	}
 

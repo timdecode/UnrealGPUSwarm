@@ -78,9 +78,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float gridCellSize = 5.0;
 
-	TArray<FVector> outputPositions;
+	TArray<FVector4> outputPositions;
 
-	TArray<FVector> outputDirections;
+	TArray<FVector4> outputDirections;
 
 protected:
 	

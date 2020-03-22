@@ -25,7 +25,7 @@ float separationUrge;
 float cohesionUrge;
 float alignmentUrge;
 
-RWStructuredBuffer<float3> directions;
+RWStructuredBuffer<float4> directions;
 
 
 float distanceSqrd(float3 a, float3 b)
@@ -167,7 +167,7 @@ void GridNeighboursBoidUpdate(uint3 ThreadId : SV_DispatchThreadID)
 
     if( index >= numParticles )
         return;
-
+    
     const float3 position_a = positions[index];
     const float3 direction_a = directions[index];
     
@@ -178,12 +178,12 @@ void GridNeighboursBoidUpdate(uint3 ThreadId : SV_DispatchThreadID)
 
     float3 separation = float3(0.0, 0.0, 0.0);
     float3 alignment = float3(0.0, 0.0, 0.0);
-	float3 neighboursCentre = float3(0.0, 0.0, 0.0);
+	float3 neighboursCentre = position_a;
 
     const float neighbourDistanceSqrd = neighbourhoodDistance * neighbourhoodDistance;
 
     int3 cellIndex = positionToCellIndex(position_a);
-    uint count = 0;
+    uint count = 1;
     
     for(int i = -1; i <= 1; ++i)
     {
@@ -236,9 +236,9 @@ void GridNeighboursBoidUpdate(uint3 ThreadId : SV_DispatchThreadID)
     if (count > 0)
     {
         neighboursCentre *= 1.0f / float(count);
-        float3 cohesion = neighboursCentre - position_a;
+        cohesion = neighboursCentre - position_a;
         
-        cohesion = safeNormal(cohesion);
+        //cohesion = safeNormal(cohesion);
     }
     else
         cohesion = float3(0.0f, 0.0f, 0.0f);
@@ -269,8 +269,8 @@ void GridNeighboursBoidUpdate(uint3 ThreadId : SV_DispatchThreadID)
     float ip = exp(-boidRotationSpeed * dt);
     newDirection = lerp(newDirection, direction_a, ip);
     
-    positions[index] = position_a + newDirection * (velocity * dt);
-    directions[index] = newDirection;
+    positions[index].xyz = position_a + newDirection * (velocity * dt);
+    directions[index].xyz = newDirection;
 }
 
 
