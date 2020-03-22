@@ -178,25 +178,6 @@ public:
 
 IMPLEMENT_GLOBAL_SHADER(FHashedGrid_resetCellOffsetBuffer_CS, "/ComputeShaderPlugin/HashedGrid.usf", "resetCellOffsetBuffer", SF_Compute);
 
-class FHashedGrid_resetParticleIndexBuffer_CS : public FGlobalShader
-{
-public:
-	DECLARE_GLOBAL_SHADER(FHashedGrid_resetParticleIndexBuffer_CS);
-	SHADER_USE_PARAMETER_STRUCT(FHashedGrid_resetParticleIndexBuffer_CS, FGlobalShader);
-
-	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
-		SHADER_PARAMETER(uint32, numParticles)
-		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, particleIndexBuffer)
-	END_SHADER_PARAMETER_STRUCT()
-
-public:
-	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
-	{
-		return IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM5);
-	}
-};
-
-IMPLEMENT_GLOBAL_SHADER(FHashedGrid_resetParticleIndexBuffer_CS, "/ComputeShaderPlugin/HashedGrid.usf", "resetParticleIndexBuffer", SF_Compute);
 
 
 
@@ -433,25 +414,8 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	{
 		const uint32_t cellOffsetBufferSize = gridDimensions.X * gridDimensions.Y * gridDimensions.Z;
 
-		// reset the particle index buffer
-		{
-			FHashedGrid_resetParticleIndexBuffer_CS::FParameters parameters;
-			parameters.numParticles = numBoids;
-			parameters.particleIndexBuffer = _particleIndexBufferUAV;
-
-			TShaderMapRef<FHashedGrid_resetParticleIndexBuffer_CS> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
-			FComputeShaderUtils::Dispatch(
-				RHICommands,
-				*computeShader,
-				parameters,
-				groupSize(numBoids)
-			);
-		}
-
 		// calculate the unsorted cell index buffer
 		{
-
-			
 			FHashedGrid_createUnsortedList_CS::FParameters parameters;
 			parameters.numParticles = numBoids;
 			parameters.cellSizeReciprocal = 1.0f / gridCellSize;
@@ -471,6 +435,11 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			);
 
 
+			RHICommands.TransitionResource(
+				EResourceTransitionAccess::ERWBarrier,
+				EResourceTransitionPipeline::EGfxToCompute,
+				_cellIndexBufferUAV
+			);
 		}
 
 		// sort the cell index buffer
