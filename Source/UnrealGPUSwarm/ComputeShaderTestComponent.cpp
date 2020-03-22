@@ -47,6 +47,8 @@ public:
 
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, positions)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, directions)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, newDirections)
+
 
 		SHADER_PARAMETER(uint32, numParticles)
 		SHADER_PARAMETER(float, cellSizeReciprocal)
@@ -68,6 +70,34 @@ public:
 
 IMPLEMENT_GLOBAL_SHADER(FBoidsComputeShader, "/ComputeShaderPlugin/Boid.usf", "GridNeighboursBoidUpdate", SF_Compute);
 
+
+class FBoids_integratePosition_CS : public FGlobalShader
+{
+public:
+	DECLARE_GLOBAL_SHADER(FBoids_integratePosition_CS);
+	SHADER_USE_PARAMETER_STRUCT(FBoids_integratePosition_CS, FGlobalShader);
+
+	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
+		SHADER_PARAMETER(float, dt)
+		SHADER_PARAMETER(float, totalTime)
+		SHADER_PARAMETER(float, boidSpeed)
+		SHADER_PARAMETER(float, boidSpeedVariation)
+		SHADER_PARAMETER(float, boidRotationSpeed)
+		SHADER_PARAMETER(uint32, numParticles)
+
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, positions)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, directions)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, newDirections)
+	END_SHADER_PARAMETER_STRUCT()
+
+public:
+	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
+	{
+		return IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM5);
+	}
+};
+
+IMPLEMENT_GLOBAL_SHADER(FBoids_integratePosition_CS, "/ComputeShaderPlugin/Boid.usf", "IntegrateBoidPosition", SF_Compute);
 
 
 
@@ -269,6 +299,9 @@ void UComputeShaderTestComponent::BeginPlay()
 
 		_directionsBuffer = RHICreateStructuredBuffer(size, size * numBoids, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
 		_directionsBufferUAV = RHICreateUnorderedAccessView(_directionsBuffer, false, false);
+
+		_newDirectionsBuffer = RHICreateStructuredBuffer(size, size * numBoids, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
+		_newDirectionsBufferUAV = RHICreateUnorderedAccessView(_newDirectionsBuffer, false, false);
 	}
 
 	// neighbours
@@ -442,21 +475,21 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 		// sort the cell index buffer
 		{
-		 	FGPUBitonicSort gpuBitonicSort;
+		 //	FGPUBitonicSort gpuBitonicSort;
 
-		 	gpuBitonicSort.sort(
-				numBoids,
-				numBoids,
-				_cellIndexBufferUAV,
-				_particleIndexBufferUAV,
-				RHICommands
-			);
+		 //	gpuBitonicSort.sort(
+			//	numBoids,
+			//	numBoids,
+			//	_cellIndexBufferUAV,
+			//	_particleIndexBufferUAV,
+			//	RHICommands
+			//);
 
-			RHICommands.TransitionResource(
-				EResourceTransitionAccess::ERWBarrier,
-				EResourceTransitionPipeline::EGfxToCompute,
-				_particleIndexBufferUAV
-			);
+			//RHICommands.TransitionResource(
+			//	EResourceTransitionAccess::ERWBarrier,
+			//	EResourceTransitionPipeline::EGfxToCompute,
+			//	_particleIndexBufferUAV
+			//);
 
 
 		}
@@ -560,8 +593,6 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 		// execute the main compute shader
 		{
-
-
 			FBoidsComputeShader::FParameters parameters;
 			parameters.dt = dt;
 			parameters.totalTime = totalTime;
@@ -585,10 +616,10 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 			parameters.positions = _positionBufferUAV;
 			parameters.directions = _directionsBufferUAV;
+			parameters.newDirections = _newDirectionsBufferUAV;
 			parameters.cellOffsetBuffer = _cellOffsetBufferUAV;
 			parameters.cellIndexBuffer = _cellIndexBufferUAV;
 			parameters.particleIndexBuffer = _particleIndexBufferUAV;
-			
 
 
 			TShaderMapRef<FBoidsComputeShader> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
@@ -598,7 +629,30 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 				parameters,
 				groupSize(numBoids)
 			);
+		}
 
+		// integrate positions
+		{
+			FBoids_integratePosition_CS::FParameters parameters;
+			parameters.dt = dt;
+			parameters.totalTime = totalTime;
+			parameters.boidSpeed = boidSpeed;
+			parameters.boidSpeedVariation = boidSpeedVariation;
+
+			parameters.numParticles = numBoids;
+
+			parameters.positions = _positionBufferUAV;
+			parameters.directions = _directionsBufferUAV;
+			parameters.newDirections = _newDirectionsBufferUAV;
+
+			TShaderMapRef<FBoids_integratePosition_CS> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
+			FComputeShaderUtils::Dispatch(
+				RHICommands,
+				*computeShader,
+				parameters,
+				groupSize(numBoids)
+			);
+		
 			// read back the data
 			// positions
 			{

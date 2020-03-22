@@ -92,6 +92,8 @@ protected:
 	FStructuredBufferRHIRef _directionsBuffer;
 	FUnorderedAccessViewRHIRef _directionsBufferUAV;
 
+	FStructuredBufferRHIRef _newDirectionsBuffer;
+	FUnorderedAccessViewRHIRef _newDirectionsBufferUAV;
 
 	FStructuredBufferRHIRef _neighboursBuffer;
 	FUnorderedAccessViewRHIRef _neighboursBufferUAV;
