@@ -24,6 +24,10 @@ RWStructuredBuffer<uint> neigbhours;
 RWStructuredBuffer<uint> neighboursBaseIndex;
 RWStructuredBuffer<uint> neighboursCount;
 
+
+
+
+
 //--------------------------------------------------------------------------------------
 // Functions
 //--------------------------------------------------------------------------------------

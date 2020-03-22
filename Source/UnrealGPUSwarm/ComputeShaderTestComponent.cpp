@@ -59,15 +59,15 @@ IMPLEMENT_GLOBAL_SHADER(FBoidsComputeShader, "/ComputeShaderPlugin/Boid.usf", "M
 
 
 
-class FNeighbours_createUnsortedList_CS : public FGlobalShader
+class FHashedGrid_createUnsortedList_CS : public FGlobalShader
 {
 public:
-	DECLARE_GLOBAL_SHADER(FNeighbours_createUnsortedList_CS);
-	SHADER_USE_PARAMETER_STRUCT(FNeighbours_createUnsortedList_CS, FGlobalShader);
+	DECLARE_GLOBAL_SHADER(FHashedGrid_createUnsortedList_CS);
+	SHADER_USE_PARAMETER_STRUCT(FHashedGrid_createUnsortedList_CS, FGlobalShader);
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
-		SHADER_PARAMETER(uint32, numBoids)
-		SHADER_PARAMETER(float, cellSize)
+		SHADER_PARAMETER(uint32, numParticles)
+		SHADER_PARAMETER(float, cellSizeReciprocal)
 		SHADER_PARAMETER(uint32, cellOffsetBufferSize)
 		SHADER_PARAMETER(FIntVector, gridDimensions)
 
@@ -83,20 +83,20 @@ public:
 	}
 };
 
-IMPLEMENT_GLOBAL_SHADER(FNeighbours_createUnsortedList_CS, "/ComputeShaderPlugin/Neighbours.usf", "createUnsortedList", SF_Compute);
+IMPLEMENT_GLOBAL_SHADER(FHashedGrid_createUnsortedList_CS, "/ComputeShaderPlugin/HashedGrid.usf", "createUnsortedList", SF_Compute);
 
 
 
 
-class FNeighbours_createOffsetList_CS : public FGlobalShader
+class FHashedGrid_createOffsetList_CS : public FGlobalShader
 {
 public:
-	DECLARE_GLOBAL_SHADER(FNeighbours_createOffsetList_CS);
-	SHADER_USE_PARAMETER_STRUCT(FNeighbours_createOffsetList_CS, FGlobalShader);
+	DECLARE_GLOBAL_SHADER(FHashedGrid_createOffsetList_CS);
+	SHADER_USE_PARAMETER_STRUCT(FHashedGrid_createOffsetList_CS, FGlobalShader);
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
-		SHADER_PARAMETER(uint32, numBoids)
-		SHADER_PARAMETER(float, cellSize)
+		SHADER_PARAMETER(uint32, numParticles)
+		SHADER_PARAMETER(float, cellSizeReciprocal)
 		SHADER_PARAMETER(uint32, cellOffsetBufferSize)
 		SHADER_PARAMETER(FIntVector, gridDimensions)
 
@@ -112,13 +112,13 @@ public:
 	}
 };
 
-IMPLEMENT_GLOBAL_SHADER(FNeighbours_createOffsetList_CS, "/ComputeShaderPlugin/Neighbours.usf", "createOffsetList", SF_Compute);
+IMPLEMENT_GLOBAL_SHADER(FHashedGrid_createOffsetList_CS, "/ComputeShaderPlugin/HashedGrid.usf", "createOffsetList", SF_Compute);
 
-class FNeighbours_resetCellOffsetBuffer_CS : public FGlobalShader
+class FHashedGrid_resetCellOffsetBuffer_CS : public FGlobalShader
 {
 public:
-	DECLARE_GLOBAL_SHADER(FNeighbours_resetCellOffsetBuffer_CS);
-	SHADER_USE_PARAMETER_STRUCT(FNeighbours_resetCellOffsetBuffer_CS, FGlobalShader);
+	DECLARE_GLOBAL_SHADER(FHashedGrid_resetCellOffsetBuffer_CS);
+	SHADER_USE_PARAMETER_STRUCT(FHashedGrid_resetCellOffsetBuffer_CS, FGlobalShader);
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
 		SHADER_PARAMETER(uint32, cellOffsetBufferSize)
@@ -132,16 +132,16 @@ public:
 	}
 };
 
-IMPLEMENT_GLOBAL_SHADER(FNeighbours_resetCellOffsetBuffer_CS, "/ComputeShaderPlugin/Neighbours.usf", "resetCellOffsetBuffer", SF_Compute);
+IMPLEMENT_GLOBAL_SHADER(FHashedGrid_resetCellOffsetBuffer_CS, "/ComputeShaderPlugin/HashedGrid.usf", "resetCellOffsetBuffer", SF_Compute);
 
-class FNeighbours_resetParticleIndexBuffer_CS : public FGlobalShader
+class FHashedGrid_resetParticleIndexBuffer_CS : public FGlobalShader
 {
 public:
-	DECLARE_GLOBAL_SHADER(FNeighbours_resetParticleIndexBuffer_CS);
-	SHADER_USE_PARAMETER_STRUCT(FNeighbours_resetParticleIndexBuffer_CS, FGlobalShader);
+	DECLARE_GLOBAL_SHADER(FHashedGrid_resetParticleIndexBuffer_CS);
+	SHADER_USE_PARAMETER_STRUCT(FHashedGrid_resetParticleIndexBuffer_CS, FGlobalShader);
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
-		SHADER_PARAMETER(uint32, numBoids)
+		SHADER_PARAMETER(uint32, numParticles)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, particleIndexBuffer)
 	END_SHADER_PARAMETER_STRUCT()
 
@@ -152,7 +152,7 @@ public:
 	}
 };
 
-IMPLEMENT_GLOBAL_SHADER(FNeighbours_resetParticleIndexBuffer_CS, "/ComputeShaderPlugin/Neighbours.usf", "resetParticleIndexBuffer", SF_Compute);
+IMPLEMENT_GLOBAL_SHADER(FHashedGrid_resetParticleIndexBuffer_CS, "/ComputeShaderPlugin/HashedGrid.usf", "resetParticleIndexBuffer", SF_Compute);
 
 
 
@@ -386,11 +386,11 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 		// reset the particle index buffer
 		{
-			FNeighbours_resetParticleIndexBuffer_CS::FParameters parameters;
+			FHashedGrid_resetParticleIndexBuffer_CS::FParameters parameters;
 			parameters.numBoids = numBoids;
 			parameters.particleIndexBuffer = _particleIndexBufferUAV;
 
-			TShaderMapRef<FNeighbours_resetParticleIndexBuffer_CS> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
+			TShaderMapRef<FHashedGrid_resetParticleIndexBuffer_CS> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
 			FComputeShaderUtils::Dispatch(
 				RHICommands,
 				*computeShader,
@@ -403,9 +403,9 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 		{
 
 			
-			FNeighbours_createUnsortedList_CS::FParameters parameters;
+			FHashedGrid_createUnsortedList_CS::FParameters parameters;
 			parameters.numBoids = numBoids;
-			parameters.cellSize = gridCellSize;
+			parameters.cellSizeReciprocal = 1.0f / gridCellSize;
 			parameters.cellOffsetBufferSize = cellOffsetBufferSize;
 			parameters.gridDimensions = gridDimensions;
 			parameters.positions = _positionBufferUAV;
@@ -413,7 +413,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			parameters.cellIndexBuffer = _cellIndexBufferUAV;
 
 
-			TShaderMapRef<FNeighbours_createUnsortedList_CS> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
+			TShaderMapRef<FHashedGrid_createUnsortedList_CS> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
 			FComputeShaderUtils::Dispatch(
 				RHICommands,
 				*computeShader,
@@ -447,11 +447,11 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 		// reset the cell offset buffer
 		{
-			FNeighbours_resetCellOffsetBuffer_CS::FParameters parameters;
+			FHashedGrid_resetCellOffsetBuffer_CS::FParameters parameters;
 			parameters.cellOffsetBufferSize = cellOffsetBufferSize;
 			parameters.cellOffsetBuffer = _cellOffsetBufferUAV;
 
-			TShaderMapRef<FNeighbours_resetCellOffsetBuffer_CS> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
+			TShaderMapRef<FHashedGrid_resetCellOffsetBuffer_CS> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
 			FComputeShaderUtils::Dispatch(
 				RHICommands,
 				*computeShader,
@@ -463,9 +463,9 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 		// build the cell offset buffer
 		{
-			FNeighbours_createOffsetList_CS::FParameters parameters;
+			FHashedGrid_createOffsetList_CS::FParameters parameters;
 			parameters.numBoids = numBoids;
-			parameters.cellSize = gridCellSize;
+			parameters.cellSizeReciprocal = 1.0f / gridCellSize;
 			parameters.cellOffsetBufferSize = cellOffsetBufferSize;
 			parameters.gridDimensions = gridDimensions;
 
@@ -474,7 +474,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			parameters.cellOffsetBuffer = _cellOffsetBufferUAV;
 
 
-			TShaderMapRef<FNeighbours_createOffsetList_CS> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
+			TShaderMapRef<FHashedGrid_createOffsetList_CS> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
 			FComputeShaderUtils::Dispatch(
 				RHICommands,
 				*computeShader,
