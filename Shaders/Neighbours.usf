@@ -4,6 +4,7 @@
 // https://wickedengine.net/2018/05/21/scalabe-gpu-fluid-simulation/
 
 uint cellOffsetBufferSize;
+uint3 gridDimensions;
 RWStructuredBuffer<uint> particleIndexBuffer;
 RWStructuredBuffer<uint> cellIndexBuffer;   
 RWStructuredBuffer<uint> cellOffsetBuffer; 
@@ -33,7 +34,7 @@ uint getFlatCellIndex(int3 cellIndex)
     const uint p2 = 19349663;
     const uint p3 = 83492791;
     //int n = p1 * cellIndex.x ^ p2*cellIndex.y ^ p3*cellIndex.z;
-    int n = cellIndex.x + cellIndex.y * 64 + cellIndex.z * 64 * 64;
+    int n = cellIndex.x + cellIndex.y * gridDimensions.x + cellIndex.z * gridDimensions.y * gridDimensions.z;
     
     n = timMod(n, cellOffsetBufferSize);
 
@@ -127,11 +128,11 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
         return;
     
     
-    int index = ThreadId.x;
+    int index = particleIndexBuffer[ThreadId.x];
 
-    float3 position_a = positions[index];
+    float3 position_a = positions[ThreadId.x];
 	
-    uint baseIndex = neighboursBaseIndex[index];
+    uint baseIndex = neighboursBaseIndex[ThreadId.x];
     uint count = 0;
     
     const float neighbourDistanceSqrd = neighbourDistance * neighbourDistance;
@@ -176,7 +177,7 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
         }
     }
 	
-    neighboursCount[index] = count;
+    neighboursCount[ThreadId.x] = count;
 }
 
 //[numthreads(256, 1, 1)]

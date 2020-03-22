@@ -69,7 +69,7 @@ public:
 		SHADER_PARAMETER(uint32, numBoids)
 		SHADER_PARAMETER(float, cellSize)
 		SHADER_PARAMETER(uint32, cellOffsetBufferSize)
-		SHADER_PARAMETER(FVector, gridOrigin)
+		SHADER_PARAMETER(FIntVector, gridDimensions)
 
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, positions)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, particleIndexBuffer)
@@ -98,6 +98,8 @@ public:
 		SHADER_PARAMETER(uint32, numBoids)
 		SHADER_PARAMETER(float, cellSize)
 		SHADER_PARAMETER(uint32, cellOffsetBufferSize)
+		SHADER_PARAMETER(FIntVector, gridDimensions)
+
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, particleIndexBuffer)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, cellIndexBuffer)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, cellOffsetBuffer)
@@ -166,6 +168,7 @@ public:
 		SHADER_PARAMETER(uint32, numNeighbours)
 		SHADER_PARAMETER(float, neighbourDistance)
 
+
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, positions)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neigbhours)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neighboursBaseIndex)
@@ -173,7 +176,7 @@ public:
 
 		SHADER_PARAMETER(float, cellSize)
 		SHADER_PARAMETER(uint32, cellOffsetBufferSize)
-		SHADER_PARAMETER(FVector, gridOrigin)
+		SHADER_PARAMETER(FIntVector, gridDimensions)
 
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, particleIndexBuffer)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, cellIndexBuffer)
@@ -404,6 +407,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			parameters.numBoids = numBoids;
 			parameters.cellSize = gridCellSize;
 			parameters.cellOffsetBufferSize = cellOffsetBufferSize;
+			parameters.gridDimensions = gridDimensions;
 			parameters.positions = _positionBufferUAV;
 			parameters.particleIndexBuffer = _particleIndexBufferUAV;
 			parameters.cellIndexBuffer = _cellIndexBufferUAV;
@@ -422,9 +426,9 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 		// sort the cell index buffer
 		{
-			FGPUBitonicSort gpuBitonicSort;
+		 	FGPUBitonicSort gpuBitonicSort;
 
-			gpuBitonicSort.sort(
+		 	gpuBitonicSort.sort(
 				numBoids,
 				numBoids,
 				_cellIndexBufferUAV,
@@ -437,6 +441,8 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 				EResourceTransitionPipeline::EGfxToCompute,
 				_particleIndexBufferUAV
 			);
+
+
 		}
 
 		// reset the cell offset buffer
@@ -461,6 +467,8 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			parameters.numBoids = numBoids;
 			parameters.cellSize = gridCellSize;
 			parameters.cellOffsetBufferSize = cellOffsetBufferSize;
+			parameters.gridDimensions = gridDimensions;
+
 			parameters.particleIndexBuffer = _particleIndexBufferUAV;
 			parameters.cellIndexBuffer = _cellIndexBufferUAV;
 			parameters.cellOffsetBuffer = _cellOffsetBufferUAV;
@@ -493,6 +501,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 			parameters.cellSize = gridCellSize;
 			parameters.cellOffsetBufferSize = cellOffsetBufferSize;
+			parameters.gridDimensions = gridDimensions;
 
 			parameters.cellOffsetBuffer = _cellOffsetBufferUAV;
 			parameters.cellIndexBuffer = _cellIndexBufferUAV;
@@ -507,6 +516,31 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 				groupSize(numBoids)
 			);
 		}
+
+		if (false)
+		{
+			TArray<uint32> cellIndexBuffer;
+			cellIndexBuffer.Init(0, numBoids);
+
+			TArray<uint32> particleIndexBuffer;
+			particleIndexBuffer.Init(0, numBoids);
+
+			TArray<uint32> cellOffsetBuffer;
+			cellOffsetBuffer.Init(0, cellOffsetBufferSize);
+
+			uint8* cellIndexData = (uint8*)RHILockStructuredBuffer(_cellIndexBuffer, 0, numBoids * sizeof(uint32_t), RLM_ReadOnly);
+			FMemory::Memcpy(cellIndexBuffer.GetData(), cellIndexData, numBoids * sizeof(uint32_t));
+			RHIUnlockStructuredBuffer(_cellIndexBuffer);
+
+			uint8* particleIndexData = (uint8*)RHILockStructuredBuffer(_particleIndexBuffer, 0, numBoids * sizeof(uint32_t), RLM_ReadOnly);
+			FMemory::Memcpy(particleIndexBuffer.GetData(), particleIndexData, numBoids * sizeof(uint32_t));
+			RHIUnlockStructuredBuffer(_particleIndexBuffer);
+
+			uint8* cellOffsetData = (uint8*)RHILockStructuredBuffer(_cellOffsetBuffer, 0, cellOffsetBufferSize * sizeof(uint32_t), RLM_ReadOnly);
+			FMemory::Memcpy(cellOffsetBuffer.GetData(), cellOffsetData, cellOffsetBufferSize * sizeof(uint32_t));
+			RHIUnlockStructuredBuffer(_cellOffsetBuffer);
+		}
+
 
 		// execute the main compute shader
 		{
