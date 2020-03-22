@@ -8,7 +8,7 @@
 uint cellOffsetBufferSize;
 uint3 gridDimensions;
 uint numParticles;
-const float cellSizeReciprocal = 1.0f / 20.0f;
+float cellSizeReciprocal;
 
 RWStructuredBuffer<uint> particleIndexBuffer;
 RWStructuredBuffer<uint> cellIndexBuffer;   

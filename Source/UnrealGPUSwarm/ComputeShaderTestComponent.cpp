@@ -164,19 +164,18 @@ public:
 	SHADER_USE_PARAMETER_STRUCT(FNeighboursComputeShader, FGlobalShader);
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
-		SHADER_PARAMETER(uint32, numBoids)
 		SHADER_PARAMETER(uint32, numNeighbours)
 		SHADER_PARAMETER(float, neighbourDistance)
-
 
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<float3>, positions)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neigbhours)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neighboursBaseIndex)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neighboursCount)
 
-		SHADER_PARAMETER(float, cellSize)
+		SHADER_PARAMETER(uint32, numParticles)
 		SHADER_PARAMETER(uint32, cellOffsetBufferSize)
 		SHADER_PARAMETER(FIntVector, gridDimensions)
+		SHADER_PARAMETER(float, cellSizeReciprocal)
 
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, particleIndexBuffer)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, cellIndexBuffer)
@@ -387,7 +386,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 		// reset the particle index buffer
 		{
 			FHashedGrid_resetParticleIndexBuffer_CS::FParameters parameters;
-			parameters.numBoids = numBoids;
+			parameters.numParticles = numBoids;
 			parameters.particleIndexBuffer = _particleIndexBufferUAV;
 
 			TShaderMapRef<FHashedGrid_resetParticleIndexBuffer_CS> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
@@ -404,7 +403,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 			
 			FHashedGrid_createUnsortedList_CS::FParameters parameters;
-			parameters.numBoids = numBoids;
+			parameters.numParticles = numBoids;
 			parameters.cellSizeReciprocal = 1.0f / gridCellSize;
 			parameters.cellOffsetBufferSize = cellOffsetBufferSize;
 			parameters.gridDimensions = gridDimensions;
@@ -464,7 +463,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 		// build the cell offset buffer
 		{
 			FHashedGrid_createOffsetList_CS::FParameters parameters;
-			parameters.numBoids = numBoids;
+			parameters.numParticles = numBoids;
 			parameters.cellSizeReciprocal = 1.0f / gridCellSize;
 			parameters.cellOffsetBufferSize = cellOffsetBufferSize;
 			parameters.gridDimensions = gridDimensions;
@@ -490,7 +489,6 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 			
 			FNeighboursComputeShader::FParameters parameters;
-			parameters.numBoids = numBoids;
 			parameters.numNeighbours = numNeighbours;
 			parameters.neighbourDistance = neighbourDistance;
 
@@ -499,7 +497,8 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			parameters.neighboursBaseIndex = _neighboursBaseIndexUAV;
 			parameters.neighboursCount = _neighboursCountUAV;
 
-			parameters.cellSize = gridCellSize;
+			parameters.numParticles = numBoids;
+			parameters.cellSizeReciprocal = 1.0f / gridCellSize;
 			parameters.cellOffsetBufferSize = cellOffsetBufferSize;
 			parameters.gridDimensions = gridDimensions;
 
@@ -561,6 +560,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			parameters.neigbhours = _neighboursBufferUAV;
 			parameters.neighboursBaseIndex = _neighboursBaseIndexUAV;
 			parameters.neighboursCount = _neighboursCountUAV;
+			
 
 
 			TShaderMapRef<FBoidsComputeShader> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));

@@ -1,12 +1,10 @@
 #include "/Engine/Private/Common.ush"
 
+#include "HashedGrid.usf"
 
-
-uint numBoids;
 uint numNeighbours;
 float neighbourDistance;
 
-RWStructuredBuffer<float3> positions; // Point Positions Input Buffer
 
 RWStructuredBuffer<uint> neigbhours;
 RWStructuredBuffer<uint> neighboursBaseIndex;
@@ -28,7 +26,7 @@ float3 safeNormal(float3 vec)
 [numthreads(256, 1, 1)]
 void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
 {
-    if (ThreadId.x >= numBoids)
+    if (ThreadId.x >= numParticles)
         return;
     
     
@@ -57,7 +55,7 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
                 uint neighborIterator = cellOffsetBuffer[flatNeighborIndex];
 
                 // iterate through particles in the neighbour cell (if iterator offset is valid)
-                while(neighborIterator != 0xFFFFFFFF && neighborIterator < numBoids)
+                while(neighborIterator != 0xFFFFFFFF && neighborIterator < numParticles)
                 {
                     uint particleIndexB = particleIndexBuffer[neighborIterator];
 
@@ -96,7 +94,7 @@ void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
     
 //    const float neighbourDistanceSqrd = neighbourDistance * neighbourDistance;
 	
-//    for (uint i = 0; i < numBoids; ++i)
+//    for (uint i = 0; i < numParticles; ++i)
 //    {
 //        if (i != index)
 //        {
