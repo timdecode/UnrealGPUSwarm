@@ -28,7 +28,7 @@ uint getFlatCellIndex(int3 cellIndex)
     const uint p2 = 19349663;
     const uint p3 = 83492791;
     //int n = p1 * cellIndex.x ^ p2*cellIndex.y ^ p3*cellIndex.z;
-    int n = cellIndex.x + cellIndex.y * gridDimensions.x + cellIndex.z * gridDimensions.y * gridDimensions.z;
+    int n = cellIndex.x + cellIndex.y * gridDimensions.x + cellIndex.z * gridDimensions.x * gridDimensions.y;
     
     n = timMod(n, cellOffsetBufferSize);
 
