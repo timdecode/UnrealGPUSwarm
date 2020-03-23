@@ -82,8 +82,9 @@ public:
 
 	TArray<FVector4> outputDirections;
 
+
 protected:
-	unsigned int dualBufferCount = 0;
+	TAtomic<unsigned int> dualBufferCount = 0;
 
 	// GPU side
 	FStructuredBufferRHIRef _positionBuffer[2];
