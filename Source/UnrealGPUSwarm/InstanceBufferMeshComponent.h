@@ -74,13 +74,13 @@ struct FInstancedStaticMeshMappingInfo
 	}
 };
 
-class FAsyncBuildInstanceBuffer : public FNonAbandonableTask
+class FIBMAsyncBuildInstanceBuffer : public FNonAbandonableTask
 {
 public:
 	class UInstanceBufferMeshComponent* Component;
 	class UWorld* World;
 
-	FAsyncBuildInstanceBuffer(class UInstanceBufferMeshComponent* InComponent, class UWorld* InWorld)
+	FIBMAsyncBuildInstanceBuffer(class UInstanceBufferMeshComponent* InComponent, class UWorld* InWorld)
 		: Component(InComponent)
 		, World(InWorld)
 	{
@@ -88,11 +88,11 @@ public:
 	void DoWork();
 	FORCEINLINE TStatId GetStatId() const
 	{
-		RETURN_QUICK_DECLARE_CYCLE_STAT(FAsyncBuildInstanceBuffer, STATGROUP_ThreadPoolAsyncTasks);
+		RETURN_QUICK_DECLARE_CYCLE_STAT(FIBMAsyncBuildInstanceBuffer, STATGROUP_ThreadPoolAsyncTasks);
 	}
 	static const TCHAR *Name()
 	{
-		return TEXT("FAsyncBuildInstanceBuffer");
+		return TEXT("FIBMAsyncBuildInstanceBuffer");
 	}
 };
 
@@ -142,7 +142,7 @@ class ENGINE_API UInstanceBufferMeshComponent : public UStaticMeshComponent
 	SIZE_T ProxySize;
 
 	// Temp hack, long term we will load data in the right format directly
-	FAsyncTask<FAsyncBuildInstanceBuffer>* AsyncBuildInstanceBufferTask;
+	FAsyncTask<FIBMAsyncBuildInstanceBuffer>* AsyncBuildInstanceBufferTask;
 
 	/** Add an instance to this component. Transform is given in local space of this component. */
 	UFUNCTION(BlueprintCallable, Category="Components|InstancedStaticMesh")
