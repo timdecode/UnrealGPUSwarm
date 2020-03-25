@@ -344,3 +344,67 @@ struct HInstanceBufferMeshInstance : public HHitProxy
 		return EMouseCursor::CardinalCross;
 	}
 };
+
+/** Used to store lightmap data during RerunConstructionScripts */
+USTRUCT()
+struct FInstanceBufferMeshLightMapInstanceData
+{
+	GENERATED_BODY()
+
+	/** Transform of component */
+	UPROPERTY()
+	FTransform Transform;
+
+	/** guid from LODData */
+	UPROPERTY()
+	TArray<FGuid> MapBuildDataIds;
+};
+
+/** Helper class used to preserve lighting/selection state across blueprint reinstancing */
+USTRUCT()
+struct FInstanceBufferMeshComponentInstanceData : public FSceneComponentInstanceData
+{
+	GENERATED_BODY()
+public:
+	FInstanceBufferMeshComponentInstanceData() = default;
+	FInstanceBufferMeshComponentInstanceData(const UInstancedStaticMeshComponent* InComponent)
+		: FSceneComponentInstanceData(InComponent)
+		, StaticMesh(InComponent->GetStaticMesh())
+	{}
+	virtual ~FInstanceBufferMeshComponentInstanceData() = default;
+
+	virtual bool ContainsData() const override
+	{
+		return true;
+	}
+
+	virtual void ApplyToComponent(UActorComponent* Component, const ECacheApplyPhase CacheApplyPhase) override
+	{
+		Super::ApplyToComponent(Component, CacheApplyPhase);
+		CastChecked<UInstancedStaticMeshComponent>(Component)->ApplyComponentInstanceData(this);
+	}
+
+	virtual void AddReferencedObjects(FReferenceCollector& Collector) override
+	{
+		Super::AddReferencedObjects(Collector);
+		Collector.AddReferencedObject(StaticMesh);
+	}
+
+public:
+	/** Mesh being used by component */
+	UPROPERTY()
+	UStaticMesh* StaticMesh;
+
+	// Static lighting info
+	UPROPERTY()
+	FInstanceBufferMeshLightMapInstanceData CachedStaticLighting;
+	UPROPERTY()
+	TArray<FInstancedStaticMeshInstanceData> PerInstanceSMData;
+
+	/** The cached selected instances */
+	TBitArray<> SelectedInstances;
+
+	/* The cached random seed */
+	UPROPERTY()
+	int32 InstancingRandomSeed;
+};
