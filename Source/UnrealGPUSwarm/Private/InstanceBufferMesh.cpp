@@ -1115,7 +1115,7 @@ void FInstancedStaticMeshSceneProxy::GetDynamicRayTracingInstances(struct FRayTr
 
 				if (InstancedRenderData.Component->PerInstanceSMData.IsValidIndex(Instance))
 				{
-					const FInstancedStaticMeshInstanceData& InstanceData = InstancedRenderData.Component->PerInstanceSMData[Instance];
+					const FIBMInstanceData& InstanceData = InstancedRenderData.Component->PerInstanceSMData[Instance];
 					FMatrix InstanceTransform = InstanceData.Transform * ToWorld;
 					FVector InstanceLocation = InstanceTransform.TransformPosition({ 0.0f,0.0f,0.0f });
 					FVector VToInstanceCenter = Context.ReferenceView->ViewLocation - InstanceLocation;
@@ -1153,7 +1153,7 @@ void FInstancedStaticMeshSceneProxy::GetDynamicRayTracingInstances(struct FRayTr
 		{
 			if (InstancedRenderData.Component->PerInstanceSMData.IsValidIndex(InstanceIdx))
 			{
-				const FInstancedStaticMeshInstanceData& InstanceData = InstancedRenderData.Component->PerInstanceSMData[InstanceIdx];
+				const FIBMInstanceData& InstanceData = InstancedRenderData.Component->PerInstanceSMData[InstanceIdx];
 				FMatrix ComponentLocalToWorld = InstancedRenderData.Component->GetComponentTransform().ToMatrixWithScale();
 				FMatrix InstanceTransform = InstanceData.Transform * ComponentLocalToWorld;
 
@@ -1188,7 +1188,7 @@ void FInstancedStaticMeshSceneProxy::SetupRayTracingCullClusters()
 		{
 			if (InstancedRenderData.Component->PerInstanceSMData.IsValidIndex(Instance))
 			{
-				const FInstancedStaticMeshInstanceData& InstanceData = InstancedRenderData.Component->PerInstanceSMData[Instance];
+				const FIBMInstanceData& InstanceData = InstancedRenderData.Component->PerInstanceSMData[Instance];
 				FMatrix InstanceTransform = InstanceData.Transform * ComponentLocalToWorld;
 				FVector VMin, VMax;
 
@@ -1209,7 +1209,7 @@ void FInstancedStaticMeshSceneProxy::SetupRayTracingCullClusters()
 		{
 			if (InstancedRenderData.Component->PerInstanceSMData.IsValidIndex(Instance))
 			{
-				const FInstancedStaticMeshInstanceData& InstanceData = InstancedRenderData.Component->PerInstanceSMData[Instance];
+				const FIBMInstanceData& InstanceData = InstancedRenderData.Component->PerInstanceSMData[Instance];
 				FMatrix InstanceTransform = InstanceData.Transform * ComponentLocalToWorld;
 				FVector InstanceLocation = InstanceTransform.TransformPosition({ 0.0f,0.0f,0.0f });
 				FVector VMin = InstanceLocation - FVector(MaxInstanceRadius, MaxInstanceRadius, MaxInstanceRadius);
@@ -1449,7 +1449,7 @@ void UInstancedStaticMeshComponent::BuildRenderData(FStaticMeshInstanceData& Out
 			continue;
 		}
 			
-		const FInstancedStaticMeshInstanceData& InstanceData = PerInstanceSMData[Index];
+		const FIBMInstanceData& InstanceData = PerInstanceSMData[Index];
 		FVector2D LightmapUVBias = FVector2D(-1.0f, -1.0f);
 		FVector2D ShadowmapUVBias = FVector2D(-1.0f, -1.0f);
 
@@ -1898,7 +1898,7 @@ struct FInstancedStaticMeshInstanceData_DEPRECATED
 	
 	friend FArchive& operator<<(FArchive& Ar, FInstancedStaticMeshInstanceData_DEPRECATED& InstanceData)
 	{
-		// @warning BulkSerialize: FInstancedStaticMeshInstanceData is serialized as memory dump
+		// @warning BulkSerialize: FIBMInstanceData is serialized as memory dump
 		Ar << InstanceData.Transform << InstanceData.LightmapUVBias << InstanceData.ShadowmapUVBias;
 		return Ar;
 	}
@@ -2044,7 +2044,7 @@ void UInstancedStaticMeshComponent::Serialize(FArchive& Ar)
 		DeprecatedData.BulkSerialize(Ar);
 		PerInstanceSMData.Reset(DeprecatedData.Num());
 		Algo::Transform(DeprecatedData, PerInstanceSMData, [](const FInstancedStaticMeshInstanceData_DEPRECATED& OldData){ 
-			return FInstancedStaticMeshInstanceData(OldData.Transform);
+			return FIBMInstanceData(OldData.Transform);
 		});
 	}
 	else
@@ -2071,13 +2071,13 @@ void UInstancedStaticMeshComponent::PreAllocateInstancesMemory(int32 AddedInstan
 	PerInstanceSMData.Reserve(PerInstanceSMData.Num() + AddedInstanceCount);
 }
 
-int32 UInstancedStaticMeshComponent::AddInstanceInternal(int32 InstanceIndex, FInstancedStaticMeshInstanceData* InNewInstanceData, const FTransform& InstanceTransform)
+int32 UInstancedStaticMeshComponent::AddInstanceInternal(int32 InstanceIndex, FIBMInstanceData* InNewInstanceData, const FTransform& InstanceTransform)
 {
-	FInstancedStaticMeshInstanceData* NewInstanceData = InNewInstanceData;
+	FIBMInstanceData* NewInstanceData = InNewInstanceData;
 
 	if (NewInstanceData == nullptr)
 	{
-		NewInstanceData = new(PerInstanceSMData) FInstancedStaticMeshInstanceData();
+		NewInstanceData = new(PerInstanceSMData) FIBMInstanceData();
 	}
 
 	SetupNewInstanceData(*NewInstanceData, InstanceIndex, InstanceTransform);
@@ -2165,7 +2165,7 @@ bool UInstancedStaticMeshComponent::GetInstanceTransform(int32 InstanceIndex, FT
 		return false;
 	}
 
-	const FInstancedStaticMeshInstanceData& InstanceData = PerInstanceSMData[InstanceIndex];
+	const FIBMInstanceData& InstanceData = PerInstanceSMData[InstanceIndex];
 
 	OutInstanceTransform = FTransform(InstanceData.Transform);
 	if (bWorldSpace)
@@ -2237,7 +2237,7 @@ bool UInstancedStaticMeshComponent::UpdateInstanceTransform(int32 InstanceIndex,
 
 	Modify();
 
-	FInstancedStaticMeshInstanceData& InstanceData = PerInstanceSMData[InstanceIndex];
+	FIBMInstanceData& InstanceData = PerInstanceSMData[InstanceIndex];
 
     // TODO: Computing LocalTransform is useless when we're updating the world location for the entire mesh.
 	// Should find some way around this for performance.
@@ -2279,7 +2279,7 @@ bool UInstancedStaticMeshComponent::BatchUpdateInstancesTransforms(int32 StartIn
 	int32 InstanceIndex = StartInstanceIndex;
 	for (const FTransform& NewInstanceTransform : NewInstancesTransforms)
 	{
-		FInstancedStaticMeshInstanceData& InstanceData = PerInstanceSMData[InstanceIndex];
+		FIBMInstanceData& InstanceData = PerInstanceSMData[InstanceIndex];
 
 		// TODO: Computing LocalTransform is useless when we're updating the world location for the entire mesh.
 		// Should find some way around this for performance.
@@ -2324,7 +2324,7 @@ bool UInstancedStaticMeshComponent::BatchUpdateInstancesTransform(int32 StartIns
 	int32 EndInstanceIndex = StartInstanceIndex + NumInstances;
 	for(int32 InstanceIndex = StartInstanceIndex; InstanceIndex < EndInstanceIndex; ++InstanceIndex)
 	{
-		FInstancedStaticMeshInstanceData& InstanceData = PerInstanceSMData[InstanceIndex];
+		FIBMInstanceData& InstanceData = PerInstanceSMData[InstanceIndex];
 
 		// TODO: Computing LocalTransform is useless when we're updating the world location for the entire mesh.
 		// Should find some way around this for performance.
@@ -2512,7 +2512,7 @@ void UInstancedStaticMeshComponent::SetCullDistances(int32 StartCullDistance, in
 	MarkRenderStateDirty();
 }
 
-void UInstancedStaticMeshComponent::SetupNewInstanceData(FInstancedStaticMeshInstanceData& InOutNewInstanceData, int32 InInstanceIndex, const FTransform& InInstanceTransform)
+void UInstancedStaticMeshComponent::SetupNewInstanceData(FIBMInstanceData& InOutNewInstanceData, int32 InInstanceIndex, const FTransform& InInstanceTransform)
 {
 	InOutNewInstanceData.Transform = InInstanceTransform.ToMatrixWithScale();
 
@@ -2556,7 +2556,7 @@ void UInstancedStaticMeshComponent::GetInstancesMinMaxScale(FVector& MinScale, F
 
 		for (int32 i = 0; i < PerInstanceSMData.Num(); ++i)
 		{
-			const FInstancedStaticMeshInstanceData& InstanceData = PerInstanceSMData[i];
+			const FIBMInstanceData& InstanceData = PerInstanceSMData[i];
 			FVector ScaleVector = InstanceData.Transform.GetScaleVector();
 
 			MinScale = MinScale.ComponentMin(ScaleVector);

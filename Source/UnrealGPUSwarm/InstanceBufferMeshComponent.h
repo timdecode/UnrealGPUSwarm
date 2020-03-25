@@ -76,26 +76,26 @@ struct FIBMInstanceUpdateCmdBuffer
 };
 
 USTRUCT()
-struct FInstancedStaticMeshInstanceData
+struct FIBMInstanceData
 {
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY(EditAnywhere, Category=Instances)
 	FMatrix Transform;
 
-	FInstancedStaticMeshInstanceData()
+	FIBMInstanceData()
 		: Transform(FMatrix::Identity)
 	{
 	}
 
-	FInstancedStaticMeshInstanceData(const FMatrix& InTransform)
+	FIBMInstanceData(const FMatrix& InTransform)
 		: Transform(InTransform)
 	{
 	}
 
-	friend FArchive& operator<<(FArchive& Ar, FInstancedStaticMeshInstanceData& InstanceData)
+	friend FArchive& operator<<(FArchive& Ar, FIBMInstanceData& InstanceData)
 	{
-		// @warning BulkSerialize: FInstancedStaticMeshInstanceData is serialized as memory dump
+		// @warning BulkSerialize: FIBMInstanceData is serialized as memory dump
 		// See TArray::BulkSerialize for detailed description of implied limitations.
 		Ar << InstanceData.Transform;
 		return Ar;
@@ -127,7 +127,7 @@ class ENGINE_API UInstancedStaticMeshComponent : public UStaticMeshComponent
 	
 	/** Array of instances, bulk serialized. */
 	UPROPERTY(EditAnywhere, SkipSerialization, DisplayName="Instances", Category=Instances, meta=(MakeEditWidget=true, EditFixedOrder))
-	TArray<FInstancedStaticMeshInstanceData> PerInstanceSMData;
+	TArray<FIBMInstanceData> PerInstanceSMData;
 
 	/** Value used to seed the random number stream that generates random numbers for each of this mesh's instances.
 	The random number is stored in a buffer accessible to materials through the PerInstanceRandom expression. If
@@ -331,7 +331,7 @@ public:
 private:
 
 	/** Sets up new instance data to sensible defaults, creates physics counterparts if possible. */
-	void SetupNewInstanceData(FInstancedStaticMeshInstanceData& InOutNewInstanceData, int32 InInstanceIndex, const FTransform& InInstanceTransform);
+	void SetupNewInstanceData(FIBMInstanceData& InOutNewInstanceData, int32 InInstanceIndex, const FTransform& InInstanceTransform);
 
 	/** Update instance body with a new transform */
 	void UpdateInstanceBodyTransform(int32 InstanceIndex, const FTransform& WorldSpaceInstanceTransform, bool bTeleport);
@@ -347,7 +347,7 @@ protected:
 	virtual void PartialNavigationUpdate(int32 InstanceIdx);
 
 	/** Internal version of AddInstance */
-	int32 AddInstanceInternal(int32 InstanceIndex, FInstancedStaticMeshInstanceData* InNewInstanceData, const FTransform& InstanceTransform);
+	int32 AddInstanceInternal(int32 InstanceIndex, FIBMInstanceData* InNewInstanceData, const FTransform& InstanceTransform);
 
 	/** Internal version of RemoveInstance */	
 	bool RemoveInstanceInternal(int32 InstanceIndex, bool InstanceAlreadyRemoved);
@@ -455,7 +455,7 @@ public:
 	UPROPERTY()
 	FInstancedStaticMeshLightMapInstanceData CachedStaticLighting;
 	UPROPERTY()
-	TArray<FInstancedStaticMeshInstanceData> PerInstanceSMData;
+	TArray<FIBMInstanceData> PerInstanceSMData;
 
 	/** The cached selected instances */
 	TBitArray<> SelectedInstances;

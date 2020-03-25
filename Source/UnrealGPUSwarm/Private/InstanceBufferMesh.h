@@ -752,7 +752,7 @@ struct FComponentInstanceSharingData
 struct FComponentInstancedLightmapData
 {
 	/** List of all original components and their original instances containing */
-	TMap<UInstancedStaticMeshComponent*, TArray<FInstancedStaticMeshInstanceData> > ComponentInstances;
+	TMap<UInstancedStaticMeshComponent*, TArray<FIBMInstanceData> > ComponentInstances;
 
 	/** List of new components */
 	TArray< FComponentInstanceSharingData > SharingData;
