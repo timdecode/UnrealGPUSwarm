@@ -140,9 +140,9 @@ private:
 	FInstancedStaticMeshVertexFactory
 -----------------------------------------------------------------------------*/
 
-struct FIBMInstancingUserData
+struct FInstancingUserData
 {
-	class FIBMRenderData* RenderData;
+	class FInstancedStaticMeshRenderData* RenderData;
 	class FStaticMeshRenderData* MeshRenderData;
 
 	int32 StartCullDistance;
@@ -429,14 +429,14 @@ struct FPerInstanceRenderData
 
 
 /*-----------------------------------------------------------------------------
-	FIBMRenderData
+	FInstancedStaticMeshRenderData
 -----------------------------------------------------------------------------*/
 
-class FIBMRenderData
+class FInstancedStaticMeshRenderData
 {
 public:
 
-	FIBMRenderData(UInstancedStaticMeshComponent* InComponent, ERHIFeatureLevel::Type InFeatureLevel)
+	FInstancedStaticMeshRenderData(UInstancedStaticMeshComponent* InComponent, ERHIFeatureLevel::Type InFeatureLevel)
 	  : Component(InComponent)
 	  , PerInstanceRenderData(InComponent->PerInstanceRenderData)
 	  , LODModels(Component->GetStaticMesh()->RenderData->LODResources)
@@ -602,7 +602,7 @@ protected:
 	UStaticMesh* StaticMesh;
 
 	/** Per component render data */
-	FIBMRenderData InstancedRenderData;
+	FInstancedStaticMeshRenderData InstancedRenderData;
 
 #if WITH_EDITOR
 	/* If we we have any selected instances */
@@ -612,9 +612,9 @@ protected:
 #endif
 
 	/** LOD transition info. */
-	FIBMInstancingUserData UserData_AllInstances;
-	FIBMInstancingUserData UserData_SelectedInstances;
-	FIBMInstancingUserData UserData_DeselectedInstances;
+	FInstancingUserData UserData_AllInstances;
+	FInstancingUserData UserData_SelectedInstances;
+	FInstancingUserData UserData_DeselectedInstances;
 
 #if RHI_RAYTRACING
 	TArray< FVector >						RayTracingCullClusterBoundsMin;
