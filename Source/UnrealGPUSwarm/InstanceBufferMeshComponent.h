@@ -15,7 +15,7 @@
 
 class FLightingBuildOptions;
 class FPrimitiveSceneProxy;
-class FStaticLightingTextureMapping_InstancedStaticMesh;
+class FStaticLightingTextureMapping_IBM;
 class ULightComponent;
 struct FNavigableGeometryExport;
 struct FNavigationRelevantData;
@@ -24,7 +24,7 @@ struct FStaticLightingPrimitiveInfo;
 
 DECLARE_STATS_GROUP(TEXT("Foliage"), STATGROUP_Foliage, STATCAT_Advanced);
 
-class FStaticLightingTextureMapping_InstancedStaticMesh;
+class FStaticLightingTextureMapping_IBM;
 class FInstancedLightMap2D;
 class FInstancedShadowMap2D;
 class FStaticMeshInstanceData;
@@ -66,7 +66,7 @@ struct FInstancedStaticMeshMappingInfo
 {
 	GENERATED_USTRUCT_BODY()
 
-	FStaticLightingTextureMapping_InstancedStaticMesh* Mapping;
+	FStaticLightingTextureMapping_IBM* Mapping;
 
 	FInstancedStaticMeshMappingInfo()
 		: Mapping(nullptr)
@@ -321,9 +321,9 @@ protected:
 	UPROPERTY(Transient, DuplicateTransient, TextExportTransient)
 	TArray<FInstancedStaticMeshMappingInfo> CachedMappings;
 
-	void ApplyLightMapping(FStaticLightingTextureMapping_InstancedStaticMesh* InMapping, ULevel* LightingScenario);
+	void ApplyLightMapping(FStaticLightingTextureMapping_IBM* InMapping, ULevel* LightingScenario);
 
-	friend FStaticLightingTextureMapping_InstancedStaticMesh;
+	friend FStaticLightingTextureMapping_IBM;
 	friend FInstancedLightMap2D;
 	friend FInstancedShadowMap2D;
 };

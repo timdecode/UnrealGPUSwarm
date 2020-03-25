@@ -658,11 +658,11 @@ public:
 
 
 /** Represents a static mesh primitive with texture mapped static lighting. */
-class FStaticLightingTextureMapping_InstancedStaticMesh : public FStaticMeshStaticLightingTextureMapping
+class FStaticLightingTextureMapping_IBM : public FStaticMeshStaticLightingTextureMapping
 {
 public:
 	/** Initialization constructor. */
-	FStaticLightingTextureMapping_InstancedStaticMesh(UInstancedStaticMeshComponent* InPrimitive, int32 LODIndex, int32 InInstanceIndex, FStaticLightingMesh* InMesh, int32 InSizeX, int32 InSizeY, int32 InTextureCoordinateIndex, bool bPerformFullQualityRebuild)
+	FStaticLightingTextureMapping_IBM(UInstancedStaticMeshComponent* InPrimitive, int32 LODIndex, int32 InInstanceIndex, FStaticLightingMesh* InMesh, int32 InSizeX, int32 InSizeY, int32 InTextureCoordinateIndex, bool bPerformFullQualityRebuild)
 		: FStaticMeshStaticLightingTextureMapping(InPrimitive, LODIndex, InMesh, InSizeX, InSizeY, InTextureCoordinateIndex, bPerformFullQualityRebuild)
 		, InstanceIndex(InInstanceIndex)
 		, QuantizedData(nullptr)

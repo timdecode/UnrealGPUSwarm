@@ -1732,7 +1732,7 @@ void UInstancedStaticMeshComponent::GetStaticLightingInfo(FStaticLightingPrimiti
 				auto* StaticLightingMesh = new FStaticLightingMesh_InstancedStaticMesh(this, LODIndex, InstanceIndex, InRelevantLights);
 				OutPrimitiveInfo.Meshes.Add(StaticLightingMesh);
 
-				auto* InstancedMapping = new FStaticLightingTextureMapping_InstancedStaticMesh(this, LODIndex, InstanceIndex, StaticLightingMesh, LightMapWidth, LightMapHeight, GetStaticMesh()->LightMapCoordinateIndex, true);
+				auto* InstancedMapping = new FStaticLightingTextureMapping_IBM(this, LODIndex, InstanceIndex, StaticLightingMesh, LightMapWidth, LightMapHeight, GetStaticMesh()->LightMapCoordinateIndex, true);
 				OutPrimitiveInfo.Mappings.Add(InstancedMapping);
 
 				CachedMappings[LODIndex * PerInstanceSMData.Num() + InstanceIndex].Mapping = InstancedMapping;
@@ -1746,7 +1746,7 @@ void UInstancedStaticMeshComponent::GetStaticLightingInfo(FStaticLightingPrimiti
 	}
 }
 
-void UInstancedStaticMeshComponent::ApplyLightMapping(FStaticLightingTextureMapping_InstancedStaticMesh* InMapping, ULevel* LightingScenario)
+void UInstancedStaticMeshComponent::ApplyLightMapping(FStaticLightingTextureMapping_IBM* InMapping, ULevel* LightingScenario)
 {
 	static const auto CVar = IConsoleManager::Get().FindTConsoleVariableDataInt(TEXT("r.VirtualTexturedLightmaps"));
 	const bool bUseVirtualTextures = (CVar->GetValueOnAnyThread() != 0) && UseVirtualTexturing(GMaxRHIFeatureLevel);
@@ -1762,7 +1762,7 @@ void UInstancedStaticMeshComponent::ApplyLightMapping(FStaticLightingTextureMapp
 		TArray<TUniquePtr<FQuantizedLightmapData>> AllQuantizedData;
 		for (auto& MappingInfo : CachedMappings)
 		{
-			FStaticLightingTextureMapping_InstancedStaticMesh* Mapping = MappingInfo.Mapping;
+			FStaticLightingTextureMapping_IBM* Mapping = MappingInfo.Mapping;
 			AllQuantizedData.Add(MoveTemp(Mapping->QuantizedData));
 		}
 
@@ -1770,7 +1770,7 @@ void UInstancedStaticMeshComponent::ApplyLightMapping(FStaticLightingTextureMapp
 		TArray<TMap<ULightComponent*, TUniquePtr<FShadowMapData2D>>> AllShadowMapData;
 		for (auto& MappingInfo : CachedMappings)
 		{
-			FStaticLightingTextureMapping_InstancedStaticMesh* Mapping = MappingInfo.Mapping;
+			FStaticLightingTextureMapping_IBM* Mapping = MappingInfo.Mapping;
 			bNeedsShadowMap = bNeedsShadowMap || (Mapping->ShadowMapData.Num() > 0);
 			AllShadowMapData.Add(MoveTemp(Mapping->ShadowMapData));
 		}
