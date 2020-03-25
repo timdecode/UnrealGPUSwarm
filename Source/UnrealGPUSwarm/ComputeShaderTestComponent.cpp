@@ -449,6 +449,8 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	ENQUEUE_RENDER_COMMAND(FComputeShaderRunner)(
 	[&, totalTime, dt](FRHICommandListImmediate& RHICommands)
 	{
+		QUICK_SCOPE_CYCLE_COUNTER(STAT_UComputeShaderTestComponent_TickComponent);
+
 		const uint32_t cellOffsetBufferSize = gridDimensions.X * gridDimensions.Y * gridDimensions.Z;
 
 		auto& positionsBufferUAV = _positionBufferUAV[dualBufferCount];
