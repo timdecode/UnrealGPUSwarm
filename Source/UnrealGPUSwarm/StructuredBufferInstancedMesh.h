@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable, ClassGroup = (Rendering, Common), hidecategories = (Object, Activation, "Components|Activation"), ShowCategories = (Mobility), editinlinenew, meta = (BlueprintSpawnableComponent))
 class UNREALGPUSWARM_API UStructuredBufferInstancedMesh : public UStaticMeshComponent
 {
 	GENERATED_BODY()
