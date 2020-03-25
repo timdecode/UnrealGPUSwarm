@@ -140,7 +140,7 @@ private:
 	FInstancedStaticMeshVertexFactory
 -----------------------------------------------------------------------------*/
 
-struct FInstancingUserData
+struct FIBMInstancingUserData
 {
 	class FInstancedStaticMeshRenderData* RenderData;
 	class FStaticMeshRenderData* MeshRenderData;
@@ -612,9 +612,9 @@ protected:
 #endif
 
 	/** LOD transition info. */
-	FInstancingUserData UserData_AllInstances;
-	FInstancingUserData UserData_SelectedInstances;
-	FInstancingUserData UserData_DeselectedInstances;
+	FIBMInstancingUserData UserData_AllInstances;
+	FIBMInstancingUserData UserData_SelectedInstances;
+	FIBMInstancingUserData UserData_DeselectedInstances;
 
 #if RHI_RAYTRACING
 	TArray< FVector >						RayTracingCullClusterBoundsMin;

@@ -1,10 +1,10 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 /*=============================================================================
-	InstancedStaticMesh.cpp: Static mesh rendering code.
+	InstanceBufferMesh.cpp: Static mesh rendering code.
 =============================================================================*/
 
-#include "InstancedStaticMesh.h"
+#include "InstanceBufferMesh.h"
 #include "AI/NavigationSystemBase.h"
 #include "Engine/MapBuildDataRegistry.h"
 #include "Components/LightComponent.h"
@@ -757,7 +757,7 @@ void FInstancedStaticMeshSceneProxy::GetDynamicMeshElements(const TArray<const F
 	// If the first pass rendered selected instances only, we need to render the deselected instances in a second pass
 	const int32 NumSelectionGroups = (bSelectionRenderEnabled && bHasSelectedInstances) ? 2 : 1;
 
-	const FInstancingUserData* PassUserData[2] =
+	const FIBMInstancingUserData* PassUserData[2] =
 	{
 		bHasSelectedInstances && bSelectionRenderEnabled ? &UserData_SelectedInstances : &UserData_AllInstances,
 		&UserData_DeselectedInstances
@@ -2938,7 +2938,7 @@ void FInstancedStaticMeshVertexFactoryShaderParameters::GetElementShaderBindings
 	FRHIUniformBuffer* VertexFactoryUniformBuffer = static_cast<FRHIUniformBuffer*>(BatchElement.VertexFactoryUserData);
 	FLocalVertexFactoryShaderParametersBase::GetElementShaderBindingsBase(Scene, View, Shader, InputStreamType, FeatureLevel, VertexFactory, BatchElement, VertexFactoryUniformBuffer, ShaderBindings, VertexStreams);
 
-	const FInstancingUserData* InstancingUserData = (const FInstancingUserData*)BatchElement.UserData;
+	const FIBMInstancingUserData* InstancingUserData = (const FIBMInstancingUserData*)BatchElement.UserData;
 	const auto* InstancedVertexFactory = static_cast<const FInstancedStaticMeshVertexFactory*>(VertexFactory);
 	const int32 InstanceOffsetValue = BatchElement.UserIndex;
 
@@ -2967,7 +2967,7 @@ void FInstancedStaticMeshVertexFactoryShaderParameters::GetElementShaderBindings
 	else if (CPUInstanceOrigin.IsBound())
 	{
 		const float ShortScale = 1.0f / 32767.0f;
-		auto* InstancingData = (const FInstancingUserData*)BatchElement.UserData;
+		auto* InstancingData = (const FIBMInstancingUserData*)BatchElement.UserData;
 		check(InstancingData);
 
 		FVector4 InstanceTransform[3];
