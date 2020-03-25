@@ -11,7 +11,7 @@
 #include "Engine/TextureStreamingTypes.h"
 #include "Components/StaticMeshComponent.h"
 
-#include "InstancedStaticMeshComponent.generated.h"
+#include "InstancedBufferMeshComponent.generated.h"
 
 class FLightingBuildOptions;
 class FPrimitiveSceneProxy;
@@ -30,7 +30,7 @@ class FInstancedShadowMap2D;
 class FStaticMeshInstanceData;
 
 USTRUCT()
-struct FInstancedStaticMeshInstanceData
+struct FInstanceBufferMeshInstanceData
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -45,16 +45,16 @@ struct FInstancedStaticMeshInstanceData
 	UPROPERTY()
 	FVector2D ShadowmapUVBias_DEPRECATED;
 
-	FInstancedStaticMeshInstanceData()
+	FInstanceBufferMeshInstanceData()
 		: Transform(FMatrix::Identity)
 		, LightmapUVBias_DEPRECATED(ForceInit)
 		, ShadowmapUVBias_DEPRECATED(ForceInit)
 	{
 	}
 
-	friend FArchive& operator<<(FArchive& Ar, FInstancedStaticMeshInstanceData& InstanceData)
+	friend FArchive& operator<<(FArchive& Ar, FInstanceBufferMeshInstanceData& InstanceData)
 	{
-		// @warning BulkSerialize: FInstancedStaticMeshInstanceData is serialized as memory dump
+		// @warning BulkSerialize: FInstanceBufferMeshInstanceData is serialized as memory dump
 		// See TArray::BulkSerialize for detailed description of implied limitations.
 		Ar << InstanceData.Transform << InstanceData.LightmapUVBias_DEPRECATED << InstanceData.ShadowmapUVBias_DEPRECATED;
 		return Ar;
@@ -106,7 +106,7 @@ class ENGINE_API UInstancedStaticMeshComponent : public UStaticMeshComponent
 
 	/** Array of instances, bulk serialized. */
 	UPROPERTY(EditAnywhere, SkipSerialization, DisplayName="Instances", Category=Instances, meta=(MakeEditWidget=true, EditFixedOrder))
-	TArray<FInstancedStaticMeshInstanceData> PerInstanceSMData;
+	TArray<FInstanceBufferMeshInstanceData> PerInstanceSMData;
 
 	/** Value used to seed the random number stream that generates random numbers for each of this mesh's instances.
 		The random number is stored in a buffer accessible to materials through the PerInstanceRandom expression. If
@@ -292,14 +292,14 @@ private:
 	void ClearAllInstanceBodies();
 
 	/** Sets up new instance data to sensible defaults, creates physics counterparts if possible. */
-	void SetupNewInstanceData(FInstancedStaticMeshInstanceData& InOutNewInstanceData, int32 InInstanceIndex, const FTransform& InInstanceTransform);
+	void SetupNewInstanceData(FInstanceBufferMeshInstanceData& InOutNewInstanceData, int32 InInstanceIndex, const FTransform& InInstanceTransform);
 
 protected:
 	/** Request to navigation system to update only part of navmesh occupied by specified instance. */
 	virtual void PartialNavigationUpdate(int32 InstanceIdx);
 
 	/** Internal version of AddInstance */
-	int32 AddInstanceInternal(int32 InstanceIndex, FInstancedStaticMeshInstanceData* InNewInstanceData, const FTransform& InstanceTransform);
+	int32 AddInstanceInternal(int32 InstanceIndex, FInstanceBufferMeshInstanceData* InNewInstanceData, const FTransform& InstanceTransform);
 	
 	/** Internal version of RemoveInstance */	
 	bool RemoveInstanceInternal(int32 InstanceIndex, bool ReorderInstances, bool InstanceAlreadyRemoved);
