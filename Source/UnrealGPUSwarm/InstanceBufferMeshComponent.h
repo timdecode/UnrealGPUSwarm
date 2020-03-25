@@ -329,13 +329,13 @@ protected:
 };
 
 /** InstancedStaticMeshInstance hit proxy */
-struct HInstancedStaticMeshInstance : public HHitProxy
+struct HInstanceBufferMeshInstance : public HHitProxy
 {
 	UInstancedStaticMeshComponent* Component;
 	int32 InstanceIndex;
 
 	DECLARE_HIT_PROXY(ENGINE_API);
-	HInstancedStaticMeshInstance(UInstancedStaticMeshComponent* InComponent, int32 InInstanceIndex) : HHitProxy(HPP_World), Component(InComponent), InstanceIndex(InInstanceIndex) {}
+	HInstanceBufferMeshInstance(UInstancedStaticMeshComponent* InComponent, int32 InInstanceIndex) : HHitProxy(HPP_World), Component(InComponent), InstanceIndex(InInstanceIndex) {}
 
 	virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
 
