@@ -265,7 +265,7 @@ public:
 	//~ End UObject Interface
 
 	/** Applies the cached component instance data to a newly blueprint constructed component. */
-	virtual void ApplyComponentInstanceData(class FInstancedStaticMeshComponentInstanceData* ComponentInstanceData);
+	virtual void ApplyComponentInstanceData(class FInstanceBufferMeshComponentInstanceData* ComponentInstanceData);
 
 	/** Check to see if an instance is selected. */
 	bool IsInstanceSelected(int32 InInstanceIndex) const;

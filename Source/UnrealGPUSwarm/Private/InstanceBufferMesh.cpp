@@ -1281,8 +1281,8 @@ TStructOnScope<FActorComponentInstanceData> UInstanceBufferMeshComponent::GetCom
 {
 	TStructOnScope<FActorComponentInstanceData> InstanceData;
 #if WITH_EDITOR
-	InstanceData.InitializeAs<FInstancedStaticMeshComponentInstanceData>(this);
-	FInstancedStaticMeshComponentInstanceData* StaticMeshInstanceData = InstanceData.Cast<FInstancedStaticMeshComponentInstanceData>();
+	InstanceData.InitializeAs<FInstanceBufferMeshComponentInstanceData>(this);
+	FInstanceBufferMeshComponentInstanceData* StaticMeshInstanceData = InstanceData.Cast<FInstanceBufferMeshComponentInstanceData>();
 
 	// Fill in info (copied from UStaticMeshComponent::GetComponentInstanceData)
 	StaticMeshInstanceData->CachedStaticLighting.Transform = GetComponentTransform();
@@ -1304,7 +1304,7 @@ TStructOnScope<FActorComponentInstanceData> UInstanceBufferMeshComponent::GetCom
 	return InstanceData;
 }
 
-void UInstanceBufferMeshComponent::ApplyComponentInstanceData(FInstancedStaticMeshComponentInstanceData* InstancedMeshData)
+void UInstanceBufferMeshComponent::ApplyComponentInstanceData(FInstanceBufferMeshComponentInstanceData* InstancedMeshData)
 {
 #if WITH_EDITOR
 	check(InstancedMeshData);
