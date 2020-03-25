@@ -44,19 +44,19 @@ extern TAutoConsoleVariable<int32> CVarMinLOD;
 extern const int32 InstancedStaticMeshMaxTexCoord;
 
 /*-----------------------------------------------------------------------------
-	FStaticMeshInstanceBuffer
+	FIBMInstanceBuffer
 -----------------------------------------------------------------------------*/
 
 /** A vertex buffer of positions. */
-class FStaticMeshInstanceBuffer : public FRenderResource
+class FIBMInstanceBuffer : public FRenderResource
 {
 public:
 
 	/** Default constructor. */
-	FStaticMeshInstanceBuffer(ERHIFeatureLevel::Type InFeatureLevel, bool InRequireCPUAccess);
+	FIBMInstanceBuffer(ERHIFeatureLevel::Type InFeatureLevel, bool InRequireCPUAccess);
 
 	/** Destructor. */
-	~FStaticMeshInstanceBuffer();
+	~FIBMInstanceBuffer();
 
 	/**
 	 * Initializes the buffer with the component's data.
@@ -68,7 +68,7 @@ public:
 	/**
 	 * Specialized assignment operator, only used when importing LOD's. 
 	 */
-	void operator=(const FStaticMeshInstanceBuffer &Other);
+	void operator=(const FIBMInstanceBuffer &Other);
 
 	// Other accessors.
 	FORCEINLINE uint32 GetNumInstances() const
@@ -423,7 +423,7 @@ struct FPerInstanceRenderData
 	SIZE_T								ResourceSize;
 
 	/** Instance buffer */
-	FStaticMeshInstanceBuffer			InstanceBuffer;
+	FIBMInstanceBuffer			InstanceBuffer;
 	TSharedPtr<FStaticMeshInstanceData, ESPMode::ThreadSafe> InstanceBuffer_GameThread;
 };
 
