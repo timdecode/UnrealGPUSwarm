@@ -11,7 +11,7 @@
 #include "Engine/TextureStreamingTypes.h"
 #include "Components/StaticMeshComponent.h"
 
-#include "InstancedStaticMeshComponent.generated.h"
+#include "InstanceBufferMeshComponent.generated.h"
 
 class FLightingBuildOptions;
 class FPrimitiveSceneProxy;

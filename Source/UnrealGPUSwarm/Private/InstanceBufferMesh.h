@@ -20,7 +20,7 @@
 #include "MaterialShared.h"
 #include "Materials/Material.h"
 #include "StaticMeshResources.h"
-#include "Components/InstancedStaticMeshComponent.h"
+#include "InstanceBufferMeshComponent.h"
 #include "Engine/StaticMesh.h"
 
 #include "StaticMeshLight.h"

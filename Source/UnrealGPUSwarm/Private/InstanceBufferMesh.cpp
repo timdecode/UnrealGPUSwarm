@@ -1,10 +1,10 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 /*=============================================================================
-	InstancedStaticMesh.cpp: Static mesh rendering code.
+	InstaneBufferMesh.cpp: Static mesh rendering code.
 =============================================================================*/
 
-#include "InstancedStaticMesh.h"
+#include "InstaneBufferMesh.h"
 #include "AI/NavigationSystemBase.h"
 #include "Engine/MapBuildDataRegistry.h"
 #include "Components/LightComponent.h"
