@@ -90,63 +90,63 @@ void HInstancedStaticMeshInstance::AddReferencedObjects(FReferenceCollector& Col
 	Collector.AddReferencedObject(Component);
 }
 
-FInstanceUpdateCmdBuffer::FInstanceUpdateCmdBuffer()
+FIBMInstanceUpdateCmdBuffer::FIBMInstanceUpdateCmdBuffer()
 	: NumAdds(0)
 	, NumEdits(0)
 {
 }
 
-void FInstanceUpdateCmdBuffer::HideInstance(int32 RenderIndex)
+void FIBMInstanceUpdateCmdBuffer::HideInstance(int32 RenderIndex)
 {
 	check(RenderIndex >= 0);
 
 	FInstanceUpdateCommand& Cmd = Cmds.AddDefaulted_GetRef();
 	Cmd.InstanceIndex = RenderIndex;
-	Cmd.Type = FInstanceUpdateCmdBuffer::Hide;
+	Cmd.Type = FIBMInstanceUpdateCmdBuffer::Hide;
 
 	Edit();
 }
 
-void FInstanceUpdateCmdBuffer::AddInstance(const FMatrix& InTransform)
+void FIBMInstanceUpdateCmdBuffer::AddInstance(const FMatrix& InTransform)
 {
 	FInstanceUpdateCommand& Cmd = Cmds.AddDefaulted_GetRef();
 	Cmd.InstanceIndex = INDEX_NONE;
-	Cmd.Type = FInstanceUpdateCmdBuffer::Add;
+	Cmd.Type = FIBMInstanceUpdateCmdBuffer::Add;
 	Cmd.XForm = InTransform;
 
 	NumAdds++;
 	Edit();
 }
 
-void FInstanceUpdateCmdBuffer::UpdateInstance(int32 RenderIndex, const FMatrix& InTransform)
+void FIBMInstanceUpdateCmdBuffer::UpdateInstance(int32 RenderIndex, const FMatrix& InTransform)
 {
 	FInstanceUpdateCommand& Cmd = Cmds.AddDefaulted_GetRef();
 	Cmd.InstanceIndex = RenderIndex;
-	Cmd.Type = FInstanceUpdateCmdBuffer::Update;
+	Cmd.Type = FIBMInstanceUpdateCmdBuffer::Update;
 	Cmd.XForm = InTransform;
 
 	Edit();
 }
 
-void FInstanceUpdateCmdBuffer::SetEditorData(int32 RenderIndex, const FColor& Color, bool bSelected)
+void FIBMInstanceUpdateCmdBuffer::SetEditorData(int32 RenderIndex, const FColor& Color, bool bSelected)
 {
 	FInstanceUpdateCommand& Cmd = Cmds.AddDefaulted_GetRef();
 	Cmd.InstanceIndex = RenderIndex;
-	Cmd.Type = FInstanceUpdateCmdBuffer::EditorData;
+	Cmd.Type = FIBMInstanceUpdateCmdBuffer::EditorData;
 	Cmd.HitProxyColor = Color;
 	Cmd.bSelected = bSelected;
 
 	Edit();
 }
 
-void FInstanceUpdateCmdBuffer::SetLightMapData(int32 RenderIndex, const FVector2D& LightmapUVBias)
+void FIBMInstanceUpdateCmdBuffer::SetLightMapData(int32 RenderIndex, const FVector2D& LightmapUVBias)
 {
 	// We only support 1 command to update lightmap/shadowmap
 	bool CommandExist = false;
 
 	for (FInstanceUpdateCommand& Cmd : Cmds)
 	{
-		if (Cmd.Type == FInstanceUpdateCmdBuffer::LightmapData && Cmd.InstanceIndex == RenderIndex)
+		if (Cmd.Type == FIBMInstanceUpdateCmdBuffer::LightmapData && Cmd.InstanceIndex == RenderIndex)
 		{
 			CommandExist = true;
 			Cmd.LightmapUVBias = LightmapUVBias;
@@ -158,21 +158,21 @@ void FInstanceUpdateCmdBuffer::SetLightMapData(int32 RenderIndex, const FVector2
 	{
 		FInstanceUpdateCommand& Cmd = Cmds.AddDefaulted_GetRef();
 		Cmd.InstanceIndex = RenderIndex;
-		Cmd.Type = FInstanceUpdateCmdBuffer::LightmapData;
+		Cmd.Type = FIBMInstanceUpdateCmdBuffer::LightmapData;
 		Cmd.LightmapUVBias = LightmapUVBias;
 	}
 
 	Edit();
 }
 
-void FInstanceUpdateCmdBuffer::SetShadowMapData(int32 RenderIndex, const FVector2D& ShadowmapUVBias)
+void FIBMInstanceUpdateCmdBuffer::SetShadowMapData(int32 RenderIndex, const FVector2D& ShadowmapUVBias)
 {
 	// We only support 1 command to update lightmap/shadowmap
 	bool CommandExist = false;
 
 	for (FInstanceUpdateCommand& Cmd : Cmds)
 	{
-		if (Cmd.Type == FInstanceUpdateCmdBuffer::LightmapData && Cmd.InstanceIndex == RenderIndex)
+		if (Cmd.Type == FIBMInstanceUpdateCmdBuffer::LightmapData && Cmd.InstanceIndex == RenderIndex)
 		{
 			CommandExist = true;
 			Cmd.ShadowmapUVBias = ShadowmapUVBias;
@@ -184,25 +184,25 @@ void FInstanceUpdateCmdBuffer::SetShadowMapData(int32 RenderIndex, const FVector
 	{
 		FInstanceUpdateCommand& Cmd = Cmds.AddDefaulted_GetRef();
 		Cmd.InstanceIndex = RenderIndex;
-		Cmd.Type = FInstanceUpdateCmdBuffer::LightmapData;
+		Cmd.Type = FIBMInstanceUpdateCmdBuffer::LightmapData;
 		Cmd.ShadowmapUVBias = ShadowmapUVBias;
 	}
 
 	Edit();
 }
 
-void FInstanceUpdateCmdBuffer::ResetInlineCommands()
+void FIBMInstanceUpdateCmdBuffer::ResetInlineCommands()
 {
 	Cmds.Empty();
 	NumAdds = 0;
 }
 
-void FInstanceUpdateCmdBuffer::Edit()
+void FIBMInstanceUpdateCmdBuffer::Edit()
 {
 	NumEdits++;
 }
 
-void FInstanceUpdateCmdBuffer::Reset()
+void FIBMInstanceUpdateCmdBuffer::Reset()
 {
 	Cmds.Empty();
 	NumAdds = 0;
@@ -235,13 +235,13 @@ void FStaticMeshInstanceBuffer::InitFromPreallocatedData(FStaticMeshInstanceData
 	InstanceData->SetAllowCPUAccess(RequireCPUAccess);
 }
 
-void FStaticMeshInstanceBuffer::UpdateFromCommandBuffer_Concurrent(FInstanceUpdateCmdBuffer& CmdBuffer)
+void FStaticMeshInstanceBuffer::UpdateFromCommandBuffer_Concurrent(FIBMInstanceUpdateCmdBuffer& CmdBuffer)
 {
 	QUICK_SCOPE_CYCLE_COUNTER(STAT_FStaticMeshInstanceBuffer_UpdateFromCommandBuffer_Concurrent);
 	
 	FStaticMeshInstanceBuffer* InstanceBuffer = this; 
-	FInstanceUpdateCmdBuffer* NewCmdBuffer = new FInstanceUpdateCmdBuffer();
-	FMemory::Memswap(&CmdBuffer, NewCmdBuffer, sizeof(FInstanceUpdateCmdBuffer));
+	FIBMInstanceUpdateCmdBuffer* NewCmdBuffer = new FIBMInstanceUpdateCmdBuffer();
+	FMemory::Memswap(&CmdBuffer, NewCmdBuffer, sizeof(FIBMInstanceUpdateCmdBuffer));
 	
 	// leave NumEdits unchanged in commandbuffer
 	CmdBuffer.NumEdits = NewCmdBuffer->NumEdits; 
@@ -255,7 +255,7 @@ void FStaticMeshInstanceBuffer::UpdateFromCommandBuffer_Concurrent(FInstanceUpda
 		});
 }
 
-void FStaticMeshInstanceBuffer::UpdateFromCommandBuffer_RenderThread(FInstanceUpdateCmdBuffer& CmdBuffer)
+void FStaticMeshInstanceBuffer::UpdateFromCommandBuffer_RenderThread(FIBMInstanceUpdateCmdBuffer& CmdBuffer)
 {
 	QUICK_SCOPE_CYCLE_COUNTER(STAT_FStaticMeshInstanceBuffer_UpdateFromCommandBuffer_RenderThread);
 	
@@ -275,19 +275,19 @@ void FStaticMeshInstanceBuffer::UpdateFromCommandBuffer_RenderThread(FInstanceUp
 		const auto& Cmd = CmdBuffer.Cmds[i];
 		switch (Cmd.Type)
 		{
-		case FInstanceUpdateCmdBuffer::Add:
+		case FIBMInstanceUpdateCmdBuffer::Add:
 			InstanceData->SetInstance(AddIndex++, Cmd.XForm, 0);
 			break;
-		case FInstanceUpdateCmdBuffer::Hide:
+		case FIBMInstanceUpdateCmdBuffer::Hide:
 			InstanceData->NullifyInstance(Cmd.InstanceIndex);
 			break;
-		case FInstanceUpdateCmdBuffer::Update:
+		case FIBMInstanceUpdateCmdBuffer::Update:
 			InstanceData->SetInstance(Cmd.InstanceIndex, Cmd.XForm, 0);
 			break;
-		case FInstanceUpdateCmdBuffer::EditorData:
+		case FIBMInstanceUpdateCmdBuffer::EditorData:
 			InstanceData->SetInstanceEditorData(Cmd.InstanceIndex, Cmd.HitProxyColor, Cmd.bSelected);
 			break;
-		case FInstanceUpdateCmdBuffer::LightmapData:
+		case FIBMInstanceUpdateCmdBuffer::LightmapData:
 			InstanceData->SetInstanceLightMapData(Cmd.InstanceIndex, Cmd.LightmapUVBias, Cmd.ShadowmapUVBias);
 			break;
 		default:
@@ -737,7 +737,7 @@ void FPerInstanceRenderData::UpdateFromPreallocatedData(FStaticMeshInstanceData&
 	);
 }
 
-void FPerInstanceRenderData::UpdateFromCommandBuffer(FInstanceUpdateCmdBuffer& CmdBuffer)
+void FPerInstanceRenderData::UpdateFromCommandBuffer(FIBMInstanceUpdateCmdBuffer& CmdBuffer)
 {
 	InstanceBuffer.UpdateFromCommandBuffer_Concurrent(CmdBuffer);
 }

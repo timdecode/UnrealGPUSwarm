@@ -63,7 +63,7 @@ public:
 	 * @param Other - instance data, this call assumes the memory, so this will be empty after the call
 	 */
 	ENGINE_API void InitFromPreallocatedData(FStaticMeshInstanceData& Other);
-	ENGINE_API void UpdateFromCommandBuffer_Concurrent(FInstanceUpdateCmdBuffer& CmdBuffer);
+	ENGINE_API void UpdateFromCommandBuffer_Concurrent(FIBMInstanceUpdateCmdBuffer& CmdBuffer);
 
 	/**
 	 * Specialized assignment operator, only used when importing LOD's. 
@@ -133,7 +133,7 @@ private:
 	void CreateVertexBuffer(FResourceArrayInterface* InResourceArray, uint32 InUsage, uint32 InStride, uint8 InFormat, FVertexBufferRHIRef& OutVertexBufferRHI, FShaderResourceViewRHIRef& OutInstanceSRV);
 	
 	/**  */
-	void UpdateFromCommandBuffer_RenderThread(FInstanceUpdateCmdBuffer& CmdBuffer);
+	void UpdateFromCommandBuffer_RenderThread(FIBMInstanceUpdateCmdBuffer& CmdBuffer);
 };
 
 /*-----------------------------------------------------------------------------
@@ -394,7 +394,7 @@ private:
 	FShaderParameter InstanceOffset;
 };
 
-struct FInstanceUpdateCmdBuffer;
+struct FIBMInstanceUpdateCmdBuffer;
 /*-----------------------------------------------------------------------------
 	FPerInstanceRenderData
 	Holds render data that can persist between scene proxy reconstruction
@@ -414,7 +414,7 @@ struct FPerInstanceRenderData
 		
 	/**
 	*/
-	ENGINE_API void UpdateFromCommandBuffer(FInstanceUpdateCmdBuffer& CmdBuffer);
+	ENGINE_API void UpdateFromCommandBuffer(FIBMInstanceUpdateCmdBuffer& CmdBuffer);
 
 	/** Hit proxies for the instances */
 	TArray<TRefCountPtr<HHitProxy>>		HitProxies;

@@ -29,7 +29,7 @@ class FInstancedLightMap2D;
 class FInstancedShadowMap2D;
 class FStaticMeshInstanceData;
 
-struct FInstanceUpdateCmdBuffer
+struct FIBMInstanceUpdateCmdBuffer
 {
 	enum EUpdateCommandType
 	{
@@ -53,7 +53,7 @@ struct FInstanceUpdateCmdBuffer
 		FVector2D ShadowmapUVBias;
 	};
 	
-	FInstanceUpdateCmdBuffer();
+	FIBMInstanceUpdateCmdBuffer();
 	
 	// Commands that can modify render data in place
 	void HideInstance(int32 RenderIndex);
@@ -250,7 +250,7 @@ public:
 	TSharedPtr<FPerInstanceRenderData, ESPMode::ThreadSafe> PerInstanceRenderData;
 
 	/** Recorded modifications to per-instance data */
-	FInstanceUpdateCmdBuffer InstanceUpdateCmdBuffer;
+	FIBMInstanceUpdateCmdBuffer InstanceUpdateCmdBuffer;
 
 	/** 
 	 *  Buffers with per-instance data laid out for rendering. 
