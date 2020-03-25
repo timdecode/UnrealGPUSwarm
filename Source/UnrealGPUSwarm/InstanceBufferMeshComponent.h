@@ -117,13 +117,13 @@ struct FInstancedStaticMeshMappingInfo
 
 /** A component that efficiently renders multiple instances of the same StaticMesh. */
 UCLASS(ClassGroup = Rendering, meta = (BlueprintSpawnableComponent), Blueprintable)
-class ENGINE_API UInstancedStaticMeshComponent : public UStaticMeshComponent
+class ENGINE_API UInstanceBufferMeshComponent : public UStaticMeshComponent
 {
 	GENERATED_UCLASS_BODY()
 	
 	/** Needs implementation in InstancedStaticMesh.cpp to compile UniquePtr for forward declared class */
-	UInstancedStaticMeshComponent(FVTableHelper& Helper);
-	virtual ~UInstancedStaticMeshComponent();
+	UInstanceBufferMeshComponent(FVTableHelper& Helper);
+	virtual ~UInstanceBufferMeshComponent();
 	
 	/** Array of instances, bulk serialized. */
 	UPROPERTY(EditAnywhere, SkipSerialization, DisplayName="Instances", Category=Instances, meta=(MakeEditWidget=true, EditFixedOrder))
@@ -387,11 +387,11 @@ protected:
 /** InstancedStaticMeshInstance hit proxy */
 struct HInstancedStaticMeshInstance : public HHitProxy
 {
-	UInstancedStaticMeshComponent* Component;
+	UInstanceBufferMeshComponent* Component;
 	int32 InstanceIndex;
 
 	DECLARE_HIT_PROXY(ENGINE_API);
-	HInstancedStaticMeshInstance(UInstancedStaticMeshComponent* InComponent, int32 InInstanceIndex) : HHitProxy(HPP_World), Component(InComponent), InstanceIndex(InInstanceIndex) {}
+	HInstancedStaticMeshInstance(UInstanceBufferMeshComponent* InComponent, int32 InInstanceIndex) : HHitProxy(HPP_World), Component(InComponent), InstanceIndex(InInstanceIndex) {}
 
 	virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
 
@@ -423,7 +423,7 @@ struct FInstancedStaticMeshComponentInstanceData : public FSceneComponentInstanc
 	GENERATED_BODY()
 public:
 	FInstancedStaticMeshComponentInstanceData() = default;
-	FInstancedStaticMeshComponentInstanceData(const UInstancedStaticMeshComponent* InComponent)
+	FInstancedStaticMeshComponentInstanceData(const UInstanceBufferMeshComponent* InComponent)
 		: FSceneComponentInstanceData(InComponent)
 		, StaticMesh(InComponent->GetStaticMesh())
 	{}
@@ -437,7 +437,7 @@ public:
 	virtual void ApplyToComponent(UActorComponent* Component, const ECacheApplyPhase CacheApplyPhase) override
 	{
 		Super::ApplyToComponent(Component, CacheApplyPhase);
-		CastChecked<UInstancedStaticMeshComponent>(Component)->ApplyComponentInstanceData(this);
+		CastChecked<UInstanceBufferMeshComponent>(Component)->ApplyComponentInstanceData(this);
 	}
 
 	virtual void AddReferencedObjects(FReferenceCollector& Collector) override
