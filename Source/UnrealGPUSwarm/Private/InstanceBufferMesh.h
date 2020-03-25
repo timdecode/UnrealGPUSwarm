@@ -436,7 +436,7 @@ class FInstancedStaticMeshRenderData
 {
 public:
 
-	FInstancedStaticMeshRenderData(UInstancedStaticMeshComponent* InComponent, ERHIFeatureLevel::Type InFeatureLevel)
+	FInstancedStaticMeshRenderData(UInstanceBufferMeshComponent* InComponent, ERHIFeatureLevel::Type InFeatureLevel)
 	  : Component(InComponent)
 	  , PerInstanceRenderData(InComponent->PerInstanceRenderData)
 	  , LODModels(Component->GetStaticMesh()->RenderData->LODResources)
@@ -466,7 +466,7 @@ public:
 	}
 
 	/** Source component */
-	UInstancedStaticMeshComponent* Component;
+	UInstanceBufferMeshComponent* Component;
 
 	/** Per instance render data, could be shared with component */
 	TSharedPtr<FPerInstanceRenderData, ESPMode::ThreadSafe> PerInstanceRenderData;
@@ -506,7 +506,7 @@ class FInstancedStaticMeshSceneProxy : public FStaticMeshSceneProxy
 public:
 	SIZE_T GetTypeHash() const override;
 
-	FInstancedStaticMeshSceneProxy(UInstancedStaticMeshComponent* InComponent, ERHIFeatureLevel::Type InFeatureLevel)
+	FInstancedStaticMeshSceneProxy(UInstanceBufferMeshComponent* InComponent, ERHIFeatureLevel::Type InFeatureLevel)
 	:	FStaticMeshSceneProxy(InComponent, true)
 	,	StaticMesh(InComponent->GetStaticMesh())
 	,	InstancedRenderData(InComponent, InFeatureLevel)
@@ -627,7 +627,7 @@ protected:
 
 private:
 
-	void SetupProxy(UInstancedStaticMeshComponent* InComponent);
+	void SetupProxy(UInstanceBufferMeshComponent* InComponent);
 };
 
 #if WITH_EDITOR
@@ -644,7 +644,7 @@ class FStaticLightingMesh_InstancedStaticMesh : public FStaticMeshStaticLighting
 public:
 
 	/** Initialization constructor. */
-	FStaticLightingMesh_InstancedStaticMesh(const UInstancedStaticMeshComponent* InPrimitive, int32 LODIndex, int32 InstanceIndex, const TArray<ULightComponent*>& InRelevantLights)
+	FStaticLightingMesh_InstancedStaticMesh(const UInstanceBufferMeshComponent* InPrimitive, int32 LODIndex, int32 InstanceIndex, const TArray<ULightComponent*>& InRelevantLights)
 		: FStaticMeshStaticLightingMesh(InPrimitive, LODIndex, InRelevantLights)
 	{
 		// override the local to world to combine the per instance transform with the component's standard transform
@@ -662,7 +662,7 @@ class FStaticLightingTextureMapping_IBM : public FStaticMeshStaticLightingTextur
 {
 public:
 	/** Initialization constructor. */
-	FStaticLightingTextureMapping_IBM(UInstancedStaticMeshComponent* InPrimitive, int32 LODIndex, int32 InInstanceIndex, FStaticLightingMesh* InMesh, int32 InSizeX, int32 InSizeY, int32 InTextureCoordinateIndex, bool bPerformFullQualityRebuild)
+	FStaticLightingTextureMapping_IBM(UInstanceBufferMeshComponent* InPrimitive, int32 LODIndex, int32 InInstanceIndex, FStaticLightingMesh* InMesh, int32 InSizeX, int32 InSizeY, int32 InTextureCoordinateIndex, bool bPerformFullQualityRebuild)
 		: FStaticMeshStaticLightingTextureMapping(InPrimitive, LODIndex, InMesh, InSizeX, InSizeY, InTextureCoordinateIndex, bPerformFullQualityRebuild)
 		, InstanceIndex(InInstanceIndex)
 		, QuantizedData(nullptr)
@@ -676,7 +676,7 @@ public:
 	{
 		check(bComplete == false);
 
-		UInstancedStaticMeshComponent* InstancedComponent = Cast<UInstancedStaticMeshComponent>(Primitive.Get());
+		UInstanceBufferMeshComponent* InstancedComponent = Cast<UInstanceBufferMeshComponent>(Primitive.Get());
 
 		if (InstancedComponent)
 		{
@@ -705,7 +705,7 @@ public:
 	}
 
 private:
-	friend class UInstancedStaticMeshComponent;
+	friend class UInstanceBufferMeshComponent;
 
 	/** The instance of the primitive this mapping represents. */
 	const int32 InstanceIndex;
@@ -728,7 +728,7 @@ private:
 struct FComponentInstanceSharingData
 {
 	/** The component that is associated (owns) this data */
-	UInstancedStaticMeshComponent* Component;
+	UInstanceBufferMeshComponent* Component;
 
 	/** Light map texture */
 	UTexture* LightMapTexture;
@@ -752,7 +752,7 @@ struct FComponentInstanceSharingData
 struct FComponentInstancedLightmapData
 {
 	/** List of all original components and their original instances containing */
-	TMap<UInstancedStaticMeshComponent*, TArray<FInstancedStaticMeshInstanceData> > ComponentInstances;
+	TMap<UInstanceBufferMeshComponent*, TArray<FInstancedStaticMeshInstanceData> > ComponentInstances;
 
 	/** List of new components */
 	TArray< FComponentInstanceSharingData > SharingData;

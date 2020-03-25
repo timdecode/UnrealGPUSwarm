@@ -856,7 +856,7 @@ int32 FInstancedStaticMeshSceneProxy::CollectOccluderElements(FOccluderElementsC
 	return 0;
 }
 
-void FInstancedStaticMeshSceneProxy::SetupProxy(UInstancedStaticMeshComponent* InComponent)
+void FInstancedStaticMeshSceneProxy::SetupProxy(UInstanceBufferMeshComponent* InComponent)
 {
 #if WITH_EDITOR
 	if (bHasSelectedInstances)
@@ -1255,10 +1255,10 @@ void FInstancedStaticMeshSceneProxy::SetupRayTracingCullClusters()
 
 
 /*-----------------------------------------------------------------------------
-	UInstancedStaticMeshComponent
+	UInstanceBufferMeshComponent
 -----------------------------------------------------------------------------*/
 
-UInstancedStaticMeshComponent::UInstancedStaticMeshComponent(const FObjectInitializer& ObjectInitializer)
+UInstanceBufferMeshComponent::UInstanceBufferMeshComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	Mobility = EComponentMobility::Movable;
@@ -1267,17 +1267,17 @@ UInstancedStaticMeshComponent::UInstancedStaticMeshComponent(const FObjectInitia
 	bDisallowMeshPaintPerInstance = true;
 }
 
-UInstancedStaticMeshComponent::UInstancedStaticMeshComponent(FVTableHelper& Helper)
+UInstanceBufferMeshComponent::UInstanceBufferMeshComponent(FVTableHelper& Helper)
 	: Super(Helper)
 {
 }
 
-UInstancedStaticMeshComponent::~UInstancedStaticMeshComponent()
+UInstanceBufferMeshComponent::~UInstanceBufferMeshComponent()
 {
 	ReleasePerInstanceRenderData();
 }
 
-TStructOnScope<FActorComponentInstanceData> UInstancedStaticMeshComponent::GetComponentInstanceData() const
+TStructOnScope<FActorComponentInstanceData> UInstanceBufferMeshComponent::GetComponentInstanceData() const
 {
 	TStructOnScope<FActorComponentInstanceData> InstanceData;
 #if WITH_EDITOR
@@ -1304,7 +1304,7 @@ TStructOnScope<FActorComponentInstanceData> UInstancedStaticMeshComponent::GetCo
 	return InstanceData;
 }
 
-void UInstancedStaticMeshComponent::ApplyComponentInstanceData(FInstancedStaticMeshComponentInstanceData* InstancedMeshData)
+void UInstanceBufferMeshComponent::ApplyComponentInstanceData(FInstancedStaticMeshComponentInstanceData* InstancedMeshData)
 {
 #if WITH_EDITOR
 	check(InstancedMeshData);
@@ -1356,7 +1356,7 @@ void UInstancedStaticMeshComponent::ApplyComponentInstanceData(FInstancedStaticM
 #endif
 }
 
-FPrimitiveSceneProxy* UInstancedStaticMeshComponent::CreateSceneProxy()
+FPrimitiveSceneProxy* UInstanceBufferMeshComponent::CreateSceneProxy()
 {
 	LLM_SCOPE(ELLMTag::InstancedMesh);
 	ProxySize = 0;
@@ -1396,7 +1396,7 @@ FPrimitiveSceneProxy* UInstancedStaticMeshComponent::CreateSceneProxy()
 	}
 }
 
-void UInstancedStaticMeshComponent::CreateHitProxyData(TArray<TRefCountPtr<HHitProxy>>& HitProxies)
+void UInstanceBufferMeshComponent::CreateHitProxyData(TArray<TRefCountPtr<HHitProxy>>& HitProxies)
 {
 	if (GIsEditor && bHasPerInstanceHitProxies)
 	{
@@ -1416,7 +1416,7 @@ void UInstancedStaticMeshComponent::CreateHitProxyData(TArray<TRefCountPtr<HHitP
 	}
 }
 
-void UInstancedStaticMeshComponent::BuildRenderData(FStaticMeshInstanceData& OutData, TArray<TRefCountPtr<HHitProxy>>& OutHitProxies)
+void UInstanceBufferMeshComponent::BuildRenderData(FStaticMeshInstanceData& OutData, TArray<TRefCountPtr<HHitProxy>>& OutHitProxies)
 {
 	LLM_SCOPE(ELLMTag::InstancedMesh);
 	QUICK_SCOPE_CYCLE_COUNTER(STAT_UInstancedStaticMeshComponent_BuildRenderData);
@@ -1479,7 +1479,7 @@ void UInstancedStaticMeshComponent::BuildRenderData(FStaticMeshInstanceData& Out
 	}
 }
 
-void UInstancedStaticMeshComponent::InitInstanceBody(int32 InstanceIdx, FBodyInstance* InstanceBodyInstance)
+void UInstanceBufferMeshComponent::InitInstanceBody(int32 InstanceIdx, FBodyInstance* InstanceBodyInstance)
 {
 	if (!GetStaticMesh())
 	{
@@ -1510,7 +1510,7 @@ void UInstancedStaticMeshComponent::InitInstanceBody(int32 InstanceIdx, FBodyIns
 #endif //WITH_PHYSX
 }
 
-void UInstancedStaticMeshComponent::CreateAllInstanceBodies()
+void UInstanceBufferMeshComponent::CreateAllInstanceBodies()
 {
 	QUICK_SCOPE_CYCLE_COUNTER(STAT_UInstancedStaticMeshComponent_CreateAllInstanceBodies);
 
@@ -1579,7 +1579,7 @@ void UInstancedStaticMeshComponent::CreateAllInstanceBodies()
 	}
 }
 
-void UInstancedStaticMeshComponent::ClearAllInstanceBodies()
+void UInstanceBufferMeshComponent::ClearAllInstanceBodies()
 {
 	QUICK_SCOPE_CYCLE_COUNTER(STAT_UInstancedStaticMeshComponent_ClearAllInstanceBodies);
 	for (int32 i = 0; i < InstanceBodies.Num(); i++)
@@ -1595,7 +1595,7 @@ void UInstancedStaticMeshComponent::ClearAllInstanceBodies()
 }
 
 
-void UInstancedStaticMeshComponent::OnCreatePhysicsState()
+void UInstanceBufferMeshComponent::OnCreatePhysicsState()
 {
 	check(InstanceBodies.Num() == 0);
 
@@ -1612,7 +1612,7 @@ void UInstancedStaticMeshComponent::OnCreatePhysicsState()
 	USceneComponent::OnCreatePhysicsState();
 }
 
-void UInstancedStaticMeshComponent::OnDestroyPhysicsState()
+void UInstanceBufferMeshComponent::OnDestroyPhysicsState()
 {
 	USceneComponent::OnDestroyPhysicsState();
 
@@ -1620,13 +1620,13 @@ void UInstancedStaticMeshComponent::OnDestroyPhysicsState()
 	ClearAllInstanceBodies();
 }
 
-bool UInstancedStaticMeshComponent::CanEditSimulatePhysics()
+bool UInstanceBufferMeshComponent::CanEditSimulatePhysics()
 {
 	// if instancedstaticmeshcomponent, we will never allow it
 	return false;
 }
 
-FBoxSphereBounds UInstancedStaticMeshComponent::CalcBounds(const FTransform& BoundTransform) const
+FBoxSphereBounds UInstanceBufferMeshComponent::CalcBounds(const FTransform& BoundTransform) const
 {
 	if(GetStaticMesh() && PerInstanceSMData.Num() > 0)
 	{
@@ -1649,7 +1649,7 @@ FBoxSphereBounds UInstancedStaticMeshComponent::CalcBounds(const FTransform& Bou
 }
 
 #if WITH_EDITOR
-void UInstancedStaticMeshComponent::GetStaticLightingInfo(FStaticLightingPrimitiveInfo& OutPrimitiveInfo, const TArray<ULightComponent*>& InRelevantLights, const FLightingBuildOptions& Options)
+void UInstanceBufferMeshComponent::GetStaticLightingInfo(FStaticLightingPrimitiveInfo& OutPrimitiveInfo, const TArray<ULightComponent*>& InRelevantLights, const FLightingBuildOptions& Options)
 {
 	if (HasValidSettingsForStaticLighting(false))
 	{
@@ -1746,7 +1746,7 @@ void UInstancedStaticMeshComponent::GetStaticLightingInfo(FStaticLightingPrimiti
 	}
 }
 
-void UInstancedStaticMeshComponent::ApplyLightMapping(FStaticLightingTextureMapping_IBM* InMapping, ULevel* LightingScenario)
+void UInstanceBufferMeshComponent::ApplyLightMapping(FStaticLightingTextureMapping_IBM* InMapping, ULevel* LightingScenario)
 {
 	static const auto CVar = IConsoleManager::Get().FindTConsoleVariableDataInt(TEXT("r.VirtualTexturedLightmaps"));
 	const bool bUseVirtualTextures = (CVar->GetValueOnAnyThread() != 0) && UseVirtualTexturing(GMaxRHIFeatureLevel);
@@ -1846,7 +1846,7 @@ void UInstancedStaticMeshComponent::ApplyLightMapping(FStaticLightingTextureMapp
 }
 #endif
 
-void UInstancedStaticMeshComponent::ReleasePerInstanceRenderData()
+void UInstanceBufferMeshComponent::ReleasePerInstanceRenderData()
 {
 	if (PerInstanceRenderData.IsValid())
 	{
@@ -1869,7 +1869,7 @@ void UInstancedStaticMeshComponent::ReleasePerInstanceRenderData()
 	} //-V773
 }
 
-void UInstancedStaticMeshComponent::PropagateLightingScenarioChange()
+void UInstanceBufferMeshComponent::PropagateLightingScenarioChange()
 {
 	FComponentRecreateRenderStateContext Context(this);
 
@@ -1878,7 +1878,7 @@ void UInstancedStaticMeshComponent::PropagateLightingScenarioChange()
 	MarkRenderStateDirty();
 }
 
-void UInstancedStaticMeshComponent::GetLightAndShadowMapMemoryUsage( int32& LightMapMemoryUsage, int32& ShadowMapMemoryUsage ) const
+void UInstanceBufferMeshComponent::GetLightAndShadowMapMemoryUsage( int32& LightMapMemoryUsage, int32& ShadowMapMemoryUsage ) const
 {
 	Super::GetLightAndShadowMapMemoryUsage(LightMapMemoryUsage, ShadowMapMemoryUsage);
 
@@ -1920,7 +1920,7 @@ static bool NeedRenderDataForTargetPlatform(const ITargetPlatform* TargetPlatfor
 	return true;
 }
 
-void UInstancedStaticMeshComponent::SerializeRenderData(FArchive& Ar)
+void UInstanceBufferMeshComponent::SerializeRenderData(FArchive& Ar)
 {
 	if (Ar.IsLoading())
 	{
@@ -2022,7 +2022,7 @@ void UInstancedStaticMeshComponent::SerializeRenderData(FArchive& Ar)
 	}
 }
 
-void UInstancedStaticMeshComponent::Serialize(FArchive& Ar)
+void UInstanceBufferMeshComponent::Serialize(FArchive& Ar)
 {
 	LLM_SCOPE(ELLMTag::InstancedMesh);
 	Super::Serialize(Ar);
@@ -2066,12 +2066,12 @@ void UInstancedStaticMeshComponent::Serialize(FArchive& Ar)
 #endif
 }
 
-void UInstancedStaticMeshComponent::PreAllocateInstancesMemory(int32 AddedInstanceCount)
+void UInstanceBufferMeshComponent::PreAllocateInstancesMemory(int32 AddedInstanceCount)
 {
 	PerInstanceSMData.Reserve(PerInstanceSMData.Num() + AddedInstanceCount);
 }
 
-int32 UInstancedStaticMeshComponent::AddInstanceInternal(int32 InstanceIndex, FInstancedStaticMeshInstanceData* InNewInstanceData, const FTransform& InstanceTransform)
+int32 UInstanceBufferMeshComponent::AddInstanceInternal(int32 InstanceIndex, FInstancedStaticMeshInstanceData* InNewInstanceData, const FTransform& InstanceTransform)
 {
 	FInstancedStaticMeshInstanceData* NewInstanceData = InNewInstanceData;
 
@@ -2097,19 +2097,19 @@ int32 UInstancedStaticMeshComponent::AddInstanceInternal(int32 InstanceIndex, FI
 	return InstanceIndex;
 }
 
-int32 UInstancedStaticMeshComponent::AddInstance(const FTransform& InstanceTransform)
+int32 UInstanceBufferMeshComponent::AddInstance(const FTransform& InstanceTransform)
 {
 	return AddInstanceInternal(PerInstanceSMData.Num(), nullptr, InstanceTransform);
 }
 
-int32 UInstancedStaticMeshComponent::AddInstanceWorldSpace(const FTransform& WorldTransform)
+int32 UInstanceBufferMeshComponent::AddInstanceWorldSpace(const FTransform& WorldTransform)
  {
 	// Transform from world space to local space
 	FTransform RelativeTM = WorldTransform.GetRelativeTransform(GetComponentTransform());
 	return AddInstance(RelativeTM);
 }
 
-bool UInstancedStaticMeshComponent::RemoveInstanceInternal(int32 InstanceIndex, bool InstanceAlreadyRemoved)
+bool UInstanceBufferMeshComponent::RemoveInstanceInternal(int32 InstanceIndex, bool InstanceAlreadyRemoved)
 {
 	// Request navigation update
 	PartialNavigationUpdate(InstanceIndex);
@@ -2153,12 +2153,12 @@ bool UInstancedStaticMeshComponent::RemoveInstanceInternal(int32 InstanceIndex, 
 	return true;
 }
 
-bool UInstancedStaticMeshComponent::RemoveInstance(int32 InstanceIndex)
+bool UInstanceBufferMeshComponent::RemoveInstance(int32 InstanceIndex)
 {
 	return RemoveInstanceInternal(InstanceIndex, false);
 }
 
-bool UInstancedStaticMeshComponent::GetInstanceTransform(int32 InstanceIndex, FTransform& OutInstanceTransform, bool bWorldSpace) const
+bool UInstanceBufferMeshComponent::GetInstanceTransform(int32 InstanceIndex, FTransform& OutInstanceTransform, bool bWorldSpace) const
 {
 	if (!PerInstanceSMData.IsValidIndex(InstanceIndex))
 	{
@@ -2176,7 +2176,7 @@ bool UInstancedStaticMeshComponent::GetInstanceTransform(int32 InstanceIndex, FT
 	return true;
 }
 
-void UInstancedStaticMeshComponent::OnUpdateTransform(EUpdateTransformFlags UpdateTransformFlags, ETeleportType Teleport)
+void UInstanceBufferMeshComponent::OnUpdateTransform(EUpdateTransformFlags UpdateTransformFlags, ETeleportType Teleport)
 {
 	// We are handling the physics move below, so don't handle it at higher levels
 	Super::OnUpdateTransform(UpdateTransformFlags | EUpdateTransformFlags::SkipPhysicsUpdate, Teleport);
@@ -2194,7 +2194,7 @@ void UInstancedStaticMeshComponent::OnUpdateTransform(EUpdateTransformFlags Upda
 	}
 }
 
-void UInstancedStaticMeshComponent::UpdateInstanceBodyTransform(int32 InstanceIndex, const FTransform& WorldSpaceInstanceTransform, bool bTeleport)
+void UInstanceBufferMeshComponent::UpdateInstanceBodyTransform(int32 InstanceIndex, const FTransform& WorldSpaceInstanceTransform, bool bTeleport)
 {
 	check(bPhysicsStateCreated);
 
@@ -2228,7 +2228,7 @@ void UInstancedStaticMeshComponent::UpdateInstanceBodyTransform(int32 InstanceIn
 #endif //WITH_PHYSX
 }
 
-bool UInstancedStaticMeshComponent::UpdateInstanceTransform(int32 InstanceIndex, const FTransform& NewInstanceTransform, bool bWorldSpace, bool bMarkRenderStateDirty, bool bTeleport)
+bool UInstanceBufferMeshComponent::UpdateInstanceTransform(int32 InstanceIndex, const FTransform& NewInstanceTransform, bool bWorldSpace, bool bMarkRenderStateDirty, bool bTeleport)
 {
 	if (!PerInstanceSMData.IsValidIndex(InstanceIndex))
 	{
@@ -2267,7 +2267,7 @@ bool UInstancedStaticMeshComponent::UpdateInstanceTransform(int32 InstanceIndex,
 	return true;
 }
 
-bool UInstancedStaticMeshComponent::BatchUpdateInstancesTransforms(int32 StartInstanceIndex, const TArray<FTransform>& NewInstancesTransforms, bool bWorldSpace, bool bMarkRenderStateDirty, bool bTeleport)
+bool UInstanceBufferMeshComponent::BatchUpdateInstancesTransforms(int32 StartInstanceIndex, const TArray<FTransform>& NewInstancesTransforms, bool bWorldSpace, bool bMarkRenderStateDirty, bool bTeleport)
 {
 	if (!PerInstanceSMData.IsValidIndex(StartInstanceIndex) || !PerInstanceSMData.IsValidIndex(StartInstanceIndex + NewInstancesTransforms.Num() - 1))
 	{
@@ -2312,7 +2312,7 @@ bool UInstancedStaticMeshComponent::BatchUpdateInstancesTransforms(int32 StartIn
 	return true;
 }
 
-bool UInstancedStaticMeshComponent::BatchUpdateInstancesTransform(int32 StartInstanceIndex, int32 NumInstances, const FTransform& NewInstancesTransform, bool bWorldSpace, bool bMarkRenderStateDirty, bool bTeleport)
+bool UInstanceBufferMeshComponent::BatchUpdateInstancesTransform(int32 StartInstanceIndex, int32 NumInstances, const FTransform& NewInstancesTransform, bool bWorldSpace, bool bMarkRenderStateDirty, bool bTeleport)
 {
 	if(!PerInstanceSMData.IsValidIndex(StartInstanceIndex) || !PerInstanceSMData.IsValidIndex(StartInstanceIndex + NumInstances - 1))
 	{
@@ -2355,7 +2355,7 @@ bool UInstancedStaticMeshComponent::BatchUpdateInstancesTransform(int32 StartIns
 	return true;
 }
 
-TArray<int32> UInstancedStaticMeshComponent::GetInstancesOverlappingSphere(const FVector& Center, float Radius, bool bSphereInWorldSpace) const
+TArray<int32> UInstanceBufferMeshComponent::GetInstancesOverlappingSphere(const FVector& Center, float Radius, bool bSphereInWorldSpace) const
 {
 	TArray<int32> Result;
 
@@ -2384,7 +2384,7 @@ TArray<int32> UInstancedStaticMeshComponent::GetInstancesOverlappingSphere(const
 	return Result;
 }
 
-TArray<int32> UInstancedStaticMeshComponent::GetInstancesOverlappingBox(const FBox& InBox, bool bBoxInWorldSpace) const
+TArray<int32> UInstanceBufferMeshComponent::GetInstancesOverlappingBox(const FBox& InBox, bool bBoxInWorldSpace) const
 {
 	TArray<int32> Result;
 
@@ -2413,12 +2413,12 @@ TArray<int32> UInstancedStaticMeshComponent::GetInstancesOverlappingBox(const FB
 	return Result;
 }
 
-bool UInstancedStaticMeshComponent::ShouldCreatePhysicsState() const
+bool UInstanceBufferMeshComponent::ShouldCreatePhysicsState() const
 {
 	return IsRegistered() && !IsBeingDestroyed() && GetStaticMesh() && (bAlwaysCreatePhysicsState || IsCollisionEnabled());
 }
 
-float UInstancedStaticMeshComponent::GetTextureStreamingTransformScale() const
+float UInstanceBufferMeshComponent::GetTextureStreamingTransformScale() const
 {
 	// By default if there are no per instance data, use a scale of 1.
 	// This is required because some derived class use the instancing system without filling the per instance data. (like landscape grass)
@@ -2448,7 +2448,7 @@ float UInstancedStaticMeshComponent::GetTextureStreamingTransformScale() const
 	return TransformScale;
 }
 
-bool UInstancedStaticMeshComponent::GetMaterialStreamingData(int32 MaterialIndex, FPrimitiveMaterialInfo& MaterialData) const
+bool UInstanceBufferMeshComponent::GetMaterialStreamingData(int32 MaterialIndex, FPrimitiveMaterialInfo& MaterialData) const
 {
 	// Same thing as StaticMesh but we take the full bounds to cover the instances.
 	if (GetStaticMesh())
@@ -2460,7 +2460,7 @@ bool UInstancedStaticMeshComponent::GetMaterialStreamingData(int32 MaterialIndex
 	return MaterialData.IsValid();
 }
 
-bool UInstancedStaticMeshComponent::BuildTextureStreamingData(ETextureStreamingBuildType BuildType, EMaterialQualityLevel::Type QualityLevel, ERHIFeatureLevel::Type FeatureLevel, TSet<FGuid>& DependentResources)
+bool UInstanceBufferMeshComponent::BuildTextureStreamingData(ETextureStreamingBuildType BuildType, EMaterialQualityLevel::Type QualityLevel, ERHIFeatureLevel::Type FeatureLevel, TSet<FGuid>& DependentResources)
 {
 #if WITH_EDITORONLY_DATA // Only rebuild the data in editor 
 	if (GetInstanceCount() > 0)
@@ -2471,7 +2471,7 @@ bool UInstancedStaticMeshComponent::BuildTextureStreamingData(ETextureStreamingB
 	return true;
 }
 
-void UInstancedStaticMeshComponent::GetStreamingRenderAssetInfo(FStreamingTextureLevelContext& LevelContext, TArray<FStreamingRenderAssetPrimitiveInfo>& OutStreamingRenderAssets) const
+void UInstanceBufferMeshComponent::GetStreamingRenderAssetInfo(FStreamingTextureLevelContext& LevelContext, TArray<FStreamingRenderAssetPrimitiveInfo>& OutStreamingRenderAssets) const
 {
 	// Don't only look the instance count but also if the bound is valid, as derived classes might not set PerInstanceSMData.
 	if (GetInstanceCount() > 0 || Bounds.SphereRadius > 0)
@@ -2480,7 +2480,7 @@ void UInstancedStaticMeshComponent::GetStreamingRenderAssetInfo(FStreamingTextur
 	}
 }
 
-void UInstancedStaticMeshComponent::ClearInstances()
+void UInstanceBufferMeshComponent::ClearInstances()
 {
 	// Clear all the per-instance data
 	PerInstanceSMData.Empty();
@@ -2500,19 +2500,19 @@ void UInstancedStaticMeshComponent::ClearInstances()
 	FNavigationSystem::UpdateComponentData(*this);
 }
 
-int32 UInstancedStaticMeshComponent::GetInstanceCount() const
+int32 UInstanceBufferMeshComponent::GetInstanceCount() const
 {
 	return PerInstanceSMData.Num();
 }
 
-void UInstancedStaticMeshComponent::SetCullDistances(int32 StartCullDistance, int32 EndCullDistance)
+void UInstanceBufferMeshComponent::SetCullDistances(int32 StartCullDistance, int32 EndCullDistance)
 {
 	InstanceStartCullDistance = StartCullDistance;
 	InstanceEndCullDistance = EndCullDistance;
 	MarkRenderStateDirty();
 }
 
-void UInstancedStaticMeshComponent::SetupNewInstanceData(FInstancedStaticMeshInstanceData& InOutNewInstanceData, int32 InInstanceIndex, const FTransform& InInstanceTransform)
+void UInstanceBufferMeshComponent::SetupNewInstanceData(FInstancedStaticMeshInstanceData& InOutNewInstanceData, int32 InInstanceIndex, const FTransform& InInstanceTransform)
 {
 	InOutNewInstanceData.Transform = InInstanceTransform.ToMatrixWithScale();
 
@@ -2532,7 +2532,7 @@ void UInstancedStaticMeshComponent::SetupNewInstanceData(FInstancedStaticMeshIns
 	}
 }
 
-static bool ComponentRequestsCPUAccess(UInstancedStaticMeshComponent* InComponent, ERHIFeatureLevel::Type FeatureLevel)
+static bool ComponentRequestsCPUAccess(UInstanceBufferMeshComponent* InComponent, ERHIFeatureLevel::Type FeatureLevel)
 {
 	if (FeatureLevel > ERHIFeatureLevel::ES3_1)
 	{
@@ -2547,7 +2547,7 @@ static bool ComponentRequestsCPUAccess(UInstancedStaticMeshComponent* InComponen
 	return false;
 }
 
-void UInstancedStaticMeshComponent::GetInstancesMinMaxScale(FVector& MinScale, FVector& MaxScale) const
+void UInstanceBufferMeshComponent::GetInstancesMinMaxScale(FVector& MinScale, FVector& MaxScale) const
 {
 	if (PerInstanceSMData.Num() > 0)
 	{
@@ -2570,7 +2570,7 @@ void UInstancedStaticMeshComponent::GetInstancesMinMaxScale(FVector& MinScale, F
 	}
 }
 
-void UInstancedStaticMeshComponent::InitPerInstanceRenderData(bool InitializeFromCurrentData, FStaticMeshInstanceData* InSharedInstanceBufferData, bool InRequireCPUAccess)
+void UInstanceBufferMeshComponent::InitPerInstanceRenderData(bool InitializeFromCurrentData, FStaticMeshInstanceData* InSharedInstanceBufferData, bool InRequireCPUAccess)
 {
 	if (PerInstanceRenderData.IsValid())
 	{
@@ -2613,7 +2613,7 @@ void UInstancedStaticMeshComponent::InitPerInstanceRenderData(bool InitializeFro
 	}
 }
 
-void UInstancedStaticMeshComponent::OnComponentCreated()
+void UInstanceBufferMeshComponent::OnComponentCreated()
 {
 	Super::OnComponentCreated();
 
@@ -2627,7 +2627,7 @@ void UInstancedStaticMeshComponent::OnComponentCreated()
 	}
 }
 
-void UInstancedStaticMeshComponent::PostLoad()
+void UInstanceBufferMeshComponent::PostLoad()
 {
 	Super::PostLoad();
 
@@ -2635,7 +2635,7 @@ void UInstancedStaticMeshComponent::PostLoad()
 	OnPostLoadPerInstanceData();
 }
 
-void UInstancedStaticMeshComponent::OnPostLoadPerInstanceData()
+void UInstanceBufferMeshComponent::OnPostLoadPerInstanceData()
 {
 	if (!HasAnyFlags(RF_ClassDefaultObject|RF_ArchetypeObject))
 	{
@@ -2662,13 +2662,13 @@ void UInstancedStaticMeshComponent::OnPostLoadPerInstanceData()
 	}
 }
 
-void UInstancedStaticMeshComponent::PartialNavigationUpdate(int32 InstanceIdx)
+void UInstanceBufferMeshComponent::PartialNavigationUpdate(int32 InstanceIdx)
 {
 	// Just update everything
 	FNavigationSystem::UpdateComponentData(*this);
 }
 
-bool UInstancedStaticMeshComponent::DoCustomNavigableGeometryExport(FNavigableGeometryExport& GeomExport) const
+bool UInstanceBufferMeshComponent::DoCustomNavigableGeometryExport(FNavigableGeometryExport& GeomExport) const
 {
 	if (GetStaticMesh() && GetStaticMesh()->NavCollision)
 	{
@@ -2696,14 +2696,14 @@ bool UInstancedStaticMeshComponent::DoCustomNavigableGeometryExport(FNavigableGe
 		}
 
 		// Hook per instance transform delegate
-		GeomExport.SetNavDataPerInstanceTransformDelegate(FNavDataPerInstanceTransformDelegate::CreateUObject(this, &UInstancedStaticMeshComponent::GetNavigationPerInstanceTransforms));
+		GeomExport.SetNavDataPerInstanceTransformDelegate(FNavDataPerInstanceTransformDelegate::CreateUObject(this, &UInstanceBufferMeshComponent::GetNavigationPerInstanceTransforms));
 	}
 
 	// we don't want "regular" collision export for this component
 	return false;
 }
 
-void UInstancedStaticMeshComponent::GetNavigationData(FNavigationRelevantData& Data) const
+void UInstanceBufferMeshComponent::GetNavigationData(FNavigationRelevantData& Data) const
 {
 	if (GetStaticMesh() && GetStaticMesh()->NavCollision)
 	{
@@ -2714,17 +2714,17 @@ void UInstancedStaticMeshComponent::GetNavigationData(FNavigationRelevantData& D
 			NavCollision->GetNavigationModifier(Data.Modifiers, FTransform::Identity);
 
 			// Hook per instance transform delegate
-			Data.NavDataPerInstanceTransformDelegate = FNavDataPerInstanceTransformDelegate::CreateUObject(this, &UInstancedStaticMeshComponent::GetNavigationPerInstanceTransforms);
+			Data.NavDataPerInstanceTransformDelegate = FNavDataPerInstanceTransformDelegate::CreateUObject(this, &UInstanceBufferMeshComponent::GetNavigationPerInstanceTransforms);
 		}
 	}
 }
 
-FBox UInstancedStaticMeshComponent::GetNavigationBounds() const
+FBox UInstanceBufferMeshComponent::GetNavigationBounds() const
 {
 	return CalcBounds(GetComponentTransform()).GetBox();
 }
 
-void UInstancedStaticMeshComponent::GetNavigationPerInstanceTransforms(const FBox& AreaBox, TArray<FTransform>& InstanceData) const
+void UInstanceBufferMeshComponent::GetNavigationPerInstanceTransforms(const FBox& AreaBox, TArray<FTransform>& InstanceData) const
 {
 	for (const auto& InstancedData : PerInstanceSMData)
 	{
@@ -2737,7 +2737,7 @@ void UInstancedStaticMeshComponent::GetNavigationPerInstanceTransforms(const FBo
 	}
 }
 
-void UInstancedStaticMeshComponent::GetResourceSizeEx(FResourceSizeEx& CumulativeResourceSize)
+void UInstanceBufferMeshComponent::GetResourceSizeEx(FResourceSizeEx& CumulativeResourceSize)
 {
 	Super::GetResourceSizeEx(CumulativeResourceSize);
 
@@ -2760,13 +2760,13 @@ void UInstancedStaticMeshComponent::GetResourceSizeEx(FResourceSizeEx& Cumulativ
 	CumulativeResourceSize.AddDedicatedSystemMemoryBytes(InstanceUpdateCmdBuffer.Cmds.GetAllocatedSize());
 }
 
-void UInstancedStaticMeshComponent::BeginDestroy()
+void UInstanceBufferMeshComponent::BeginDestroy()
 {
 	ReleasePerInstanceRenderData();
 	Super::BeginDestroy();
 }
 
-void UInstancedStaticMeshComponent::PostDuplicate(bool bDuplicateForPIE)
+void UInstanceBufferMeshComponent::PostDuplicate(bool bDuplicateForPIE)
 {
 	Super::PostDuplicate(bDuplicateForPIE);
 
@@ -2777,7 +2777,7 @@ void UInstancedStaticMeshComponent::PostDuplicate(bool bDuplicateForPIE)
 }
 
 #if WITH_EDITOR
-void UInstancedStaticMeshComponent::PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent)
+void UInstanceBufferMeshComponent::PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent)
 {
 	if(PropertyChangedEvent.Property != NULL)
 	{
@@ -2820,7 +2820,7 @@ void UInstancedStaticMeshComponent::PostEditChangeChainProperty(FPropertyChanged
 	Super::PostEditChangeChainProperty(PropertyChangedEvent);
 }
 
-void UInstancedStaticMeshComponent::PostEditUndo()
+void UInstanceBufferMeshComponent::PostEditUndo()
 {
 	Super::PostEditUndo();
 
@@ -2828,7 +2828,7 @@ void UInstancedStaticMeshComponent::PostEditUndo()
 }
 #endif
 
-bool UInstancedStaticMeshComponent::IsInstanceSelected(int32 InInstanceIndex) const
+bool UInstanceBufferMeshComponent::IsInstanceSelected(int32 InInstanceIndex) const
 {
 #if WITH_EDITOR
 	if(SelectedInstances.IsValidIndex(InInstanceIndex))
@@ -2840,7 +2840,7 @@ bool UInstancedStaticMeshComponent::IsInstanceSelected(int32 InInstanceIndex) co
 	return false;
 }
 
-void UInstancedStaticMeshComponent::SelectInstance(bool bInSelected, int32 InInstanceIndex, int32 InInstanceCount)
+void UInstanceBufferMeshComponent::SelectInstance(bool bInSelected, int32 InInstanceIndex, int32 InInstanceCount)
 {
 #if WITH_EDITOR
 	if (InInstanceCount > 0)
@@ -2883,7 +2883,7 @@ void UInstancedStaticMeshComponent::SelectInstance(bool bInSelected, int32 InIns
 #endif
 }
 
-void UInstancedStaticMeshComponent::ClearInstanceSelection()
+void UInstanceBufferMeshComponent::ClearInstanceSelection()
 {
 #if WITH_EDITOR
 	int32 InstanceCount = SelectedInstances.Num();

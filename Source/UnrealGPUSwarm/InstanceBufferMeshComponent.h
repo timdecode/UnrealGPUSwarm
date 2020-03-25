@@ -77,10 +77,10 @@ struct FInstancedStaticMeshMappingInfo
 class FAsyncBuildInstanceBuffer : public FNonAbandonableTask
 {
 public:
-	class UInstancedStaticMeshComponent* Component;
+	class UInstanceBufferMeshComponent* Component;
 	class UWorld* World;
 
-	FAsyncBuildInstanceBuffer(class UInstancedStaticMeshComponent* InComponent, class UWorld* InWorld)
+	FAsyncBuildInstanceBuffer(class UInstanceBufferMeshComponent* InComponent, class UWorld* InWorld)
 		: Component(InComponent)
 		, World(InWorld)
 	{
@@ -98,11 +98,11 @@ public:
 
 /** A component that efficiently renders multiple instances of the same StaticMesh. */
 UCLASS(ClassGroup = Rendering, meta = (BlueprintSpawnableComponent), Blueprintable)
-class ENGINE_API UInstancedStaticMeshComponent : public UStaticMeshComponent
+class ENGINE_API UInstanceBufferMeshComponent : public UStaticMeshComponent
 {
 	GENERATED_UCLASS_BODY()
 
-	virtual ~UInstancedStaticMeshComponent();
+	virtual ~UInstanceBufferMeshComponent();
 
 	/** Array of instances, bulk serialized. */
 	UPROPERTY(EditAnywhere, SkipSerialization, DisplayName="Instances", Category=Instances, meta=(MakeEditWidget=true, EditFixedOrder))
@@ -331,11 +331,11 @@ protected:
 /** InstancedStaticMeshInstance hit proxy */
 struct HInstanceBufferMeshInstance : public HHitProxy
 {
-	UInstancedStaticMeshComponent* Component;
+	UInstanceBufferMeshComponent* Component;
 	int32 InstanceIndex;
 
 	DECLARE_HIT_PROXY(ENGINE_API);
-	HInstanceBufferMeshInstance(UInstancedStaticMeshComponent* InComponent, int32 InInstanceIndex) : HHitProxy(HPP_World), Component(InComponent), InstanceIndex(InInstanceIndex) {}
+	HInstanceBufferMeshInstance(UInstanceBufferMeshComponent* InComponent, int32 InInstanceIndex) : HHitProxy(HPP_World), Component(InComponent), InstanceIndex(InInstanceIndex) {}
 
 	virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
 
