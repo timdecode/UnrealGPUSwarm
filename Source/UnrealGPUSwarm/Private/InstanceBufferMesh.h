@@ -396,17 +396,17 @@ private:
 
 struct FIBMInstanceUpdateCmdBuffer;
 /*-----------------------------------------------------------------------------
-	FPerInstanceRenderData
+	FIBMPerInstanceRenderData
 	Holds render data that can persist between scene proxy reconstruction
 -----------------------------------------------------------------------------*/
-struct FPerInstanceRenderData
+struct FIBMPerInstanceRenderData
 {
 	// Should be always constructed on main thread
-	FPerInstanceRenderData(FStaticMeshInstanceData& Other, ERHIFeatureLevel::Type InFeaureLevel, bool InRequireCPUAccess);
-	~FPerInstanceRenderData();
+	FIBMPerInstanceRenderData(FStaticMeshInstanceData& Other, ERHIFeatureLevel::Type InFeaureLevel, bool InRequireCPUAccess);
+	~FIBMPerInstanceRenderData();
 
 	/**
-	 * Call to update the Instance buffer with pre allocated data without recreating the FPerInstanceRenderData
+	 * Call to update the Instance buffer with pre allocated data without recreating the FIBMPerInstanceRenderData
 	 * @param InComponent - The owning component
 	 * @param InOther - The Instance data to copy into our instance buffer
 	 */
@@ -469,7 +469,7 @@ public:
 	UInstanceBufferMeshComponent* Component;
 
 	/** Per instance render data, could be shared with component */
-	TSharedPtr<FPerInstanceRenderData, ESPMode::ThreadSafe> PerInstanceRenderData;
+	TSharedPtr<FIBMPerInstanceRenderData, ESPMode::ThreadSafe> PerInstanceRenderData;
 
 	/** Vertex factory */
 	TIndirectArray<FInstancedStaticMeshVertexFactory> VertexFactories;

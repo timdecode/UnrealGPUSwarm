@@ -19,7 +19,7 @@ class FStaticLightingTextureMapping_InstancedStaticMesh;
 class ULightComponent;
 struct FNavigableGeometryExport;
 struct FNavigationRelevantData;
-struct FPerInstanceRenderData;
+struct FIBMPerInstanceRenderData;
 struct FStaticLightingPrimitiveInfo;
 
 DECLARE_STATS_GROUP(TEXT("Foliage"), STATGROUP_Foliage, STATCAT_Advanced);
@@ -247,7 +247,7 @@ class ENGINE_API UInstanceBufferMeshComponent : public UStaticMeshComponent
 
 public:
 	/** Render data will be initialized on PostLoad or on demand. Released on the rendering thread. */
-	TSharedPtr<FPerInstanceRenderData, ESPMode::ThreadSafe> PerInstanceRenderData;
+	TSharedPtr<FIBMPerInstanceRenderData, ESPMode::ThreadSafe> PerInstanceRenderData;
 
 	/** Recorded modifications to per-instance data */
 	FIBMInstanceUpdateCmdBuffer InstanceUpdateCmdBuffer;

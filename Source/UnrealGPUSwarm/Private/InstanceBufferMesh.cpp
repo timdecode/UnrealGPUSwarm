@@ -697,7 +697,7 @@ void FInstancedStaticMeshRenderData::InitVertexFactories()
 	});
 }
 
-FPerInstanceRenderData::FPerInstanceRenderData(FStaticMeshInstanceData& Other, ERHIFeatureLevel::Type InFeaureLevel, bool InRequireCPUAccess)
+FIBMPerInstanceRenderData::FIBMPerInstanceRenderData(FStaticMeshInstanceData& Other, ERHIFeatureLevel::Type InFeaureLevel, bool InRequireCPUAccess)
 	: ResourceSize(InRequireCPUAccess ? Other.GetResourceSize() : 0)
 	, InstanceBuffer(InFeaureLevel, InRequireCPUAccess)
 {
@@ -707,14 +707,14 @@ FPerInstanceRenderData::FPerInstanceRenderData(FStaticMeshInstanceData& Other, E
 	BeginInitResource(&InstanceBuffer);
 }
 		
-FPerInstanceRenderData::~FPerInstanceRenderData()
+FIBMPerInstanceRenderData::~FIBMPerInstanceRenderData()
 {
 	InstanceBuffer_GameThread.Reset();
 	// Should be always destructed on rendering thread
 	InstanceBuffer.ReleaseResource();
 }
 
-void FPerInstanceRenderData::UpdateFromPreallocatedData(FStaticMeshInstanceData& InOther)
+void FIBMPerInstanceRenderData::UpdateFromPreallocatedData(FStaticMeshInstanceData& InOther)
 {
 	InstanceBuffer.RequireCPUAccess = (InOther.GetOriginResourceArray()->GetAllowCPUAccess() || InOther.GetTransformResourceArray()->GetAllowCPUAccess() || InOther.GetLightMapResourceArray()->GetAllowCPUAccess()) ? true : InstanceBuffer.RequireCPUAccess;
 	ResourceSize = InstanceBuffer.RequireCPUAccess ? InOther.GetResourceSize() : 0;
@@ -737,7 +737,7 @@ void FPerInstanceRenderData::UpdateFromPreallocatedData(FStaticMeshInstanceData&
 	);
 }
 
-void FPerInstanceRenderData::UpdateFromCommandBuffer(FIBMInstanceUpdateCmdBuffer& CmdBuffer)
+void FIBMPerInstanceRenderData::UpdateFromCommandBuffer(FIBMInstanceUpdateCmdBuffer& CmdBuffer)
 {
 	InstanceBuffer.UpdateFromCommandBuffer_Concurrent(CmdBuffer);
 }
@@ -1850,7 +1850,7 @@ void UInstanceBufferMeshComponent::ReleasePerInstanceRenderData()
 {
 	if (PerInstanceRenderData.IsValid())
 	{
-		typedef TSharedPtr<FPerInstanceRenderData, ESPMode::ThreadSafe> FPerInstanceRenderDataPtr;
+		typedef TSharedPtr<FIBMPerInstanceRenderData, ESPMode::ThreadSafe> FPerInstanceRenderDataPtr;
 
 		PerInstanceRenderData->HitProxies.Empty();
 
@@ -2594,7 +2594,7 @@ void UInstanceBufferMeshComponent::InitPerInstanceRenderData(bool InitializeFrom
 
 	if (InSharedInstanceBufferData != nullptr)
 	{
-		PerInstanceRenderData = MakeShareable(new FPerInstanceRenderData(*InSharedInstanceBufferData, FeatureLevel, KeepInstanceBufferCPUAccess));
+		PerInstanceRenderData = MakeShareable(new FIBMPerInstanceRenderData(*InSharedInstanceBufferData, FeatureLevel, KeepInstanceBufferCPUAccess));
 	}
 	else
 	{
@@ -2608,7 +2608,7 @@ void UInstanceBufferMeshComponent::InitPerInstanceRenderData(bool InitializeFrom
 			BuildRenderData(InstanceBufferData, HitProxies);
 		}
 			
-		PerInstanceRenderData = MakeShareable(new FPerInstanceRenderData(InstanceBufferData, FeatureLevel, KeepInstanceBufferCPUAccess));
+		PerInstanceRenderData = MakeShareable(new FIBMPerInstanceRenderData(InstanceBufferData, FeatureLevel, KeepInstanceBufferCPUAccess));
 		PerInstanceRenderData->HitProxies = MoveTemp(HitProxies);
 	}
 }
