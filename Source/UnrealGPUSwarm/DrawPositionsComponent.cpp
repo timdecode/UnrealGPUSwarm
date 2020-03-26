@@ -168,7 +168,7 @@ void UDrawPositionsComponent::_updateInstanceBuffers()
 
 
 		FBoids_copyPositions_CS::FParameters parameters;
-		parameters.positions = boidsComponent->_positionBufferUAV[1];
+		parameters.positions = boidsComponent->currentPositionsBuffer();
 		parameters.positions_other = _positionsUAV;
 		parameters.numParticles = numParticles;
 		parameters.instanceSize = size;

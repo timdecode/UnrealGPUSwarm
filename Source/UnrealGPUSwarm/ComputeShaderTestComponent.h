@@ -30,7 +30,10 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-
+	FUnorderedAccessViewRHIRef currentPositionsBuffer()
+	{
+		return _positionBufferUAV[dualBufferCount];
+	}
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -81,6 +84,8 @@ public:
 	TArray<FVector4> outputPositions;
 
 	TArray<FVector4> outputDirections;
+
+
 
 public:
 	unsigned int dualBufferCount = 0;
