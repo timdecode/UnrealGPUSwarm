@@ -3,6 +3,8 @@
 
 #include "DrawPositionsComponent.h"
 
+#include "InstanceBufferMeshComponent.h"
+
 #include "ComputeShaderTestComponent.h"
 
 // Sets default values for this component's properties
@@ -35,7 +37,7 @@ void UDrawPositionsComponent::TickComponent(float DeltaTime, ELevelTick TickType
 
 void UDrawPositionsComponent::_initISMC()
 {
-	UInstancedStaticMeshComponent * ismc = GetOwner()->FindComponentByClass<UInstancedStaticMeshComponent>();
+	UInstanceBufferMeshComponent * ismc = GetOwner()->FindComponentByClass<UInstanceBufferMeshComponent>();
 
 	if (!ismc) return;
 
@@ -51,7 +53,7 @@ void UDrawPositionsComponent::_initISMC()
 
 void UDrawPositionsComponent::_updateInstanceTransforms()
 {
-	UInstancedStaticMeshComponent * ismc = GetOwner()->FindComponentByClass<UInstancedStaticMeshComponent>();
+	UInstanceBufferMeshComponent * ismc = GetOwner()->FindComponentByClass<UInstanceBufferMeshComponent>();
 
 	if (!ismc) return;
 
