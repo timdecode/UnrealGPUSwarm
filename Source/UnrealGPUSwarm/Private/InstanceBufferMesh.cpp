@@ -46,7 +46,7 @@
 
 const int32 InstancedStaticMeshMaxTexCoord = 8;
 
-IMPLEMENT_HIT_PROXY(HInstancedStaticMeshInstance, HHitProxy);
+IMPLEMENT_HIT_PROXY(HInstanceBufferMeshInstance, HHitProxy);
 
 TAutoConsoleVariable<int32> CVarMinLOD(
 	TEXT("foliage.MinLOD"),
@@ -85,7 +85,7 @@ static TAutoConsoleVariable<float> CVarRayTracingInstancesLowScaleCullRadius(
 
 
 /** InstancedStaticMeshInstance hit proxy */
-void HInstancedStaticMeshInstance::AddReferencedObjects(FReferenceCollector& Collector)
+void HInstanceBufferMeshInstance::AddReferencedObjects(FReferenceCollector& Collector)
 {
 	Collector.AddReferencedObject(Component);
 }
@@ -1407,7 +1407,7 @@ void UInstanceBufferMeshComponent::CreateHitProxyData(TArray<TRefCountPtr<HHitPr
 
 		for (int32 InstanceIdx = 0; InstanceIdx < NumProxies; ++InstanceIdx)
 		{
-			HitProxies.Add(new HInstancedStaticMeshInstance(this, InstanceIdx));
+			HitProxies.Add(new HInstanceBufferMeshInstance(this, InstanceIdx));
 		}
 	}
 	else
