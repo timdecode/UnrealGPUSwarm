@@ -125,6 +125,9 @@ class UNREALGPUSWARM_API UInstanceBufferMeshComponent : public UStaticMeshCompon
 	/** Needs implementation in InstancedStaticMesh.cpp to compile UniquePtr for forward declared class */
 	UInstanceBufferMeshComponent(FVTableHelper& Helper);
 	virtual ~UInstanceBufferMeshComponent();
+
+	FStructuredBufferRHIRef positionsBuffer;
+	FStructuredBufferRHIRef directionsBuffer;
 	
 	/** Array of instances, bulk serialized. */
 	UPROPERTY(EditAnywhere, SkipSerialization, DisplayName="Instances", Category=Instances, meta=(MakeEditWidget=true, EditFixedOrder))
