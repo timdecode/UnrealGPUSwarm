@@ -323,7 +323,7 @@ public:
 	}
 };
 
-class FInstancedStaticMeshVertexFactoryShaderParameters : public FLocalVertexFactoryShaderParametersBase
+class FInstanceBufferMeshVertexFactoryShaderParameters : public FLocalVertexFactoryShaderParametersBase
 {
 	virtual void Bind(const FShaderParameterMap& ParameterMap) override
 	{

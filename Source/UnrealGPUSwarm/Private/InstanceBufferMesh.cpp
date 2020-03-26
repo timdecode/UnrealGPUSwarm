@@ -648,7 +648,7 @@ void FInstanceBufferMeshVertexFactory::InitRHI()
 
 FVertexFactoryShaderParameters* FInstanceBufferMeshVertexFactory::ConstructShaderParameters(EShaderFrequency ShaderFrequency)
 {
-	return ShaderFrequency == SF_Vertex ? new FInstancedStaticMeshVertexFactoryShaderParameters() : NULL;
+	return ShaderFrequency == SF_Vertex ? new FInstanceBufferMeshVertexFactoryShaderParameters() : NULL;
 }
 
 IMPLEMENT_VERTEX_FACTORY_TYPE_EX(FInstanceBufferMeshVertexFactory,"/Engine/Private/LocalVertexFactory.ush",true,true,true,true,true,true,false);
@@ -2920,7 +2920,7 @@ static TAutoConsoleVariable<int32> CVarCullAllInVertexShader(
 	0,
 	TEXT("Debugging, if this is greater than 0, cull all instances in the vertex shader."));
 
-void FInstancedStaticMeshVertexFactoryShaderParameters::GetElementShaderBindings(
+void FInstanceBufferMeshVertexFactoryShaderParameters::GetElementShaderBindings(
 	const class FSceneInterface* Scene,
 	const FSceneView* View,
 	const FMeshMaterialShader* Shader,
