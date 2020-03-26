@@ -141,8 +141,17 @@ void UDrawPositionsComponent::_updateInstanceBuffers()
 	int toAdd = FMath::Max(0, boidsComponent->numBoids - ismc->GetInstanceCount());
 	int toRemove = FMath::Max(0, ismc->GetInstanceCount() - boidsComponent->numBoids);
 
+	FTransform transform = FTransform::Identity;
+
+	transform.SetScale3D(FVector(size));
+
 	for (int i = 0; i < toAdd; ++i)
-		ismc->AddInstance(FTransform::Identity);
+	{
+
+
+		ismc->AddInstance(transform);
+	}
+
 	for (int i = 0; i < toRemove; ++i)
 		ismc->RemoveInstance(ismc->GetInstanceCount() - 1);
 
