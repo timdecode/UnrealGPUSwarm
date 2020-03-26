@@ -137,7 +137,7 @@ private:
 };
 
 /*-----------------------------------------------------------------------------
-	FInstancedStaticMeshVertexFactory
+	FInstanceBufferMeshVertexFactory
 -----------------------------------------------------------------------------*/
 
 struct FInstancingUserData
@@ -178,12 +178,12 @@ struct FInstancedStaticMeshDataType
 /**
  * A vertex factory for instanced static meshes
  */
-struct FInstancedStaticMeshVertexFactory : public FLocalVertexFactory
+struct FInstanceBufferMeshVertexFactory : public FLocalVertexFactory
 {
-	DECLARE_VERTEX_FACTORY_TYPE(FInstancedStaticMeshVertexFactory);
+	DECLARE_VERTEX_FACTORY_TYPE(FInstanceBufferMeshVertexFactory);
 public:
-	FInstancedStaticMeshVertexFactory(ERHIFeatureLevel::Type InFeatureLevel)
-		: FLocalVertexFactory(InFeatureLevel, "FInstancedStaticMeshVertexFactory")
+	FInstanceBufferMeshVertexFactory(ERHIFeatureLevel::Type InFeatureLevel)
+		: FLocalVertexFactory(InFeatureLevel, "FInstanceBufferMeshVertexFactory")
 	{
 	}
 
@@ -236,7 +236,7 @@ public:
 	 * Copy the data from another vertex factory
 	 * @param Other - factory to copy from
 	 */
-	void Copy(const FInstancedStaticMeshVertexFactory& Other);
+	void Copy(const FInstanceBufferMeshVertexFactory& Other);
 
 	// FRenderResource interface.
 	virtual void InitRHI() override;
@@ -246,7 +246,7 @@ public:
 	/** Make sure we account for changes in the signature of GetStaticBatchElementVisibility() */
 	static CONSTEXPR uint32 NumBitsForVisibilityMask()
 	{		
-		return 8 * sizeof(decltype(((FInstancedStaticMeshVertexFactory*)nullptr)->GetStaticBatchElementVisibility(FSceneView(FSceneViewInitOptions()), nullptr)));
+		return 8 * sizeof(decltype(((FInstanceBufferMeshVertexFactory*)nullptr)->GetStaticBatchElementVisibility(FSceneView(FSceneViewInitOptions()), nullptr)));
 	}
 
 	/**
@@ -292,12 +292,12 @@ private:
 };
 
 
-struct FEmulatedInstancedStaticMeshVertexFactory : public FInstancedStaticMeshVertexFactory
+struct FEmulatedInstancedStaticMeshVertexFactory : public FInstanceBufferMeshVertexFactory
 {
 	DECLARE_VERTEX_FACTORY_TYPE(FEmulatedInstancedStaticMeshVertexFactory);
 public:
 	FEmulatedInstancedStaticMeshVertexFactory(ERHIFeatureLevel::Type InFeatureLevel)
-		: FInstancedStaticMeshVertexFactory(InFeatureLevel)
+		: FInstanceBufferMeshVertexFactory(InFeatureLevel)
 	{
 	}
 
@@ -318,7 +318,7 @@ public:
 	 */
 	static void ModifyCompilationEnvironment(const FVertexFactoryType* Type, EShaderPlatform Platform, const FMaterial* Material, FShaderCompilerEnvironment& OutEnvironment)
 	{
-		FInstancedStaticMeshVertexFactory::ModifyCompilationEnvironment(Type, Platform, Material, OutEnvironment);
+		FInstanceBufferMeshVertexFactory::ModifyCompilationEnvironment(Type, Platform, Material, OutEnvironment);
 		OutEnvironment.SetDefine(TEXT("USE_INSTANCING_EMULATED"), TEXT("1"));
 	}
 };
@@ -472,7 +472,7 @@ public:
 	TSharedPtr<FIBMPerInstanceRenderData, ESPMode::ThreadSafe> PerInstanceRenderData;
 
 	/** Vertex factory */
-	TIndirectArray<FInstancedStaticMeshVertexFactory> VertexFactories;
+	TIndirectArray<FInstanceBufferMeshVertexFactory> VertexFactories;
 
 	/** LOD render data from the static mesh. */
 	TIndirectArray<FStaticMeshLODResources>& LODModels;

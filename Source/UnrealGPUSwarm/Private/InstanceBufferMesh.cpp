@@ -501,7 +501,7 @@ void FIBMInstanceData::Serialize(FArchive& Ar)
 /**
  * Should we cache the material's shadertype on this platform with this vertex factory? 
  */
-bool FInstancedStaticMeshVertexFactory::ShouldCompilePermutation(EShaderPlatform Platform, const class FMaterial* Material, const class FShaderType* ShaderType)
+bool FInstanceBufferMeshVertexFactory::ShouldCompilePermutation(EShaderPlatform Platform, const class FMaterial* Material, const class FShaderType* ShaderType)
 {
 	return (Material->IsUsedWithInstancedStaticMeshes() || Material->IsSpecialEngineMaterial()) 
 			&& FLocalVertexFactory::ShouldCompilePermutation(Platform, Material, ShaderType);
@@ -512,9 +512,9 @@ bool FInstancedStaticMeshVertexFactory::ShouldCompilePermutation(EShaderPlatform
  * Copy the data from another vertex factory
  * @param Other - factory to copy from
  */
-void FInstancedStaticMeshVertexFactory::Copy(const FInstancedStaticMeshVertexFactory& Other)
+void FInstanceBufferMeshVertexFactory::Copy(const FInstanceBufferMeshVertexFactory& Other)
 {
-	FInstancedStaticMeshVertexFactory* VertexFactory = this;
+	FInstanceBufferMeshVertexFactory* VertexFactory = this;
 	const FDataType* DataCopy = &Other.Data;
 	ENQUEUE_RENDER_COMMAND(FInstancedStaticMeshVertexFactoryCopyData)(
 	[VertexFactory, DataCopy](FRHICommandListImmediate& RHICmdList)
@@ -524,7 +524,7 @@ void FInstancedStaticMeshVertexFactory::Copy(const FInstancedStaticMeshVertexFac
 	BeginUpdateResourceRHI(this);
 }
 
-void FInstancedStaticMeshVertexFactory::InitRHI()
+void FInstanceBufferMeshVertexFactory::InitRHI()
 {
 	check(HasValidFeatureLevel());
 	const bool bInstanced = GRHISupportsInstancing;
@@ -646,12 +646,12 @@ void FInstancedStaticMeshVertexFactory::InitRHI()
 }
 
 
-FVertexFactoryShaderParameters* FInstancedStaticMeshVertexFactory::ConstructShaderParameters(EShaderFrequency ShaderFrequency)
+FVertexFactoryShaderParameters* FInstanceBufferMeshVertexFactory::ConstructShaderParameters(EShaderFrequency ShaderFrequency)
 {
 	return ShaderFrequency == SF_Vertex ? new FInstancedStaticMeshVertexFactoryShaderParameters() : NULL;
 }
 
-IMPLEMENT_VERTEX_FACTORY_TYPE_EX(FInstancedStaticMeshVertexFactory,"/Engine/Private/LocalVertexFactory.ush",true,true,true,true,true,true,false);
+IMPLEMENT_VERTEX_FACTORY_TYPE_EX(FInstanceBufferMeshVertexFactory,"/Engine/Private/LocalVertexFactory.ush",true,true,true,true,true,true,false);
 IMPLEMENT_VERTEX_FACTORY_TYPE_EX(FEmulatedInstancedStaticMeshVertexFactory,"/Engine/Private/LocalVertexFactory.ush",true,true,true,true,true,true,false);
 
 void FInstancedStaticMeshRenderData::InitVertexFactories()
@@ -661,7 +661,7 @@ void FInstancedStaticMeshRenderData::InitVertexFactories()
 	// Allocate the vertex factories for each LOD
 	for (int32 LODIndex = 0; LODIndex < LODModels.Num(); LODIndex++)
 	{
-		VertexFactories.Add(bInstanced ? new FInstancedStaticMeshVertexFactory(FeatureLevel) : new FEmulatedInstancedStaticMeshVertexFactory(FeatureLevel));
+		VertexFactories.Add(bInstanced ? new FInstanceBufferMeshVertexFactory(FeatureLevel) : new FEmulatedInstancedStaticMeshVertexFactory(FeatureLevel));
 	}
 
 	const int32 LightMapCoordinateIndex = Component->GetStaticMesh()->LightMapCoordinateIndex;
@@ -672,9 +672,9 @@ void FInstancedStaticMeshRenderData::InitVertexFactories()
 		{
 			const FStaticMeshLODResources* RenderData = &LODModels[LODIndex];
 
-			FInstancedStaticMeshVertexFactory::FDataType Data;
+			FInstanceBufferMeshVertexFactory::FDataType Data;
 			// Assign to the vertex factory for this LOD.
-			FInstancedStaticMeshVertexFactory& VertexFactory = VertexFactories[LODIndex];
+			FInstanceBufferMeshVertexFactory& VertexFactory = VertexFactories[LODIndex];
 
 			RenderData->VertexBuffers.PositionVertexBuffer.BindPositionVertexBuffer(&VertexFactory, Data);
 			RenderData->VertexBuffers.StaticMeshVertexBuffer.BindTangentVertexBuffer(&VertexFactory, Data);
@@ -828,7 +828,7 @@ int32 FInstancedStaticMeshSceneProxy::GetNumMeshBatches() const
 	else
 	{
 		const uint32 NumInstances = InstancedRenderData.PerInstanceRenderData->InstanceBuffer.GetNumInstances();
-		const uint32 MaxInstancesPerBatch = FInstancedStaticMeshVertexFactory::NumBitsForVisibilityMask();
+		const uint32 MaxInstancesPerBatch = FInstanceBufferMeshVertexFactory::NumBitsForVisibilityMask();
 		const uint32 NumBatches = FMath::DivideAndRoundUp(NumInstances, MaxInstancesPerBatch);
 		return NumBatches;
 	}
@@ -924,7 +924,7 @@ void FInstancedStaticMeshSceneProxy::SetupInstancedMeshBatch(int32 LODIndex, int
 	}
 	else
 	{
-		const uint32 MaxInstancesPerBatch = FInstancedStaticMeshVertexFactory::NumBitsForVisibilityMask();
+		const uint32 MaxInstancesPerBatch = FInstanceBufferMeshVertexFactory::NumBitsForVisibilityMask();
 		const uint32 NumBatches = FMath::DivideAndRoundUp(NumInstances, MaxInstancesPerBatch);
 		uint32 InstanceIndex = BatchIndex * MaxInstancesPerBatch;
 		uint32 NumInstancesThisBatch = FMath::Min(NumInstances - InstanceIndex, MaxInstancesPerBatch);
@@ -2939,7 +2939,7 @@ void FInstancedStaticMeshVertexFactoryShaderParameters::GetElementShaderBindings
 	FLocalVertexFactoryShaderParametersBase::GetElementShaderBindingsBase(Scene, View, Shader, InputStreamType, FeatureLevel, VertexFactory, BatchElement, VertexFactoryUniformBuffer, ShaderBindings, VertexStreams);
 
 	const FInstancingUserData* InstancingUserData = (const FInstancingUserData*)BatchElement.UserData;
-	const auto* InstancedVertexFactory = static_cast<const FInstancedStaticMeshVertexFactory*>(VertexFactory);
+	const auto* InstancedVertexFactory = static_cast<const FInstanceBufferMeshVertexFactory*>(VertexFactory);
 	const int32 InstanceOffsetValue = BatchElement.UserIndex;
 
 	if (bInstanced)
