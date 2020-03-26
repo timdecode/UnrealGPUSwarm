@@ -292,11 +292,11 @@ private:
 };
 
 
-struct FEmulatedInstancedStaticMeshVertexFactory : public FInstanceBufferMeshVertexFactory
+struct FEmulatedInstanceBufferMeshVertexFactory : public FInstanceBufferMeshVertexFactory
 {
-	DECLARE_VERTEX_FACTORY_TYPE(FEmulatedInstancedStaticMeshVertexFactory);
+	DECLARE_VERTEX_FACTORY_TYPE(FEmulatedInstanceBufferMeshVertexFactory);
 public:
-	FEmulatedInstancedStaticMeshVertexFactory(ERHIFeatureLevel::Type InFeatureLevel)
+	FEmulatedInstanceBufferMeshVertexFactory(ERHIFeatureLevel::Type InFeatureLevel)
 		: FInstanceBufferMeshVertexFactory(InFeatureLevel)
 	{
 	}

@@ -652,7 +652,7 @@ FVertexFactoryShaderParameters* FInstanceBufferMeshVertexFactory::ConstructShade
 }
 
 IMPLEMENT_VERTEX_FACTORY_TYPE_EX(FInstanceBufferMeshVertexFactory,"/Engine/Private/LocalVertexFactory.ush",true,true,true,true,true,true,false);
-IMPLEMENT_VERTEX_FACTORY_TYPE_EX(FEmulatedInstancedStaticMeshVertexFactory,"/Engine/Private/LocalVertexFactory.ush",true,true,true,true,true,true,false);
+IMPLEMENT_VERTEX_FACTORY_TYPE_EX(FEmulatedInstanceBufferMeshVertexFactory,"/Engine/Private/LocalVertexFactory.ush",true,true,true,true,true,true,false);
 
 void FInstanceBufferMeshRenderData::InitVertexFactories()
 {
@@ -661,7 +661,7 @@ void FInstanceBufferMeshRenderData::InitVertexFactories()
 	// Allocate the vertex factories for each LOD
 	for (int32 LODIndex = 0; LODIndex < LODModels.Num(); LODIndex++)
 	{
-		VertexFactories.Add(bInstanced ? new FInstanceBufferMeshVertexFactory(FeatureLevel) : new FEmulatedInstancedStaticMeshVertexFactory(FeatureLevel));
+		VertexFactories.Add(bInstanced ? new FInstanceBufferMeshVertexFactory(FeatureLevel) : new FEmulatedInstanceBufferMeshVertexFactory(FeatureLevel));
 	}
 
 	const int32 LightMapCoordinateIndex = Component->GetStaticMesh()->LightMapCoordinateIndex;
