@@ -2934,6 +2934,37 @@ static TAutoConsoleVariable<int32> CVarCullAllInVertexShader(
 	0,
 	TEXT("Debugging, if this is greater than 0, cull all instances in the vertex shader."));
 
+// Copied from from FLocalVertexFactoryShaderParametersBase because it wasn't declared part of the ENGINE_API >:
+void FInstanceBufferMeshVertexFactoryShaderParameters::GetElementShaderBindingsBase(const FSceneInterface* Scene, const FSceneView* View, const FMeshMaterialShader* Shader, const EVertexInputStreamType InputStreamType, ERHIFeatureLevel::Type FeatureLevel, const FVertexFactory* VertexFactory, const FMeshBatchElement& BatchElement, FRHIUniformBuffer* VertexFactoryUniformBuffer, FMeshDrawSingleShaderBindings& ShaderBindings, FVertexInputStreamArray& VertexStreams) const
+{
+	const auto* LocalVertexFactory = static_cast<const FLocalVertexFactory*>(VertexFactory);
+
+	if (LocalVertexFactory->SupportsManualVertexFetch(FeatureLevel) || UseGPUScene(GMaxRHIShaderPlatform, FeatureLevel))
+	{
+		if (!VertexFactoryUniformBuffer)
+		{
+			// No batch element override
+			VertexFactoryUniformBuffer = LocalVertexFactory->GetUniformBuffer();
+		}
+
+		ShaderBindings.Add(Shader->GetUniformBufferParameter<FLocalVertexFactoryUniformShaderParameters>(), VertexFactoryUniformBuffer);
+	}
+
+	//@todo - allow FMeshBatch to supply vertex streams (instead of requiring that they come from the vertex factory), and this userdata hack will no longer be needed for override vertex color
+	if (BatchElement.bUserDataIsColorVertexBuffer)
+	{
+		FColorVertexBuffer* OverrideColorVertexBuffer = (FColorVertexBuffer*)BatchElement.UserData;
+		check(OverrideColorVertexBuffer);
+
+		if (!LocalVertexFactory->SupportsManualVertexFetch(FeatureLevel))
+		{
+			LocalVertexFactory->GetColorOverrideStream(OverrideColorVertexBuffer, VertexStreams);
+		}
+	}
+
+
+}
+
 void FInstanceBufferMeshVertexFactoryShaderParameters::GetElementShaderBindings(
 	const class FSceneInterface* Scene,
 	const FSceneView* View,
@@ -2950,7 +2981,7 @@ void FInstanceBufferMeshVertexFactoryShaderParameters::GetElementShaderBindings(
 
 	// Decode VertexFactoryUserData as VertexFactoryUniformBuffer
 	FRHIUniformBuffer* VertexFactoryUniformBuffer = static_cast<FRHIUniformBuffer*>(BatchElement.VertexFactoryUserData);
-	FLocalVertexFactoryShaderParametersBase::GetElementShaderBindingsBase(Scene, View, Shader, InputStreamType, FeatureLevel, VertexFactory, BatchElement, VertexFactoryUniformBuffer, ShaderBindings, VertexStreams);
+	FInstanceBufferMeshVertexFactoryShaderParameters::GetElementShaderBindingsBase(Scene, View, Shader, InputStreamType, FeatureLevel, VertexFactory, BatchElement, VertexFactoryUniformBuffer, ShaderBindings, VertexStreams);
 
 	const FInstancingUserData* InstancingUserData = (const FInstancingUserData*)BatchElement.UserData;
 	const auto* InstancedVertexFactory = static_cast<const FInstanceBufferMeshVertexFactory*>(VertexFactory);
@@ -3139,3 +3170,4 @@ void FInstanceBufferMeshVertexFactoryShaderParameters::GetElementShaderBindings(
 
 	}
 }
+

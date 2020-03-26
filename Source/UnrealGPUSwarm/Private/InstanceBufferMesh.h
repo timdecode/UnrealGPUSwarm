@@ -55,6 +55,8 @@ extern const int32 InstancedStaticMeshMaxTexCoord;
 
 
 
+
+
 /*-----------------------------------------------------------------------------
 	FIBMStaticMeshInstanceData
 -----------------------------------------------------------------------------*/
@@ -892,12 +894,10 @@ public:
 	}
 };
 
-class FInstanceBufferMeshVertexFactoryShaderParameters : public FLocalVertexFactoryShaderParametersBase
+class FInstanceBufferMeshVertexFactoryShaderParameters : public FVertexFactoryShaderParameters
 {
 	virtual void Bind(const FShaderParameterMap& ParameterMap) override
 	{
-		FLocalVertexFactoryShaderParametersBase::Bind(ParameterMap);
-
 		InstancingFadeOutParamsParameter.Bind(ParameterMap, TEXT("InstancingFadeOutParams"));
 		InstancingViewZCompareZeroParameter.Bind(ParameterMap, TEXT("InstancingViewZCompareZero"));
 		InstancingViewZCompareOneParameter.Bind(ParameterMap, TEXT("InstancingViewZCompareOne"));
@@ -913,6 +913,19 @@ class FInstanceBufferMeshVertexFactoryShaderParameters : public FLocalVertexFact
 		InstanceOffset.Bind(ParameterMap, TEXT("InstanceOffset"));
 	}
 
+	void GetElementShaderBindingsBase(
+		const FSceneInterface* Scene,
+		const FSceneView* View,
+		const FMeshMaterialShader* Shader,
+		const EVertexInputStreamType InputStreamType,
+		ERHIFeatureLevel::Type FeatureLevel,
+		const FVertexFactory* VertexFactory,
+		const FMeshBatchElement& BatchElement,
+		FRHIUniformBuffer* VertexFactoryUniformBuffer,
+		FMeshDrawSingleShaderBindings& ShaderBindings,
+		FVertexInputStreamArray& VertexStreams
+	) const;
+
 	virtual void GetElementShaderBindings(
 		const class FSceneInterface* Scene,
 		const FSceneView* View,
@@ -927,7 +940,6 @@ class FInstanceBufferMeshVertexFactoryShaderParameters : public FLocalVertexFact
 
 	void Serialize(FArchive& Ar) override
 	{
-		FLocalVertexFactoryShaderParametersBase::Serialize(Ar);
 		Ar << InstancingFadeOutParamsParameter;
 		Ar << InstancingViewZCompareZeroParameter;
 		Ar << InstancingViewZCompareOneParameter;
