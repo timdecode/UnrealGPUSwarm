@@ -142,7 +142,7 @@ private:
 
 struct FInstancingUserData
 {
-	class FInstancedStaticMeshRenderData* RenderData;
+	class FInstanceBufferMeshRenderData* RenderData;
 	class FStaticMeshRenderData* MeshRenderData;
 
 	int32 StartCullDistance;
@@ -429,14 +429,14 @@ struct FIBMPerInstanceRenderData
 
 
 /*-----------------------------------------------------------------------------
-	FInstancedStaticMeshRenderData
+	FInstanceBufferMeshRenderData
 -----------------------------------------------------------------------------*/
 
-class FInstancedStaticMeshRenderData
+class FInstanceBufferMeshRenderData
 {
 public:
 
-	FInstancedStaticMeshRenderData(UInstanceBufferMeshComponent* InComponent, ERHIFeatureLevel::Type InFeatureLevel)
+	FInstanceBufferMeshRenderData(UInstanceBufferMeshComponent* InComponent, ERHIFeatureLevel::Type InFeatureLevel)
 	  : Component(InComponent)
 	  , PerInstanceRenderData(InComponent->PerInstanceRenderData)
 	  , LODModels(Component->GetStaticMesh()->RenderData->LODResources)
@@ -602,7 +602,7 @@ protected:
 	UStaticMesh* StaticMesh;
 
 	/** Per component render data */
-	FInstancedStaticMeshRenderData InstancedRenderData;
+	FInstanceBufferMeshRenderData InstancedRenderData;
 
 #if WITH_EDITOR
 	/* If we we have any selected instances */

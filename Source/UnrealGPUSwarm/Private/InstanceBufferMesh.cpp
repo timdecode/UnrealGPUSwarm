@@ -654,7 +654,7 @@ FVertexFactoryShaderParameters* FInstanceBufferMeshVertexFactory::ConstructShade
 IMPLEMENT_VERTEX_FACTORY_TYPE_EX(FInstanceBufferMeshVertexFactory,"/Engine/Private/LocalVertexFactory.ush",true,true,true,true,true,true,false);
 IMPLEMENT_VERTEX_FACTORY_TYPE_EX(FEmulatedInstancedStaticMeshVertexFactory,"/Engine/Private/LocalVertexFactory.ush",true,true,true,true,true,true,false);
 
-void FInstancedStaticMeshRenderData::InitVertexFactories()
+void FInstanceBufferMeshRenderData::InitVertexFactories()
 {
 	const bool bInstanced = GRHISupportsInstancing;
 
