@@ -403,7 +403,7 @@ struct HInstanceBufferMeshInstance : public HHitProxy
 
 /** Used to store lightmap data during RerunConstructionScripts */
 USTRUCT()
-struct FInstancedStaticMeshLightMapInstanceData
+struct FInstanceBufferMeshLightMapInstanceData
 {
 	GENERATED_BODY()
 
@@ -453,7 +453,7 @@ public:
 
 	// Static lighting info
 	UPROPERTY()
-	FInstancedStaticMeshLightMapInstanceData CachedStaticLighting;
+	FInstanceBufferMeshLightMapInstanceData CachedStaticLighting;
 	UPROPERTY()
 	TArray<FIBMInstanceData> PerInstanceSMData;
 
