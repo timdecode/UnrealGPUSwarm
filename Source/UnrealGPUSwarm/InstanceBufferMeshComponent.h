@@ -103,13 +103,13 @@ struct FIBMInstanceData
 };
 
 USTRUCT()
-struct FInstancedStaticMeshMappingInfo
+struct FInstanceBufferMeshMappingInfo
 {
 	GENERATED_USTRUCT_BODY()
 
 		FStaticLightingTextureMapping_InstanceBufferMesh* Mapping;
 
-	FInstancedStaticMeshMappingInfo()
+	FInstanceBufferMeshMappingInfo()
 		: Mapping(nullptr)
 	{
 	}
@@ -364,7 +364,7 @@ protected:
 
 	/** The mappings for all the instances of this component. */
 	UPROPERTY(Transient, DuplicateTransient, TextExportTransient)
-	TArray<FInstancedStaticMeshMappingInfo> CachedMappings;
+	TArray<FInstanceBufferMeshMappingInfo> CachedMappings;
 
 	void ApplyLightMapping(FStaticLightingTextureMapping_InstanceBufferMesh* InMapping, ULevel* LightingScenario);
 	
