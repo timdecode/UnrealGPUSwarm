@@ -36,7 +36,7 @@ public:
 		SHADER_PARAMETER(uint32, numParticles)
 
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, positions)
-		SHADER_PARAMETER_SRV(RWStructuredBuffer<float4>, positions_other)
+		SHADER_PARAMETER_SRV(RWBuffer<float4>, positions_other)
 	END_SHADER_PARAMETER_STRUCT()
 
 public:
@@ -115,6 +115,16 @@ void UDrawPositionsComponent::_initISMC()
 	ismc->SetCollisionProfileName(TEXT("NoCollision"));
 }
 
+static FIntVector groupSize(int numElements)
+{
+	const int threadCount = 256;
+
+	int count = ((numElements - 1) / threadCount) + 1;
+
+	return FIntVector(count, 1, 1);
+}
+
+
 void UDrawPositionsComponent::_updateInstanceBuffers()
 {
 	UInstanceBufferMeshComponent * ismc = GetOwner()->FindComponentByClass<UInstanceBufferMeshComponent>();
@@ -141,25 +151,24 @@ void UDrawPositionsComponent::_updateInstanceBuffers()
 
 		auto originSRV = renderData->InstanceBuffer.InstanceOriginSRV.GetReference();
 
+		int numParticles = boidsComponent->numBoids;
+
 		FBoids_copyPositions_CS::FParameters parameters;
-
-		parameters.positions = boidsComponent->_positionBufferUAV;//positionsBufferUAV;
-
+		parameters.positions = boidsComponent->_positionBufferUAV[0];
 		parameters.positions_other = originSRV;
-
-		parameters.numParticles = numBoids;
+		parameters.numParticles = numParticles;
 
 		ENQUEUE_RENDER_COMMAND(FComputeShaderRunner)(
-			[&, parameters](FRHICommandListImmediate& RHICommands)
+			[&, parameters, numParticles](FRHICommandListImmediate& RHICommands)
 		{
 
 
-			TShaderMapRef<FBoids_integratePosition_CS> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
+			TShaderMapRef<FBoids_copyPositions_CS> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
 			FComputeShaderUtils::Dispatch(
 				RHICommands,
 				*computeShader,
 				parameters,
-				groupSize(numBoids)
+				groupSize(numParticles)
 			);
 
 
