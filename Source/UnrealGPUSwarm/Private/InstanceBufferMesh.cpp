@@ -1640,24 +1640,26 @@ bool UInstanceBufferMeshComponent::CanEditSimulatePhysics()
 
 FBoxSphereBounds UInstanceBufferMeshComponent::CalcBounds(const FTransform& BoundTransform) const
 {
-	if(GetStaticMesh() && PerInstanceSMData.Num() > 0)
-	{
-		FMatrix BoundTransformMatrix = BoundTransform.ToMatrixWithScale();
+	return FBoxSphereBounds(BoundTransform.GetLocation(), FVector::ZeroVector, 10000.f);
 
-		FBoxSphereBounds RenderBounds = GetStaticMesh()->GetBounds();
-		FBoxSphereBounds NewBounds = RenderBounds.TransformBy(PerInstanceSMData[0].Transform * BoundTransformMatrix);
+	//if(GetStaticMesh() && PerInstanceSMData.Num() > 0)
+	//{
+	//	FMatrix BoundTransformMatrix = BoundTransform.ToMatrixWithScale();
 
-		for (int32 InstanceIndex = 1; InstanceIndex < PerInstanceSMData.Num(); InstanceIndex++)
-		{
-			NewBounds = NewBounds + RenderBounds.TransformBy(PerInstanceSMData[InstanceIndex].Transform * BoundTransformMatrix);
-		}
+	//	FBoxSphereBounds RenderBounds = GetStaticMesh()->GetBounds();
+	//	FBoxSphereBounds NewBounds = RenderBounds.TransformBy(PerInstanceSMData[0].Transform * BoundTransformMatrix);
 
-		return NewBounds;
-	}
-	else
-	{
-		return FBoxSphereBounds(BoundTransform.GetLocation(), FVector::ZeroVector, 0.f);
-	}
+	//	for (int32 InstanceIndex = 1; InstanceIndex < PerInstanceSMData.Num(); InstanceIndex++)
+	//	{
+	//		NewBounds = NewBounds + RenderBounds.TransformBy(PerInstanceSMData[InstanceIndex].Transform * BoundTransformMatrix);
+	//	}
+
+	//	return NewBounds;
+	//}
+	//else
+	//{
+	//	return FBoxSphereBounds(BoundTransform.GetLocation(), FVector::ZeroVector, 0.f);
+	//}
 }
 
 #if WITH_EDITOR
