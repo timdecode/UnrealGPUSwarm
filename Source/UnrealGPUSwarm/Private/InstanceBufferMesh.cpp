@@ -228,12 +228,12 @@ void FIBMInstanceBuffer::CleanUp()
 	InstanceData.Reset();
 }
 
-void FIBMInstanceBuffer::InitFromPreallocatedData(FIBMInstanceData& Other)
+void FIBMInstanceBuffer::InitFromPreallocatedData(FIBMStaticMeshInstanceData& Other)
 {
 	QUICK_SCOPE_CYCLE_COUNTER(STAT_FStaticMeshInstanceBuffer_InitFromPreallocatedData);
 
-	InstanceData = MakeShared<FIBMInstanceData, ESPMode::ThreadSafe>();
-	FMemory::Memswap(&Other, InstanceData.Get(), sizeof(FIBMInstanceData));
+	InstanceData = MakeShared<FIBMStaticMeshInstanceData, ESPMode::ThreadSafe>();
+	FMemory::Memswap(&Other, InstanceData.Get(), sizeof(FIBMStaticMeshInstanceData));
 	InstanceData->SetAllowCPUAccess(RequireCPUAccess);
 }
 

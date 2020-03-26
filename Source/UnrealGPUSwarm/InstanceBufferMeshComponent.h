@@ -22,12 +22,13 @@ struct FNavigationRelevantData;
 struct FIBMPerInstanceRenderData;
 struct FStaticLightingPrimitiveInfo;
 
-DECLARE_STATS_GROUP(TEXT("Foliage"), STATGROUP_Foliage, STATCAT_Advanced);
+// Tim: disabled
+// DECLARE_STATS_GROUP(TEXT("Foliage"), STATGROUP_Foliage, STATCAT_Advanced);
 
 class FStaticLightingTextureMapping_InstanceBufferMesh;
 class FInstancedLightMap2D;
 class FInstancedShadowMap2D;
-class FIBMInstanceData;
+class FIBMStaticMeshInstanceData;
 
 struct FIBMInstanceUpdateCmdBuffer
 {
@@ -257,7 +258,7 @@ public:
 	 *  Serialized for cooked content. Used to create PerInstanceRenderData. 
 	 *  Alive between Serialize and PostLoad calls 
 	 */
-	TUniquePtr<FIBMInstanceData> InstanceDataBuffers;
+	TUniquePtr<FIBMStaticMeshInstanceData> InstanceDataBuffers;
 
 #if WITH_EDITOR
 	/** One bit per instance if the instance is selected. */
@@ -317,7 +318,7 @@ public:
 	void ClearInstanceSelection();
 
 	/** Initialize the Per Instance Render Data */
-	void InitPerInstanceRenderData(bool InitializeFromCurrentData, FIBMInstanceData* InSharedInstanceBufferData = nullptr, bool InRequireCPUAccess = false);
+	void InitPerInstanceRenderData(bool InitializeFromCurrentData, FIBMStaticMeshInstanceData* InSharedInstanceBufferData = nullptr, bool InRequireCPUAccess = false);
 
 	/** Transfers ownership of instance render data to a render thread. Instance render data will be released in scene proxy destructor or on render thread task. */
 	void ReleasePerInstanceRenderData();
