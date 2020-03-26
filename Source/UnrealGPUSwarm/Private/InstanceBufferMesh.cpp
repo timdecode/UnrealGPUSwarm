@@ -5,7 +5,7 @@
 =============================================================================*/
 
 #include "InstanceBufferMesh.h"
-#include "InstanceBufferMeshComponent.h"
+#include "../InstanceBufferMeshComponent.h"
 
 #include "AI/NavigationSystemBase.h"
 #include "Engine/MapBuildDataRegistry.h"
@@ -18,7 +18,7 @@
 #include "ShaderParameterUtils.h"
 #include "Misc/UObjectToken.h"
 #include "PhysXPublic.h"
-#include "PhysicsEngine/PhysXSupport.h"
+//#include "PhysicsEngine/PhysXSupport.h"
 #include "PhysicsEngine/BodySetup.h"
 #include "GameFramework/WorldSettings.h"
 #include "ComponentRecreateRenderStateContext.h"
@@ -33,9 +33,12 @@
 #endif // WITH_EDITOR
 #include "MeshMaterialShader.h"
 
-#if RHI_RAYTRACING
 #include "RayTracingInstance.h"
-#endif
+
+
+//#if RHI_RAYTRACING
+//#include "RayTracingInstance.h"
+//#endif
 
 #include "Interfaces/ITargetPlatform.h"
 #if WITH_EDITOR
@@ -435,7 +438,7 @@ void FIBMInstanceBuffer::BindInstanceVertexBuffer(const class FVertexFactory* Ve
 }
 
 
-void FIBMInstanceData::Serialize(FArchive& Ar)
+void FIBMStaticMeshInstanceData::Serialize(FArchive& Ar)
 {
 	const bool bCookConvertTransformsToFullFloat = Ar.IsCooking() && bUseHalfFloat && !Ar.CookingTarget()->SupportsFeature(ETargetPlatformFeatures::HalfFloatVertexFormat);
 
@@ -699,7 +702,7 @@ void FInstanceBufferMeshRenderData::InitVertexFactories()
 	});
 }
 
-FIBMPerInstanceRenderData::FIBMPerInstanceRenderData(FIBMInstanceData& Other, ERHIFeatureLevel::Type InFeaureLevel, bool InRequireCPUAccess)
+FIBMPerInstanceRenderData::FIBMPerInstanceRenderData(FIBMStaticMeshInstanceData& Other, ERHIFeatureLevel::Type InFeaureLevel, bool InRequireCPUAccess)
 	: ResourceSize(InRequireCPUAccess ? Other.GetResourceSize() : 0)
 	, InstanceBuffer(InFeaureLevel, InRequireCPUAccess)
 {
@@ -716,17 +719,17 @@ FIBMPerInstanceRenderData::~FIBMPerInstanceRenderData()
 	InstanceBuffer.ReleaseResource();
 }
 
-void FIBMPerInstanceRenderData::UpdateFromPreallocatedData(FIBMInstanceData& InOther)
+void FIBMPerInstanceRenderData::UpdateFromPreallocatedData(FIBMStaticMeshInstanceData& InOther)
 {
 	InstanceBuffer.RequireCPUAccess = (InOther.GetOriginResourceArray()->GetAllowCPUAccess() || InOther.GetTransformResourceArray()->GetAllowCPUAccess() || InOther.GetLightMapResourceArray()->GetAllowCPUAccess()) ? true : InstanceBuffer.RequireCPUAccess;
 	ResourceSize = InstanceBuffer.RequireCPUAccess ? InOther.GetResourceSize() : 0;
 
 	InOther.SetAllowCPUAccess(InstanceBuffer.RequireCPUAccess);
 
-	InstanceBuffer_GameThread = MakeShared<FIBMInstanceData, ESPMode::ThreadSafe>();
+	InstanceBuffer_GameThread = MakeShared<FIBMStaticMeshInstanceData, ESPMode::ThreadSafe>();
 	FMemory::Memswap(&InOther, InstanceBuffer_GameThread.Get(), sizeof(FIBMInstanceData));
 
-	typedef TSharedPtr<FIBMInstanceData, ESPMode::ThreadSafe> FStaticMeshInstanceDataPtr;
+	typedef TSharedPtr<FIBMStaticMeshInstanceData, ESPMode::ThreadSafe> FStaticMeshInstanceDataPtr;
 
 	FStaticMeshInstanceDataPtr InInstanceBufferDataPtr = InstanceBuffer_GameThread;
 	FIBMInstanceBuffer* InInstanceBuffer = &InstanceBuffer;
