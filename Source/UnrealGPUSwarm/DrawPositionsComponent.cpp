@@ -36,7 +36,7 @@ public:
 		SHADER_PARAMETER(uint32, numParticles)
 
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, positions)
-		SHADER_PARAMETER_SRV(RWBuffer<float4>, positions_other)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, positions_other)
 	END_SHADER_PARAMETER_STRUCT()
 
 public:
@@ -96,7 +96,7 @@ void UDrawPositionsComponent::TickComponent(float DeltaTime, ELevelTick TickType
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 
-	_updateInstanceTransforms();
+	_updateInstanceBuffers();
 }
 
 void UDrawPositionsComponent::_initISMC()
@@ -153,9 +153,21 @@ void UDrawPositionsComponent::_updateInstanceBuffers()
 
 		int numParticles = boidsComponent->numBoids;
 
+		if (!_positionsUAV)
+		{
+			FRHIVertexBuffer * positionsVertexBuffer = renderData->InstanceBuffer.InstanceOriginBuffer.VertexBufferRHI.GetReference();
+
+			uint8 theFormat = PF_A32B32G32R32F;;
+
+			_positionsUAV = RHICreateUnorderedAccessView(positionsVertexBuffer, theFormat);
+		}
+		
+		
+
+
 		FBoids_copyPositions_CS::FParameters parameters;
-		parameters.positions = boidsComponent->_positionBufferUAV[0];
-		parameters.positions_other = originSRV;
+		parameters.positions = boidsComponent->_positionBufferUAV[1];
+		parameters.positions_other = _positionsUAV;
 		parameters.numParticles = numParticles;
 
 		ENQUEUE_RENDER_COMMAND(FComputeShaderRunner)(
@@ -174,6 +186,8 @@ void UDrawPositionsComponent::_updateInstanceBuffers()
 
 		});
 	}
+	else
+		ismc->MarkRenderStateDirty();
 }
 
 void UDrawPositionsComponent::_updateInstanceTransforms()

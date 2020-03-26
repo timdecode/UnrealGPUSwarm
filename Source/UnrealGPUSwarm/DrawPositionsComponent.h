@@ -35,4 +35,6 @@ public:
 
 protected:
 	TArray<FTransform> _instanceTransforms;
+
+	FUnorderedAccessViewRHIRef _positionsUAV;
 };
