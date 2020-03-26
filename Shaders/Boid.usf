@@ -318,28 +318,3 @@ void rearrangePositions(uint3 ThreadId : SV_DispatchThreadID)
     //}
 }
 
-[numthreads(256, 1, 1)]
-void copyPositions(uint3 ThreadId : SV_DispatchThreadID)
-{
-    int index = ThreadId.x;
-
-    if (index >= numParticles)
-        return;
-    
-    positions_other[index] = positions[index];
-    directions_other[index] = directions[index];
-    
-    //while( particleIndexBuffer[index] != index )
-    //{
-    //    uint oldIndex = particleIndexBuffer[particleIndexBuffer[index]];
-    //    float4 oldPosition = positions[particleIndexBuffer[index]];
-    //    float4 oldDirection = directions[particleIndexBuffer[index]];
-        
-    //    positions[particleIndexBuffer[index]] = positions[index];
-    //    particleIndexBuffer[particleIndexBuffer[index]] = particleIndexBuffer[index];
-        
-    //    particleIndexBuffer[index] = oldIndex;
-    //    positions[index] = oldPosition;
-    //    directions[index] = oldDirection;
-    //}
-}

@@ -46,7 +46,7 @@ public:
 	}
 };
 
-IMPLEMENT_GLOBAL_SHADER(FBoids_copyPositions_CS, "/ComputeShaderPlugin/Boid.usf", "copyPositions", SF_Compute);
+IMPLEMENT_GLOBAL_SHADER(FBoids_copyPositions_CS, "/ComputeShaderPlugin/CopyPositions.usf", "copyPositions", SF_Compute);
 
 
 
