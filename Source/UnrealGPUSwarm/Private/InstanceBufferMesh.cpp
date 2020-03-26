@@ -742,13 +742,13 @@ void FIBMPerInstanceRenderData::UpdateFromCommandBuffer(FIBMInstanceUpdateCmdBuf
 	InstanceBuffer.UpdateFromCommandBuffer_Concurrent(CmdBuffer);
 }
 
-SIZE_T FInstancedStaticMeshSceneProxy::GetTypeHash() const
+SIZE_T FInstanceBufferMeshSceneProxy::GetTypeHash() const
 {
 	static size_t UniquePointer;
 	return reinterpret_cast<size_t>(&UniquePointer);
 }
 
-void FInstancedStaticMeshSceneProxy::GetDynamicMeshElements(const TArray<const FSceneView*>& Views, const FSceneViewFamily& ViewFamily, uint32 VisibilityMap, FMeshElementCollector& Collector) const
+void FInstanceBufferMeshSceneProxy::GetDynamicMeshElements(const TArray<const FSceneView*>& Views, const FSceneViewFamily& ViewFamily, uint32 VisibilityMap, FMeshElementCollector& Collector) const
 {
 	QUICK_SCOPE_CYCLE_COUNTER(STAT_InstancedStaticMeshSceneProxy_GetMeshElements);
 
@@ -817,7 +817,7 @@ void FInstancedStaticMeshSceneProxy::GetDynamicMeshElements(const TArray<const F
 	}
 }
 
-int32 FInstancedStaticMeshSceneProxy::GetNumMeshBatches() const
+int32 FInstanceBufferMeshSceneProxy::GetNumMeshBatches() const
 {
 	const bool bInstanced = GRHISupportsInstancing;
 
@@ -834,7 +834,7 @@ int32 FInstancedStaticMeshSceneProxy::GetNumMeshBatches() const
 	}
 }
 
-int32 FInstancedStaticMeshSceneProxy::CollectOccluderElements(FOccluderElementsCollector& Collector) const
+int32 FInstanceBufferMeshSceneProxy::CollectOccluderElements(FOccluderElementsCollector& Collector) const
 {
 	if (OccluderData)
 	{	
@@ -856,7 +856,7 @@ int32 FInstancedStaticMeshSceneProxy::CollectOccluderElements(FOccluderElementsC
 	return 0;
 }
 
-void FInstancedStaticMeshSceneProxy::SetupProxy(UInstanceBufferMeshComponent* InComponent)
+void FInstanceBufferMeshSceneProxy::SetupProxy(UInstanceBufferMeshComponent* InComponent)
 {
 #if WITH_EDITOR
 	if (bHasSelectedInstances)
@@ -905,7 +905,7 @@ void FInstancedStaticMeshSceneProxy::SetupProxy(UInstanceBufferMeshComponent* In
 	UserData_DeselectedInstances.bRenderSelected = false;
 }
 
-void FInstancedStaticMeshSceneProxy::SetupInstancedMeshBatch(int32 LODIndex, int32 BatchIndex, FMeshBatch& OutMeshBatch) const
+void FInstanceBufferMeshSceneProxy::SetupInstancedMeshBatch(int32 LODIndex, int32 BatchIndex, FMeshBatch& OutMeshBatch) const
 {
 	const bool bInstanced = GRHISupportsInstancing;
 	OutMeshBatch.VertexFactory = &InstancedRenderData.VertexFactories[LODIndex];
@@ -951,7 +951,7 @@ void FInstancedStaticMeshSceneProxy::SetupInstancedMeshBatch(int32 LODIndex, int
 	}
 }
 
-void FInstancedStaticMeshSceneProxy::GetLightRelevance(const FLightSceneProxy* LightSceneProxy, bool& bDynamic, bool& bRelevant, bool& bLightMapped, bool& bShadowMapped) const
+void FInstanceBufferMeshSceneProxy::GetLightRelevance(const FLightSceneProxy* LightSceneProxy, bool& bDynamic, bool& bRelevant, bool& bLightMapped, bool& bShadowMapped) const
 {
 	FStaticMeshSceneProxy::GetLightRelevance(LightSceneProxy, bDynamic, bRelevant, bLightMapped, bShadowMapped);
 
@@ -961,7 +961,7 @@ void FInstancedStaticMeshSceneProxy::GetLightRelevance(const FLightSceneProxy* L
 	}
 }
 
-bool FInstancedStaticMeshSceneProxy::GetShadowMeshElement(int32 LODIndex, int32 BatchIndex, uint8 InDepthPriorityGroup, FMeshBatch& OutMeshBatch, bool bDitheredLODTransition) const
+bool FInstanceBufferMeshSceneProxy::GetShadowMeshElement(int32 LODIndex, int32 BatchIndex, uint8 InDepthPriorityGroup, FMeshBatch& OutMeshBatch, bool bDitheredLODTransition) const
 {
 	if (LODIndex < InstancedRenderData.VertexFactories.Num() && FStaticMeshSceneProxy::GetShadowMeshElement(LODIndex, BatchIndex, InDepthPriorityGroup, OutMeshBatch, bDitheredLODTransition))
 	{
@@ -972,7 +972,7 @@ bool FInstancedStaticMeshSceneProxy::GetShadowMeshElement(int32 LODIndex, int32 
 }
 
 /** Sets up a FMeshBatch for a specific LOD and element. */
-bool FInstancedStaticMeshSceneProxy::GetMeshElement(int32 LODIndex, int32 BatchIndex, int32 ElementIndex, uint8 InDepthPriorityGroup, bool bUseSelectionOutline, bool bAllowPreCulledIndices, FMeshBatch& OutMeshBatch) const
+bool FInstanceBufferMeshSceneProxy::GetMeshElement(int32 LODIndex, int32 BatchIndex, int32 ElementIndex, uint8 InDepthPriorityGroup, bool bUseSelectionOutline, bool bAllowPreCulledIndices, FMeshBatch& OutMeshBatch) const
 {
 	if (LODIndex < InstancedRenderData.VertexFactories.Num() && FStaticMeshSceneProxy::GetMeshElement(LODIndex, BatchIndex, ElementIndex, InDepthPriorityGroup, bUseSelectionOutline, bAllowPreCulledIndices, OutMeshBatch))
 	{
@@ -983,7 +983,7 @@ bool FInstancedStaticMeshSceneProxy::GetMeshElement(int32 LODIndex, int32 BatchI
 };
 
 /** Sets up a wireframe FMeshBatch for a specific LOD. */
-bool FInstancedStaticMeshSceneProxy::GetWireframeMeshElement(int32 LODIndex, int32 BatchIndex, const FMaterialRenderProxy* WireframeRenderProxy, uint8 InDepthPriorityGroup, bool bAllowPreCulledIndices, FMeshBatch& OutMeshBatch) const
+bool FInstanceBufferMeshSceneProxy::GetWireframeMeshElement(int32 LODIndex, int32 BatchIndex, const FMaterialRenderProxy* WireframeRenderProxy, uint8 InDepthPriorityGroup, bool bAllowPreCulledIndices, FMeshBatch& OutMeshBatch) const
 {
 	if (LODIndex < InstancedRenderData.VertexFactories.Num() && FStaticMeshSceneProxy::GetWireframeMeshElement(LODIndex, BatchIndex, WireframeRenderProxy, InDepthPriorityGroup, bAllowPreCulledIndices, OutMeshBatch))
 	{
@@ -993,7 +993,7 @@ bool FInstancedStaticMeshSceneProxy::GetWireframeMeshElement(int32 LODIndex, int
 	return false;
 }
 
-void FInstancedStaticMeshSceneProxy::GetDistancefieldAtlasData(FBox& LocalVolumeBounds, FVector2D& OutDistanceMinMax, FIntVector& OutBlockMin, FIntVector& OutBlockSize, bool& bOutBuiltAsIfTwoSided, bool& bMeshWasPlane, float& SelfShadowBias, TArray<FMatrix>& ObjectLocalToWorldTransforms, bool& bOutThrottled) const
+void FInstanceBufferMeshSceneProxy::GetDistancefieldAtlasData(FBox& LocalVolumeBounds, FVector2D& OutDistanceMinMax, FIntVector& OutBlockMin, FIntVector& OutBlockSize, bool& bOutBuiltAsIfTwoSided, bool& bMeshWasPlane, float& SelfShadowBias, TArray<FMatrix>& ObjectLocalToWorldTransforms, bool& bOutThrottled) const
 {
 	FStaticMeshSceneProxy::GetDistancefieldAtlasData(LocalVolumeBounds, OutDistanceMinMax, OutBlockMin, OutBlockSize, bOutBuiltAsIfTwoSided, bMeshWasPlane, SelfShadowBias, ObjectLocalToWorldTransforms, bOutThrottled);
 
@@ -1010,7 +1010,7 @@ void FInstancedStaticMeshSceneProxy::GetDistancefieldAtlasData(FBox& LocalVolume
 	}
 }
 
-void FInstancedStaticMeshSceneProxy::GetDistanceFieldInstanceInfo(int32& NumInstances, float& BoundsSurfaceArea) const
+void FInstanceBufferMeshSceneProxy::GetDistanceFieldInstanceInfo(int32& NumInstances, float& BoundsSurfaceArea) const
 {
 	NumInstances = DistanceFieldData ? InstancedRenderData.PerInstanceRenderData->InstanceBuffer.GetNumInstances() : 0;
 
@@ -1031,7 +1031,7 @@ void FInstancedStaticMeshSceneProxy::GetDistanceFieldInstanceInfo(int32& NumInst
 	}
 }
 
-HHitProxy* FInstancedStaticMeshSceneProxy::CreateHitProxies(UPrimitiveComponent* Component,TArray<TRefCountPtr<HHitProxy> >& OutHitProxies)
+HHitProxy* FInstanceBufferMeshSceneProxy::CreateHitProxies(UPrimitiveComponent* Component,TArray<TRefCountPtr<HHitProxy> >& OutHitProxies)
 {
 	if(InstancedRenderData.PerInstanceRenderData.IsValid() && InstancedRenderData.PerInstanceRenderData->HitProxies.Num() )
 	{
@@ -1046,7 +1046,7 @@ HHitProxy* FInstancedStaticMeshSceneProxy::CreateHitProxies(UPrimitiveComponent*
 }
 
 #if RHI_RAYTRACING
-void FInstancedStaticMeshSceneProxy::GetDynamicRayTracingInstances(struct FRayTracingMaterialGatheringContext& Context, TArray<FRayTracingInstance>& OutRayTracingInstances)
+void FInstanceBufferMeshSceneProxy::GetDynamicRayTracingInstances(struct FRayTracingMaterialGatheringContext& Context, TArray<FRayTracingInstance>& OutRayTracingInstances)
 {
 	if (!CVarRayTracingRenderInstances.GetValueOnRenderThread())
 	{
@@ -1165,7 +1165,7 @@ void FInstancedStaticMeshSceneProxy::GetDynamicRayTracingInstances(struct FRayTr
 	OutRayTracingInstances.Add(RayTracingInstanceTemplate);
 }
 
-void FInstancedStaticMeshSceneProxy::SetupRayTracingCullClusters()
+void FInstanceBufferMeshSceneProxy::SetupRayTracingCullClusters()
 {
 	//#dxr_todo: select the appropriate LOD depending on Context.View
 	int32 LOD = 0;
@@ -1388,7 +1388,7 @@ FPrimitiveSceneProxy* UInstanceBufferMeshComponent::CreateSceneProxy()
 		}
 		
 		ProxySize = PerInstanceRenderData->ResourceSize;
-		return ::new FInstancedStaticMeshSceneProxy(this, GetWorld()->FeatureLevel);
+		return ::new FInstanceBufferMeshSceneProxy(this, GetWorld()->FeatureLevel);
 	}
 	else
 	{

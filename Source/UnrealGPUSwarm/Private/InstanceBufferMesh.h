@@ -498,15 +498,15 @@ private:
 
 
 /*-----------------------------------------------------------------------------
-	FInstancedStaticMeshSceneProxy
+	FInstanceBufferMeshSceneProxy
 -----------------------------------------------------------------------------*/
 
-class FInstancedStaticMeshSceneProxy : public FStaticMeshSceneProxy
+class FInstanceBufferMeshSceneProxy : public FStaticMeshSceneProxy
 {
 public:
 	SIZE_T GetTypeHash() const override;
 
-	FInstancedStaticMeshSceneProxy(UInstanceBufferMeshComponent* InComponent, ERHIFeatureLevel::Type InFeatureLevel)
+	FInstanceBufferMeshSceneProxy(UInstanceBufferMeshComponent* InComponent, ERHIFeatureLevel::Type InFeatureLevel)
 	:	FStaticMeshSceneProxy(InComponent, true)
 	,	StaticMesh(InComponent->GetStaticMesh())
 	,	InstancedRenderData(InComponent, InFeatureLevel)
@@ -522,7 +522,7 @@ public:
 #endif
 	}
 
-	~FInstancedStaticMeshSceneProxy()
+	~FInstanceBufferMeshSceneProxy()
 	{
 		InstancedRenderData.ReleaseResources(&GetScene( ), StaticMesh);
 
