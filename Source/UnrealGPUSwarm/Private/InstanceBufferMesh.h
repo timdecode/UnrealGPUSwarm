@@ -721,39 +721,41 @@ private:
 
 #endif
 
+// Tim: I don't think these structures are even used.
+
 /**
  * Structure that maps a component to it's lighting/instancing specific data which must be the same
  * between all instances that are bound to that component.
  */
-struct FComponentInstanceSharingData
-{
-	/** The component that is associated (owns) this data */
-	UInstanceBufferMeshComponent* Component;
+// struct FComponentInstanceSharingData
+// {
+// 	/** The component that is associated (owns) this data */
+// 	UInstanceBufferMeshComponent* Component;
 
-	/** Light map texture */
-	UTexture* LightMapTexture;
+// 	/** Light map texture */
+// 	UTexture* LightMapTexture;
 
-	/** Shadow map texture (or NULL if no shadow map) */
-	UTexture* ShadowMapTexture;
-
-
-	FComponentInstanceSharingData()
-		: Component( NULL ),
-		  LightMapTexture( NULL ),
-		  ShadowMapTexture( NULL )
-	{
-	}
-};
+// 	/** Shadow map texture (or NULL if no shadow map) */
+// 	UTexture* ShadowMapTexture;
 
 
-/**
- * Helper struct to hold information about what components use what lightmap textures
- */
-struct FComponentInstancedLightmapData
-{
-	/** List of all original components and their original instances containing */
-	TMap<UInstanceBufferMeshComponent*, TArray<FIBMInstanceData> > ComponentInstances;
+// 	FComponentInstanceSharingData()
+// 		: Component( NULL ),
+// 		  LightMapTexture( NULL ),
+// 		  ShadowMapTexture( NULL )
+// 	{
+// 	}
+// };
 
-	/** List of new components */
-	TArray< FComponentInstanceSharingData > SharingData;
-};
+
+// /**
+//  * Helper struct to hold information about what components use what lightmap textures
+//  */
+// struct FComponentInstancedLightmapData
+// {
+// 	/** List of all original components and their original instances containing */
+// 	TMap<UInstanceBufferMeshComponent*, TArray<FIBMInstanceData> > ComponentInstances;
+
+// 	/** List of new components */
+// 	TArray< FComponentInstanceSharingData > SharingData;
+// };
