@@ -3171,3 +3171,11 @@ void FInstanceBufferMeshVertexFactoryShaderParameters::GetElementShaderBindings(
 	}
 }
 
+
+
+
+
+void UInstanceBufferMeshComponent::AttachBuffers()
+{
+	this->MarkRenderStateDirty();
+}

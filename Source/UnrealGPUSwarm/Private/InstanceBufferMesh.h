@@ -679,7 +679,7 @@ public:
 	/** Keep CPU copy of instance data*/
 	bool RequireCPUAccess;
 
-private:
+public:
 	class FInstanceOriginBuffer : public FVertexBuffer
 	{
 		virtual FString GetFriendlyName() const override { return TEXT("FInstanceOriginBuffer"); }

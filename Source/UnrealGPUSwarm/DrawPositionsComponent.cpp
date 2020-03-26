@@ -5,7 +5,70 @@
 
 #include "InstanceBufferMeshComponent.h"
 
+#include "ShaderParameterUtils.h"
+#include "RHIStaticStates.h"
+#include "Shader.h"
+#include "GlobalShader.h"
+#include "RenderGraphBuilder.h"
+#include "RenderGraphUtils.h"
+#include "ShaderParameterStruct.h"
+#include "UniformBuffer.h"
+#include "RHICommandList.h"
+#include "Private/InstanceBufferMesh.h"
+
 #include "ComputeShaderTestComponent.h"
+
+
+
+
+
+
+
+
+
+class FBoids_copyPositions_CS : public FGlobalShader
+{
+public:
+	DECLARE_GLOBAL_SHADER(FBoids_copyPositions_CS);
+	SHADER_USE_PARAMETER_STRUCT(FBoids_copyPositions_CS, FGlobalShader);
+
+	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
+		SHADER_PARAMETER(uint32, numParticles)
+
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, positions)
+		SHADER_PARAMETER_SRV(RWStructuredBuffer<float4>, positions_other)
+	END_SHADER_PARAMETER_STRUCT()
+
+public:
+	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
+	{
+		return IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM5);
+	}
+};
+
+IMPLEMENT_GLOBAL_SHADER(FBoids_copyPositions_CS, "/ComputeShaderPlugin/Boid.usf", "copyPositions", SF_Compute);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Sets default values for this component's properties
 UDrawPositionsComponent::UDrawPositionsComponent()
@@ -32,6 +95,7 @@ void UDrawPositionsComponent::TickComponent(float DeltaTime, ELevelTick TickType
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+
 	_updateInstanceTransforms();
 }
 
@@ -49,6 +113,58 @@ void UDrawPositionsComponent::_initISMC()
 	//ismc->UseDynamicInstanceBuffer = true;
 	//ismc->KeepInstanceBufferCPUAccess = true;
 	ismc->SetCollisionProfileName(TEXT("NoCollision"));
+}
+
+void UDrawPositionsComponent::_updateInstanceBuffers()
+{
+	UInstanceBufferMeshComponent * ismc = GetOwner()->FindComponentByClass<UInstanceBufferMeshComponent>();
+
+	if (!ismc) return;
+
+	UComputeShaderTestComponent * boidsComponent = GetOwner()->FindComponentByClass<UComputeShaderTestComponent>();
+
+	if (!boidsComponent) return;
+
+	// resize up/down the ismc
+	int toAdd = FMath::Max(0, boidsComponent->numBoids - ismc->GetInstanceCount());
+	int toRemove = FMath::Max(0, ismc->GetInstanceCount() - boidsComponent->numBoids);
+
+	for (int i = 0; i < toAdd; ++i)
+		ismc->AddInstance(FTransform::Identity);
+	for (int i = 0; i < toRemove; ++i)
+		ismc->RemoveInstance(ismc->GetInstanceCount() - 1);
+
+	// directly update the buffer
+	if (toAdd == 0)
+	{
+		auto renderData = ismc->PerInstanceRenderData;
+
+		auto originSRV = renderData->InstanceBuffer.InstanceOriginSRV.GetReference();
+
+		FBoids_copyPositions_CS::FParameters parameters;
+
+		parameters.positions = boidsComponent->_positionBufferUAV;//positionsBufferUAV;
+
+		parameters.positions_other = originSRV;
+
+		parameters.numParticles = numBoids;
+
+		ENQUEUE_RENDER_COMMAND(FComputeShaderRunner)(
+			[&, parameters](FRHICommandListImmediate& RHICommands)
+		{
+
+
+			TShaderMapRef<FBoids_integratePosition_CS> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
+			FComputeShaderUtils::Dispatch(
+				RHICommands,
+				*computeShader,
+				parameters,
+				groupSize(numBoids)
+			);
+
+
+		});
+	}
 }
 
 void UDrawPositionsComponent::_updateInstanceTransforms()
@@ -87,6 +203,11 @@ void UDrawPositionsComponent::_updateInstanceTransforms()
 		transform.SetRotation(quat);
 	}
 
-	ismc->BatchUpdateInstancesTransforms(0, _instanceTransforms, false, true, true);
+	ismc->BatchUpdateInstancesTransforms(0, _instanceTransforms, false, false, true);
+
+	if (toAdd == 0)
+		ismc->MarkRenderDynamicDataDirty();
+	else
+		ismc->MarkRenderStateDirty();
 }
 

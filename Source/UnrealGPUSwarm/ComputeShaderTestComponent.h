@@ -82,7 +82,7 @@ public:
 
 	TArray<FVector4> outputDirections;
 
-protected:
+public:
 	unsigned int dualBufferCount = 0;
 
 	// GPU side
