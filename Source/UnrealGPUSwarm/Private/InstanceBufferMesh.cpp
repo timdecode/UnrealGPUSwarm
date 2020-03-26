@@ -4,7 +4,9 @@
 	InstaneBufferMesh.cpp: Static mesh rendering code.
 =============================================================================*/
 
-#include "InstaneBufferMesh.h"
+#include "InstanceBufferMesh.h"
+#include "InstanceBufferMeshComponent.h"
+
 #include "AI/NavigationSystemBase.h"
 #include "Engine/MapBuildDataRegistry.h"
 #include "Components/LightComponent.h"

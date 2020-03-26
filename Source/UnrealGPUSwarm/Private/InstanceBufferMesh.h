@@ -62,8 +62,8 @@ public:
 	 * Initializes the buffer with the component's data.
 	 * @param Other - instance data, this call assumes the memory, so this will be empty after the call
 	 */
-	ENGINE_API void InitFromPreallocatedData(FIBMInstanceData& Other);
-	ENGINE_API void UpdateFromCommandBuffer_Concurrent(FIBMInstanceUpdateCmdBuffer& CmdBuffer);
+	UNREALGPUSWARM_API void InitFromPreallocatedData(FIBMInstanceData& Other);
+	UNREALGPUSWARM_API void UpdateFromCommandBuffer_Concurrent(FIBMInstanceUpdateCmdBuffer& CmdBuffer);
 
 	/**
 	 * Specialized assignment operator, only used when importing LOD's. 
@@ -410,11 +410,11 @@ struct FIBMPerInstanceRenderData
 	 * @param InComponent - The owning component
 	 * @param InOther - The Instance data to copy into our instance buffer
 	 */
-	ENGINE_API void UpdateFromPreallocatedData(FIBMInstanceData& InOther);
+	UNREALGPUSWARM_API void UpdateFromPreallocatedData(FIBMInstanceData& InOther);
 		
 	/**
 	*/
-	ENGINE_API void UpdateFromCommandBuffer(FIBMInstanceUpdateCmdBuffer& CmdBuffer);
+	UNREALGPUSWARM_API void UpdateFromCommandBuffer(FIBMInstanceUpdateCmdBuffer& CmdBuffer);
 
 	/** Hit proxies for the instances */
 	TArray<TRefCountPtr<HHitProxy>>		HitProxies;

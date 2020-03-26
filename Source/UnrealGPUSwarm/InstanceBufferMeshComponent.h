@@ -117,7 +117,7 @@ struct FInstanceBufferMeshMappingInfo
 
 /** A component that efficiently renders multiple instances of the same StaticMesh. */
 UCLASS(ClassGroup = Rendering, meta = (BlueprintSpawnableComponent), Blueprintable)
-class ENGINE_API UInstanceBufferMeshComponent : public UStaticMeshComponent
+class UNREALGPUSWARM_API UInstanceBufferMeshComponent : public UStaticMeshComponent
 {
 	GENERATED_UCLASS_BODY()
 	
@@ -390,7 +390,7 @@ struct HInstanceBufferMeshInstance : public HHitProxy
 	UInstanceBufferMeshComponent* Component;
 	int32 InstanceIndex;
 
-	DECLARE_HIT_PROXY(ENGINE_API);
+	DECLARE_HIT_PROXY(UNREALGPUSWARM_API);
 	HInstanceBufferMeshInstance(UInstanceBufferMeshComponent* InComponent, int32 InInstanceIndex) : HHitProxy(HPP_World), Component(InComponent), InstanceIndex(InInstanceIndex) {}
 
 	virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
