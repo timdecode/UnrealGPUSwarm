@@ -99,7 +99,7 @@ public:
 	virtual FString GetFriendlyName() const override { return TEXT("Static-mesh instances"); }
 	SIZE_T GetResourceSize() const;
 
-	void BindInstanceVertexBuffer(const class FVertexFactory* VertexFactory, struct FInstancedStaticMeshDataType& InstancedStaticMeshData) const;
+	void BindInstanceVertexBuffer(const class FVertexFactory* VertexFactory, struct FInstanceBufferMeshDataType& InstancedStaticMeshData) const;
 
 public:
 	/** The vertex data storage type */
@@ -155,7 +155,7 @@ struct FInstancingUserData
 	FVector AverageInstancesScale;
 };
 
-struct FInstancedStaticMeshDataType
+struct FInstanceBufferMeshDataType
 {
 	/** The stream to read the mesh transform from. */
 	FVertexStreamComponent InstanceOriginComponent;
@@ -187,7 +187,7 @@ public:
 	{
 	}
 
-	struct FDataType : public FInstancedStaticMeshDataType, public FLocalVertexFactory::FDataType
+	struct FDataType : public FInstanceBufferMeshDataType, public FLocalVertexFactory::FDataType
 	{
 	};
 

@@ -371,7 +371,7 @@ void FIBMInstanceBuffer::CreateVertexBuffer(FResourceArrayInterface* InResourceA
 	}
 }
 
-void FIBMInstanceBuffer::BindInstanceVertexBuffer(const class FVertexFactory* VertexFactory, FInstancedStaticMeshDataType& InstancedStaticMeshData) const
+void FIBMInstanceBuffer::BindInstanceVertexBuffer(const class FVertexFactory* VertexFactory, FInstanceBufferMeshDataType& InstancedStaticMeshData) const
 {
 	if (InstanceData->GetNumInstances() && RHISupportsManualVertexFetch(GMaxRHIShaderPlatform))
 	{
