@@ -305,7 +305,7 @@ public:
 	//~ End UObject Interface
 
 	/** Applies the cached component instance data to a newly blueprint constructed component. */
-	virtual void ApplyComponentInstanceData(struct FInstancedStaticMeshComponentInstanceData* ComponentInstanceData);
+	virtual void ApplyComponentInstanceData(struct FIBMComponentInstanceData* ComponentInstanceData);
 
 	/** Check to see if an instance is selected. */
 	bool IsInstanceSelected(int32 InInstanceIndex) const;
@@ -418,16 +418,16 @@ struct FInstancedStaticMeshLightMapInstanceData
 
 /** Helper class used to preserve lighting/selection state across blueprint reinstancing */
 USTRUCT()
-struct FInstancedStaticMeshComponentInstanceData : public FSceneComponentInstanceData
+struct FIBMComponentInstanceData : public FSceneComponentInstanceData
 {
 	GENERATED_BODY()
 public:
-	FInstancedStaticMeshComponentInstanceData() = default;
-	FInstancedStaticMeshComponentInstanceData(const UInstanceBufferMeshComponent* InComponent)
+	FIBMComponentInstanceData() = default;
+	FIBMComponentInstanceData(const UInstanceBufferMeshComponent* InComponent)
 		: FSceneComponentInstanceData(InComponent)
 		, StaticMesh(InComponent->GetStaticMesh())
 	{}
-	virtual ~FInstancedStaticMeshComponentInstanceData() = default;
+	virtual ~FIBMComponentInstanceData() = default;
 
 	virtual bool ContainsData() const override
 	{
