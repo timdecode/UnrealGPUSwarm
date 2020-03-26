@@ -53,6 +53,10 @@ const int32 InstancedStaticMeshMaxTexCoord = 8;
 
 IMPLEMENT_HIT_PROXY(HInstanceBufferMeshInstance, HHitProxy);
 
+const float TimHackMinSize = 0.000001f;
+const float TimHackLODScale = 1.0f;
+const float TimHackLODRange = 0.0f;
+
 TAutoConsoleVariable<int32> CVarMinLOD(
 	TEXT("foliage.MinLOD"),
 	-1,
@@ -3010,9 +3014,9 @@ void FInstanceBufferMeshVertexFactoryShaderParameters::GetElementShaderBindings(
 
 			FBoxSphereBounds ScaledBounds = InstancingUserData->MeshRenderData->Bounds.TransformBy(FTransform(FRotator::ZeroRotator, FVector::ZeroVector, InstancingUserData->AverageInstancesScale));
 			float SphereRadius = ScaledBounds.SphereRadius;
-			float MinSize = View->ViewMatrices.IsPerspectiveProjection() ? CVarFoliageMinimumScreenSize.GetValueOnRenderThread() : 0.0f;
-			float LODScale = CVarFoliageLODDistanceScale.GetValueOnRenderThread();
-			float LODRandom = CVarRandomLODRange.GetValueOnRenderThread();
+			float MinSize = View->ViewMatrices.IsPerspectiveProjection() ? TimHackMinSize : 0.0f;
+			float LODScale = TimHackLODScale;
+			float LODRandom = TimHackLODRange;
 			float MaxDrawDistanceScale = GetCachedScalabilityCVars().ViewDistanceScale;
 
 			if (BatchElement.InstancedLODIndex)
