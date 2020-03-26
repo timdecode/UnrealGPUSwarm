@@ -863,13 +863,14 @@ int32 FInstanceBufferMeshSceneProxy::CollectOccluderElements(FOccluderElementsCo
 
 void FInstanceBufferMeshSceneProxy::SetupProxy(UInstanceBufferMeshComponent* InComponent)
 {
-#if WITH_EDITOR
-	if (bHasSelectedInstances)
-	{
-		// if we have selected indices, mark scene proxy as selected.
-		SetSelection_GameThread(true);
-	}
-#endif
+	// Tim: disabled
+//#if WITH_EDITOR
+//	if (bHasSelectedInstances)
+//	{
+//		// if we have selected indices, mark scene proxy as selected.
+//		SetSelection_GameThread(true);
+//	}
+//#endif
 	// Make sure all the materials are okay to be rendered as an instanced mesh.
 	for (int32 LODIndex = 0; LODIndex < LODs.Num(); LODIndex++)
 	{
@@ -1656,99 +1657,101 @@ FBoxSphereBounds UInstanceBufferMeshComponent::CalcBounds(const FTransform& Boun
 #if WITH_EDITOR
 void UInstanceBufferMeshComponent::GetStaticLightingInfo(FStaticLightingPrimitiveInfo& OutPrimitiveInfo, const TArray<ULightComponent*>& InRelevantLights, const FLightingBuildOptions& Options)
 {
-	if (HasValidSettingsForStaticLighting(false))
-	{
-		// create static lighting for LOD 0
-		int32 LightMapWidth = 0;
-		int32 LightMapHeight = 0;
-		GetLightMapResolution(LightMapWidth, LightMapHeight);
+	// Tim: There are more classes we have to port to support this. We don't bake our lighting anyways.
 
-		bool bFit = false;
-		bool bReduced = false;
-		while (1)
-		{
-			const int32 OneLessThanMaximumSupportedResolution = 1 << (GMaxTextureMipCount - 2);
+	//if (HasValidSettingsForStaticLighting(false))
+	//{
+	//	// create static lighting for LOD 0
+	//	int32 LightMapWidth = 0;
+	//	int32 LightMapHeight = 0;
+	//	GetLightMapResolution(LightMapWidth, LightMapHeight);
 
-			const int32 MaxInstancesInMaxSizeLightmap = (OneLessThanMaximumSupportedResolution / LightMapWidth) * ((OneLessThanMaximumSupportedResolution / 2) / LightMapHeight);
-			if (PerInstanceSMData.Num() > MaxInstancesInMaxSizeLightmap)
-			{
-				if (LightMapWidth < 4 || LightMapHeight < 4)
-				{
-					break;
-				}
-				LightMapWidth /= 2;
-				LightMapHeight /= 2;
-				bReduced = true;
-			}
-			else
-			{
-				bFit = true;
-				break;
-			}
-		}
+	//	bool bFit = false;
+	//	bool bReduced = false;
+	//	while (1)
+	//	{
+	//		const int32 OneLessThanMaximumSupportedResolution = 1 << (GMaxTextureMipCount - 2);
 
-		if (!bFit)
-		{
-			FMessageLog("LightingResults").Message(EMessageSeverity::Error)
-				->AddToken(FUObjectToken::Create(this))
-				->AddToken(FTextToken::Create(NSLOCTEXT("InstancedStaticMesh", "FailedStaticLightingWarning", "The total lightmap size for this InstancedStaticMeshComponent is too big no matter how much we reduce the per-instance size, the number of mesh instances in this component must be reduced")));
-			return;
-		}
-		if (bReduced)
-		{
-			FMessageLog("LightingResults").Message(EMessageSeverity::Warning)
-				->AddToken(FUObjectToken::Create(this))
-				->AddToken(FTextToken::Create(NSLOCTEXT("InstancedStaticMesh", "ReducedStaticLightingWarning", "The total lightmap size for this InstancedStaticMeshComponent was too big and it was automatically reduced. Consider reducing the component's lightmap resolution or number of mesh instances in this component")));
-		}
+	//		const int32 MaxInstancesInMaxSizeLightmap = (OneLessThanMaximumSupportedResolution / LightMapWidth) * ((OneLessThanMaximumSupportedResolution / 2) / LightMapHeight);
+	//		if (PerInstanceSMData.Num() > MaxInstancesInMaxSizeLightmap)
+	//		{
+	//			if (LightMapWidth < 4 || LightMapHeight < 4)
+	//			{
+	//				break;
+	//			}
+	//			LightMapWidth /= 2;
+	//			LightMapHeight /= 2;
+	//			bReduced = true;
+	//		}
+	//		else
+	//		{
+	//			bFit = true;
+	//			break;
+	//		}
+	//	}
 
-		const int32 LightMapSize = GetWorld()->GetWorldSettings()->PackedLightAndShadowMapTextureSize;
-		const int32 MaxInstancesInDefaultSizeLightmap = (LightMapSize / LightMapWidth) * ((LightMapSize / 2) / LightMapHeight);
-		if (PerInstanceSMData.Num() > MaxInstancesInDefaultSizeLightmap)
-		{
-			FMessageLog("LightingResults").Message(EMessageSeverity::Warning)
-				->AddToken(FUObjectToken::Create(this))
-				->AddToken(FTextToken::Create(NSLOCTEXT("InstancedStaticMesh", "LargeStaticLightingWarning", "The total lightmap size for this InstancedStaticMeshComponent is large, consider reducing the component's lightmap resolution or number of mesh instances in this component")));
-		}
+	//	if (!bFit)
+	//	{
+	//		FMessageLog("LightingResults").Message(EMessageSeverity::Error)
+	//			->AddToken(FUObjectToken::Create(this))
+	//			->AddToken(FTextToken::Create(NSLOCTEXT("InstancedStaticMesh", "FailedStaticLightingWarning", "The total lightmap size for this InstancedStaticMeshComponent is too big no matter how much we reduce the per-instance size, the number of mesh instances in this component must be reduced")));
+	//		return;
+	//	}
+	//	if (bReduced)
+	//	{
+	//		FMessageLog("LightingResults").Message(EMessageSeverity::Warning)
+	//			->AddToken(FUObjectToken::Create(this))
+	//			->AddToken(FTextToken::Create(NSLOCTEXT("InstancedStaticMesh", "ReducedStaticLightingWarning", "The total lightmap size for this InstancedStaticMeshComponent was too big and it was automatically reduced. Consider reducing the component's lightmap resolution or number of mesh instances in this component")));
+	//	}
 
-		// TODO: Support separate static lighting in LODs for instanced meshes.
+	//	const int32 LightMapSize = GetWorld()->GetWorldSettings()->PackedLightAndShadowMapTextureSize;
+	//	const int32 MaxInstancesInDefaultSizeLightmap = (LightMapSize / LightMapWidth) * ((LightMapSize / 2) / LightMapHeight);
+	//	if (PerInstanceSMData.Num() > MaxInstancesInDefaultSizeLightmap)
+	//	{
+	//		FMessageLog("LightingResults").Message(EMessageSeverity::Warning)
+	//			->AddToken(FUObjectToken::Create(this))
+	//			->AddToken(FTextToken::Create(NSLOCTEXT("InstancedStaticMesh", "LargeStaticLightingWarning", "The total lightmap size for this InstancedStaticMeshComponent is large, consider reducing the component's lightmap resolution or number of mesh instances in this component")));
+	//	}
 
-		if (!GetStaticMesh()->CanLODsShareStaticLighting())
-		{
-			//TODO: Detect if the UVs for all sub-LODs overlap the base LOD UVs and omit this warning if they do.
-			FMessageLog("LightingResults").Message(EMessageSeverity::Warning)
-				->AddToken(FUObjectToken::Create(this))
-				->AddToken(FTextToken::Create(NSLOCTEXT("InstancedStaticMesh", "UniqueStaticLightingForLODWarning", "Instanced meshes don't yet support unique static lighting for each LOD. Lighting on LOD 1+ may be incorrect unless lightmap UVs are the same for all LODs.")));
-		}
+	//	// TODO: Support separate static lighting in LODs for instanced meshes.
 
-		// Force sharing LOD 0 lightmaps for now.
-		int32 NumLODs = 1;
+	//	if (!GetStaticMesh()->CanLODsShareStaticLighting())
+	//	{
+	//		//TODO: Detect if the UVs for all sub-LODs overlap the base LOD UVs and omit this warning if they do.
+	//		FMessageLog("LightingResults").Message(EMessageSeverity::Warning)
+	//			->AddToken(FUObjectToken::Create(this))
+	//			->AddToken(FTextToken::Create(NSLOCTEXT("InstancedStaticMesh", "UniqueStaticLightingForLODWarning", "Instanced meshes don't yet support unique static lighting for each LOD. Lighting on LOD 1+ may be incorrect unless lightmap UVs are the same for all LODs.")));
+	//	}
 
-		CachedMappings.Reset(PerInstanceSMData.Num() * NumLODs);
-		CachedMappings.AddZeroed(PerInstanceSMData.Num() * NumLODs);
+	//	// Force sharing LOD 0 lightmaps for now.
+	//	int32 NumLODs = 1;
 
-		NumPendingLightmaps = 0;
+	//	CachedMappings.Reset(PerInstanceSMData.Num() * NumLODs);
+	//	CachedMappings.AddZeroed(PerInstanceSMData.Num() * NumLODs);
 
-		for (int32 LODIndex = 0; LODIndex < NumLODs; LODIndex++)
-		{
-			const FStaticMeshLODResources& LODRenderData = GetStaticMesh()->RenderData->LODResources[LODIndex];
+	//	NumPendingLightmaps = 0;
 
-			for (int32 InstanceIndex = 0; InstanceIndex < PerInstanceSMData.Num(); InstanceIndex++)
-			{
-				auto* StaticLightingMesh = new FStaticLightingMesh_InstancedStaticMesh(this, LODIndex, InstanceIndex, InRelevantLights);
-				OutPrimitiveInfo.Meshes.Add(StaticLightingMesh);
+	//	for (int32 LODIndex = 0; LODIndex < NumLODs; LODIndex++)
+	//	{
+	//		const FStaticMeshLODResources& LODRenderData = GetStaticMesh()->RenderData->LODResources[LODIndex];
 
-				auto* InstancedMapping = new FStaticLightingTextureMapping_InstanceBufferMesh(this, LODIndex, InstanceIndex, StaticLightingMesh, LightMapWidth, LightMapHeight, GetStaticMesh()->LightMapCoordinateIndex, true);
-				OutPrimitiveInfo.Mappings.Add(InstancedMapping);
+	//		for (int32 InstanceIndex = 0; InstanceIndex < PerInstanceSMData.Num(); InstanceIndex++)
+	//		{
+	//			auto* StaticLightingMesh = new FStaticLightingMesh_InstancedStaticMesh(this, LODIndex, InstanceIndex, InRelevantLights);
+	//			OutPrimitiveInfo.Meshes.Add(StaticLightingMesh);
 
-				CachedMappings[LODIndex * PerInstanceSMData.Num() + InstanceIndex].Mapping = InstancedMapping;
-				NumPendingLightmaps++;
-			}
+	//			auto* InstancedMapping = new FStaticLightingTextureMapping_InstanceBufferMesh(this, LODIndex, InstanceIndex, StaticLightingMesh, LightMapWidth, LightMapHeight, GetStaticMesh()->LightMapCoordinateIndex, true);
+	//			OutPrimitiveInfo.Mappings.Add(InstancedMapping);
 
-			// Shrink LOD texture lightmaps by half for each LOD level (minimum 4x4 px)
-			LightMapWidth  = FMath::Max(LightMapWidth  / 2, 4);
-			LightMapHeight = FMath::Max(LightMapHeight / 2, 4);
-		}
-	}
+	//			CachedMappings[LODIndex * PerInstanceSMData.Num() + InstanceIndex].Mapping = InstancedMapping;
+	//			NumPendingLightmaps++;
+	//		}
+
+	//		// Shrink LOD texture lightmaps by half for each LOD level (minimum 4x4 px)
+	//		LightMapWidth  = FMath::Max(LightMapWidth  / 2, 4);
+	//		LightMapHeight = FMath::Max(LightMapHeight / 2, 4);
+	//	}
+	//}
 }
 
 void UInstanceBufferMeshComponent::ApplyLightMapping(FStaticLightingTextureMapping_InstanceBufferMesh* InMapping, ULevel* LightingScenario)
