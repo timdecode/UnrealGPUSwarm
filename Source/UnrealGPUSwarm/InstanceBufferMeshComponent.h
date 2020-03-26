@@ -27,7 +27,7 @@ DECLARE_STATS_GROUP(TEXT("Foliage"), STATGROUP_Foliage, STATCAT_Advanced);
 class FStaticLightingTextureMapping_InstancedStaticMesh;
 class FInstancedLightMap2D;
 class FInstancedShadowMap2D;
-class FStaticMeshInstanceData;
+class FIBMInstanceData;
 
 struct FIBMInstanceUpdateCmdBuffer
 {
@@ -257,7 +257,7 @@ public:
 	 *  Serialized for cooked content. Used to create PerInstanceRenderData. 
 	 *  Alive between Serialize and PostLoad calls 
 	 */
-	TUniquePtr<FStaticMeshInstanceData> InstanceDataBuffers;
+	TUniquePtr<FIBMInstanceData> InstanceDataBuffers;
 
 #if WITH_EDITOR
 	/** One bit per instance if the instance is selected. */
@@ -317,7 +317,7 @@ public:
 	void ClearInstanceSelection();
 
 	/** Initialize the Per Instance Render Data */
-	void InitPerInstanceRenderData(bool InitializeFromCurrentData, FStaticMeshInstanceData* InSharedInstanceBufferData = nullptr, bool InRequireCPUAccess = false);
+	void InitPerInstanceRenderData(bool InitializeFromCurrentData, FIBMInstanceData* InSharedInstanceBufferData = nullptr, bool InRequireCPUAccess = false);
 
 	/** Transfers ownership of instance render data to a render thread. Instance render data will be released in scene proxy destructor or on render thread task. */
 	void ReleasePerInstanceRenderData();
@@ -371,7 +371,7 @@ protected:
 	void CreateHitProxyData(TArray<TRefCountPtr<HHitProxy>>& HitProxies);
 
     /** Build instance buffer for rendering from current component data. */
-	void BuildRenderData(FStaticMeshInstanceData& OutData, TArray<TRefCountPtr<HHitProxy>>& OutHitProxies);
+	void BuildRenderData(FIBMInstanceData& OutData, TArray<TRefCountPtr<HHitProxy>>& OutHitProxies);
 	
     /** Serialize instance buffer that is used for rendering. Only for cooked content */
 	void SerializeRenderData(FArchive& Ar);

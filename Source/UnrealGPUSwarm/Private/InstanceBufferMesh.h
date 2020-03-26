@@ -62,7 +62,7 @@ public:
 	 * Initializes the buffer with the component's data.
 	 * @param Other - instance data, this call assumes the memory, so this will be empty after the call
 	 */
-	ENGINE_API void InitFromPreallocatedData(FStaticMeshInstanceData& Other);
+	ENGINE_API void InitFromPreallocatedData(FIBMInstanceData& Other);
 	ENGINE_API void UpdateFromCommandBuffer_Concurrent(FIBMInstanceUpdateCmdBuffer& CmdBuffer);
 
 	/**
@@ -86,7 +86,7 @@ public:
 		InstanceData->GetInstanceShaderValues(InstanceIndex, InstanceTransform, InstanceLightmapAndShadowMapUVBias, InstanceOrigin);
 	}
 	
-	FORCEINLINE FStaticMeshInstanceData* GetInstanceData() const
+	FORCEINLINE FIBMInstanceData* GetInstanceData() const
 	{
 		return InstanceData.Get();
 	}
@@ -103,7 +103,7 @@ public:
 
 public:
 	/** The vertex data storage type */
-	TSharedPtr<FStaticMeshInstanceData, ESPMode::ThreadSafe> InstanceData;
+	TSharedPtr<FIBMInstanceData, ESPMode::ThreadSafe> InstanceData;
 
 	/** Keep CPU copy of instance data*/
 	bool RequireCPUAccess;
@@ -402,7 +402,7 @@ struct FIBMInstanceUpdateCmdBuffer;
 struct FIBMPerInstanceRenderData
 {
 	// Should be always constructed on main thread
-	FIBMPerInstanceRenderData(FStaticMeshInstanceData& Other, ERHIFeatureLevel::Type InFeaureLevel, bool InRequireCPUAccess);
+	FIBMPerInstanceRenderData(FIBMInstanceData& Other, ERHIFeatureLevel::Type InFeaureLevel, bool InRequireCPUAccess);
 	~FIBMPerInstanceRenderData();
 
 	/**
@@ -410,7 +410,7 @@ struct FIBMPerInstanceRenderData
 	 * @param InComponent - The owning component
 	 * @param InOther - The Instance data to copy into our instance buffer
 	 */
-	ENGINE_API void UpdateFromPreallocatedData(FStaticMeshInstanceData& InOther);
+	ENGINE_API void UpdateFromPreallocatedData(FIBMInstanceData& InOther);
 		
 	/**
 	*/
@@ -424,7 +424,7 @@ struct FIBMPerInstanceRenderData
 
 	/** Instance buffer */
 	FStaticMeshInstanceBuffer			InstanceBuffer;
-	TSharedPtr<FStaticMeshInstanceData, ESPMode::ThreadSafe> InstanceBuffer_GameThread;
+	TSharedPtr<FIBMInstanceData, ESPMode::ThreadSafe> InstanceBuffer_GameThread;
 };
 
 

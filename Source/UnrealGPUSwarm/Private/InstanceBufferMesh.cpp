@@ -226,12 +226,12 @@ void FStaticMeshInstanceBuffer::CleanUp()
 	InstanceData.Reset();
 }
 
-void FStaticMeshInstanceBuffer::InitFromPreallocatedData(FStaticMeshInstanceData& Other)
+void FStaticMeshInstanceBuffer::InitFromPreallocatedData(FIBMInstanceData& Other)
 {
 	QUICK_SCOPE_CYCLE_COUNTER(STAT_FStaticMeshInstanceBuffer_InitFromPreallocatedData);
 
-	InstanceData = MakeShared<FStaticMeshInstanceData, ESPMode::ThreadSafe>();
-	FMemory::Memswap(&Other, InstanceData.Get(), sizeof(FStaticMeshInstanceData));
+	InstanceData = MakeShared<FIBMInstanceData, ESPMode::ThreadSafe>();
+	FMemory::Memswap(&Other, InstanceData.Get(), sizeof(FIBMInstanceData));
 	InstanceData->SetAllowCPUAccess(RequireCPUAccess);
 }
 
@@ -433,7 +433,7 @@ void FStaticMeshInstanceBuffer::BindInstanceVertexBuffer(const class FVertexFact
 }
 
 
-void FStaticMeshInstanceData::Serialize(FArchive& Ar)
+void FIBMInstanceData::Serialize(FArchive& Ar)
 {
 	const bool bCookConvertTransformsToFullFloat = Ar.IsCooking() && bUseHalfFloat && !Ar.CookingTarget()->SupportsFeature(ETargetPlatformFeatures::HalfFloatVertexFormat);
 
@@ -697,7 +697,7 @@ void FInstancedStaticMeshRenderData::InitVertexFactories()
 	});
 }
 
-FIBMPerInstanceRenderData::FIBMPerInstanceRenderData(FStaticMeshInstanceData& Other, ERHIFeatureLevel::Type InFeaureLevel, bool InRequireCPUAccess)
+FIBMPerInstanceRenderData::FIBMPerInstanceRenderData(FIBMInstanceData& Other, ERHIFeatureLevel::Type InFeaureLevel, bool InRequireCPUAccess)
 	: ResourceSize(InRequireCPUAccess ? Other.GetResourceSize() : 0)
 	, InstanceBuffer(InFeaureLevel, InRequireCPUAccess)
 {
@@ -714,17 +714,17 @@ FIBMPerInstanceRenderData::~FIBMPerInstanceRenderData()
 	InstanceBuffer.ReleaseResource();
 }
 
-void FIBMPerInstanceRenderData::UpdateFromPreallocatedData(FStaticMeshInstanceData& InOther)
+void FIBMPerInstanceRenderData::UpdateFromPreallocatedData(FIBMInstanceData& InOther)
 {
 	InstanceBuffer.RequireCPUAccess = (InOther.GetOriginResourceArray()->GetAllowCPUAccess() || InOther.GetTransformResourceArray()->GetAllowCPUAccess() || InOther.GetLightMapResourceArray()->GetAllowCPUAccess()) ? true : InstanceBuffer.RequireCPUAccess;
 	ResourceSize = InstanceBuffer.RequireCPUAccess ? InOther.GetResourceSize() : 0;
 
 	InOther.SetAllowCPUAccess(InstanceBuffer.RequireCPUAccess);
 
-	InstanceBuffer_GameThread = MakeShared<FStaticMeshInstanceData, ESPMode::ThreadSafe>();
-	FMemory::Memswap(&InOther, InstanceBuffer_GameThread.Get(), sizeof(FStaticMeshInstanceData));
+	InstanceBuffer_GameThread = MakeShared<FIBMInstanceData, ESPMode::ThreadSafe>();
+	FMemory::Memswap(&InOther, InstanceBuffer_GameThread.Get(), sizeof(FIBMInstanceData));
 
-	typedef TSharedPtr<FStaticMeshInstanceData, ESPMode::ThreadSafe> FStaticMeshInstanceDataPtr;
+	typedef TSharedPtr<FIBMInstanceData, ESPMode::ThreadSafe> FStaticMeshInstanceDataPtr;
 
 	FStaticMeshInstanceDataPtr InInstanceBufferDataPtr = InstanceBuffer_GameThread;
 	FStaticMeshInstanceBuffer* InInstanceBuffer = &InstanceBuffer;
@@ -1382,7 +1382,7 @@ FPrimitiveSceneProxy* UInstanceBufferMeshComponent::CreateSceneProxy()
 		{
 			InstanceUpdateCmdBuffer.Reset();
 
-			FStaticMeshInstanceData RenderInstanceData = FStaticMeshInstanceData(GVertexElementTypeSupport.IsSupported(VET_Half2));
+			FIBMInstanceData RenderInstanceData = FIBMInstanceData(GVertexElementTypeSupport.IsSupported(VET_Half2));
 			BuildRenderData(RenderInstanceData, PerInstanceRenderData->HitProxies);
 			PerInstanceRenderData->UpdateFromPreallocatedData(RenderInstanceData);
 		}
@@ -1416,7 +1416,7 @@ void UInstanceBufferMeshComponent::CreateHitProxyData(TArray<TRefCountPtr<HHitPr
 	}
 }
 
-void UInstanceBufferMeshComponent::BuildRenderData(FStaticMeshInstanceData& OutData, TArray<TRefCountPtr<HHitProxy>>& OutHitProxies)
+void UInstanceBufferMeshComponent::BuildRenderData(FIBMInstanceData& OutData, TArray<TRefCountPtr<HHitProxy>>& OutHitProxies)
 {
 	LLM_SCOPE(ELLMTag::InstancedMesh);
 	QUICK_SCOPE_CYCLE_COUNTER(STAT_UInstancedStaticMeshComponent_BuildRenderData);
@@ -1929,7 +1929,7 @@ void UInstanceBufferMeshComponent::SerializeRenderData(FArchive& Ar)
 
 		if (RenderDataSizeBytes > 0)
 		{
-			InstanceDataBuffers = MakeUnique<FStaticMeshInstanceData>();
+			InstanceDataBuffers = MakeUnique<FIBMInstanceData>();
 			InstanceDataBuffers->Serialize(Ar);
 		}
 	}
@@ -1955,7 +1955,7 @@ void UInstanceBufferMeshComponent::SerializeRenderData(FArchive& Ar)
 				{
 					InstanceUpdateCmdBuffer.Reset();
 
-					FStaticMeshInstanceData RenderInstanceData = FStaticMeshInstanceData(GVertexElementTypeSupport.IsSupported(VET_Half2));
+					FIBMInstanceData RenderInstanceData = FIBMInstanceData(GVertexElementTypeSupport.IsSupported(VET_Half2));
 					BuildRenderData(RenderInstanceData, PerInstanceRenderData->HitProxies);
 					PerInstanceRenderData->UpdateFromPreallocatedData(RenderInstanceData);
 					MarkRenderStateDirty();
@@ -2570,7 +2570,7 @@ void UInstanceBufferMeshComponent::GetInstancesMinMaxScale(FVector& MinScale, FV
 	}
 }
 
-void UInstanceBufferMeshComponent::InitPerInstanceRenderData(bool InitializeFromCurrentData, FStaticMeshInstanceData* InSharedInstanceBufferData, bool InRequireCPUAccess)
+void UInstanceBufferMeshComponent::InitPerInstanceRenderData(bool InitializeFromCurrentData, FIBMInstanceData* InSharedInstanceBufferData, bool InRequireCPUAccess)
 {
 	if (PerInstanceRenderData.IsValid())
 	{
@@ -2599,7 +2599,7 @@ void UInstanceBufferMeshComponent::InitPerInstanceRenderData(bool InitializeFrom
 	else
 	{
 		TArray<TRefCountPtr<HHitProxy>> HitProxies;
-		FStaticMeshInstanceData InstanceBufferData = FStaticMeshInstanceData(GVertexElementTypeSupport.IsSupported(VET_Half2));
+		FIBMInstanceData InstanceBufferData = FIBMInstanceData(GVertexElementTypeSupport.IsSupported(VET_Half2));
 		
 		if (InitializeFromCurrentData)
 		{
