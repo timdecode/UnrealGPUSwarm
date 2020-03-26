@@ -324,10 +324,10 @@ void FIBMInstanceBuffer::InitRHI()
 		LLM_SCOPE(ELLMTag::InstancedMesh);
 
 		// Tim: We want to write to this buffer GPU side. So it should not be static.
-		auto AccessFlags = BUF_UnorderedAccess; // BUF_Static;
-		CreateVertexBuffer(InstanceData->GetOriginResourceArray(), AccessFlags | BUF_ShaderResource, 16, PF_A32B32G32R32F, InstanceOriginBuffer.VertexBufferRHI, InstanceOriginSRV);
-		CreateVertexBuffer(InstanceData->GetTransformResourceArray(), AccessFlags | BUF_ShaderResource, InstanceData->GetTranslationUsesHalfs() ? 8 : 16, InstanceData->GetTranslationUsesHalfs() ? PF_FloatRGBA : PF_A32B32G32R32F, InstanceTransformBuffer.VertexBufferRHI, InstanceTransformSRV);
-		CreateVertexBuffer(InstanceData->GetLightMapResourceArray(), AccessFlags | BUF_ShaderResource, 8, PF_R16G16B16A16_SNORM, InstanceLightmapBuffer.VertexBufferRHI, InstanceLightmapSRV);
+		auto AccessFlags = BUF_UnorderedAccess | BUF_ShaderResource; // BUF_Static;
+		CreateVertexBuffer(InstanceData->GetOriginResourceArray(), AccessFlags, 16, PF_A32B32G32R32F, InstanceOriginBuffer.VertexBufferRHI, InstanceOriginSRV);
+		CreateVertexBuffer(InstanceData->GetTransformResourceArray(), AccessFlags, InstanceData->GetTranslationUsesHalfs() ? 8 : 16, InstanceData->GetTranslationUsesHalfs() ? PF_FloatRGBA : PF_A32B32G32R32F, InstanceTransformBuffer.VertexBufferRHI, InstanceTransformSRV);
+		CreateVertexBuffer(InstanceData->GetLightMapResourceArray(), AccessFlags, 8, PF_R16G16B16A16_SNORM, InstanceLightmapBuffer.VertexBufferRHI, InstanceLightmapSRV);
 	}
 }
 
