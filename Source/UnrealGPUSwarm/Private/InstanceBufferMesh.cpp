@@ -1936,7 +1936,7 @@ void UInstanceBufferMeshComponent::SerializeRenderData(FArchive& Ar)
 
 		if (RenderDataSizeBytes > 0)
 		{
-			InstanceDataBuffers = MakeUnique<FIBMInstanceData>();
+			InstanceDataBuffers = MakeUnique<FIBMStaticMeshInstanceData>();
 			InstanceDataBuffers->Serialize(Ar);
 		}
 	}
@@ -1962,7 +1962,7 @@ void UInstanceBufferMeshComponent::SerializeRenderData(FArchive& Ar)
 				{
 					InstanceUpdateCmdBuffer.Reset();
 
-					FIBMInstanceData RenderInstanceData = FIBMInstanceData(GVertexElementTypeSupport.IsSupported(VET_Half2));
+					FIBMStaticMeshInstanceData RenderInstanceData = FIBMStaticMeshInstanceData(GVertexElementTypeSupport.IsSupported(VET_Half2));
 					BuildRenderData(RenderInstanceData, PerInstanceRenderData->HitProxies);
 					PerInstanceRenderData->UpdateFromPreallocatedData(RenderInstanceData);
 					MarkRenderStateDirty();
@@ -2577,7 +2577,7 @@ void UInstanceBufferMeshComponent::GetInstancesMinMaxScale(FVector& MinScale, FV
 	}
 }
 
-void UInstanceBufferMeshComponent::InitPerInstanceRenderData(bool InitializeFromCurrentData, FIBMInstanceData* InSharedInstanceBufferData, bool InRequireCPUAccess)
+void UInstanceBufferMeshComponent::InitPerInstanceRenderData(bool InitializeFromCurrentData, FIBMStaticMeshInstanceData* InSharedInstanceBufferData, bool InRequireCPUAccess)
 {
 	if (PerInstanceRenderData.IsValid())
 	{
@@ -2606,7 +2606,7 @@ void UInstanceBufferMeshComponent::InitPerInstanceRenderData(bool InitializeFrom
 	else
 	{
 		TArray<TRefCountPtr<HHitProxy>> HitProxies;
-		FIBMInstanceData InstanceBufferData = FIBMInstanceData(GVertexElementTypeSupport.IsSupported(VET_Half2));
+		FIBMStaticMeshInstanceData InstanceBufferData = FIBMStaticMeshInstanceData(GVertexElementTypeSupport.IsSupported(VET_Half2));
 		
 		if (InitializeFromCurrentData)
 		{
