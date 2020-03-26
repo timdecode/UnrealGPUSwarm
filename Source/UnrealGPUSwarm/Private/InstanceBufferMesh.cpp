@@ -209,24 +209,24 @@ void FIBMInstanceUpdateCmdBuffer::Reset()
 	NumEdits = 0;
 }
 
-FStaticMeshInstanceBuffer::FStaticMeshInstanceBuffer(ERHIFeatureLevel::Type InFeatureLevel, bool InRequireCPUAccess)
+FIBMInstanceBuffer::FIBMInstanceBuffer(ERHIFeatureLevel::Type InFeatureLevel, bool InRequireCPUAccess)
 	: FRenderResource(InFeatureLevel)
 	, RequireCPUAccess(InRequireCPUAccess)
 {
 }
 
-FStaticMeshInstanceBuffer::~FStaticMeshInstanceBuffer()
+FIBMInstanceBuffer::~FIBMInstanceBuffer()
 {
 	CleanUp();
 }
 
 /** Delete existing resources */
-void FStaticMeshInstanceBuffer::CleanUp()
+void FIBMInstanceBuffer::CleanUp()
 {
 	InstanceData.Reset();
 }
 
-void FStaticMeshInstanceBuffer::InitFromPreallocatedData(FIBMInstanceData& Other)
+void FIBMInstanceBuffer::InitFromPreallocatedData(FIBMInstanceData& Other)
 {
 	QUICK_SCOPE_CYCLE_COUNTER(STAT_FStaticMeshInstanceBuffer_InitFromPreallocatedData);
 
@@ -235,11 +235,11 @@ void FStaticMeshInstanceBuffer::InitFromPreallocatedData(FIBMInstanceData& Other
 	InstanceData->SetAllowCPUAccess(RequireCPUAccess);
 }
 
-void FStaticMeshInstanceBuffer::UpdateFromCommandBuffer_Concurrent(FIBMInstanceUpdateCmdBuffer& CmdBuffer)
+void FIBMInstanceBuffer::UpdateFromCommandBuffer_Concurrent(FIBMInstanceUpdateCmdBuffer& CmdBuffer)
 {
 	QUICK_SCOPE_CYCLE_COUNTER(STAT_FStaticMeshInstanceBuffer_UpdateFromCommandBuffer_Concurrent);
 	
-	FStaticMeshInstanceBuffer* InstanceBuffer = this; 
+	FIBMInstanceBuffer* InstanceBuffer = this; 
 	FIBMInstanceUpdateCmdBuffer* NewCmdBuffer = new FIBMInstanceUpdateCmdBuffer();
 	FMemory::Memswap(&CmdBuffer, NewCmdBuffer, sizeof(FIBMInstanceUpdateCmdBuffer));
 	
@@ -255,7 +255,7 @@ void FStaticMeshInstanceBuffer::UpdateFromCommandBuffer_Concurrent(FIBMInstanceU
 		});
 }
 
-void FStaticMeshInstanceBuffer::UpdateFromCommandBuffer_RenderThread(FIBMInstanceUpdateCmdBuffer& CmdBuffer)
+void FIBMInstanceBuffer::UpdateFromCommandBuffer_RenderThread(FIBMInstanceUpdateCmdBuffer& CmdBuffer)
 {
 	QUICK_SCOPE_CYCLE_COUNTER(STAT_FStaticMeshInstanceBuffer_UpdateFromCommandBuffer_RenderThread);
 	
@@ -301,12 +301,12 @@ void FStaticMeshInstanceBuffer::UpdateFromCommandBuffer_RenderThread(FIBMInstanc
 /**
  * Specialized assignment operator, only used when importing LOD's.  
  */
-void FStaticMeshInstanceBuffer::operator=(const FStaticMeshInstanceBuffer &Other)
+void FIBMInstanceBuffer::operator=(const FIBMInstanceBuffer &Other)
 {
 	checkf(0, TEXT("Unexpected assignment call"));
 }
 
-void FStaticMeshInstanceBuffer::InitRHI()
+void FIBMInstanceBuffer::InitRHI()
 {
 	check(InstanceData);
 	if (InstanceData->GetNumInstances() > 0)
@@ -320,7 +320,7 @@ void FStaticMeshInstanceBuffer::InitRHI()
 	}
 }
 
-void FStaticMeshInstanceBuffer::ReleaseRHI()
+void FIBMInstanceBuffer::ReleaseRHI()
 {
 	InstanceOriginSRV.SafeRelease();
 	InstanceTransformSRV.SafeRelease();
@@ -331,7 +331,7 @@ void FStaticMeshInstanceBuffer::ReleaseRHI()
 	InstanceLightmapBuffer.ReleaseRHI();
 }
 
-void FStaticMeshInstanceBuffer::InitResource()
+void FIBMInstanceBuffer::InitResource()
 {
 	FRenderResource::InitResource();
 	InstanceOriginBuffer.InitResource();
@@ -339,7 +339,7 @@ void FStaticMeshInstanceBuffer::InitResource()
 	InstanceLightmapBuffer.InitResource();
 }
 
-void FStaticMeshInstanceBuffer::ReleaseResource()
+void FIBMInstanceBuffer::ReleaseResource()
 {
 	FRenderResource::ReleaseResource();
 	InstanceOriginBuffer.ReleaseResource();
@@ -347,7 +347,7 @@ void FStaticMeshInstanceBuffer::ReleaseResource()
 	InstanceLightmapBuffer.ReleaseResource();
 }
 
-SIZE_T FStaticMeshInstanceBuffer::GetResourceSize() const
+SIZE_T FIBMInstanceBuffer::GetResourceSize() const
 {
 	if (InstanceData && InstanceData->GetNumInstances() > 0)
 	{
@@ -356,7 +356,7 @@ SIZE_T FStaticMeshInstanceBuffer::GetResourceSize() const
 	return 0;
 }
 
-void FStaticMeshInstanceBuffer::CreateVertexBuffer(FResourceArrayInterface* InResourceArray, uint32 InUsage, uint32 InStride, uint8 InFormat, FVertexBufferRHIRef& OutVertexBufferRHI, FShaderResourceViewRHIRef& OutInstanceSRV)
+void FIBMInstanceBuffer::CreateVertexBuffer(FResourceArrayInterface* InResourceArray, uint32 InUsage, uint32 InStride, uint8 InFormat, FVertexBufferRHIRef& OutVertexBufferRHI, FShaderResourceViewRHIRef& OutInstanceSRV)
 {
 	check(InResourceArray);
 	check(InResourceArray->GetResourceDataSize() > 0);
@@ -371,7 +371,7 @@ void FStaticMeshInstanceBuffer::CreateVertexBuffer(FResourceArrayInterface* InRe
 	}
 }
 
-void FStaticMeshInstanceBuffer::BindInstanceVertexBuffer(const class FVertexFactory* VertexFactory, FInstancedStaticMeshDataType& InstancedStaticMeshData) const
+void FIBMInstanceBuffer::BindInstanceVertexBuffer(const class FVertexFactory* VertexFactory, FInstancedStaticMeshDataType& InstancedStaticMeshData) const
 {
 	if (InstanceData->GetNumInstances() && RHISupportsManualVertexFetch(GMaxRHIShaderPlatform))
 	{
@@ -727,7 +727,7 @@ void FIBMPerInstanceRenderData::UpdateFromPreallocatedData(FIBMInstanceData& InO
 	typedef TSharedPtr<FIBMInstanceData, ESPMode::ThreadSafe> FStaticMeshInstanceDataPtr;
 
 	FStaticMeshInstanceDataPtr InInstanceBufferDataPtr = InstanceBuffer_GameThread;
-	FStaticMeshInstanceBuffer* InInstanceBuffer = &InstanceBuffer;
+	FIBMInstanceBuffer* InInstanceBuffer = &InstanceBuffer;
 	ENQUEUE_RENDER_COMMAND(FInstanceBuffer_UpdateFromPreallocatedData)(
 		[InInstanceBufferDataPtr, InInstanceBuffer](FRHICommandListImmediate& RHICmdList)
 		{
@@ -838,7 +838,7 @@ int32 FInstancedStaticMeshSceneProxy::CollectOccluderElements(FOccluderElementsC
 {
 	if (OccluderData)
 	{	
-		FStaticMeshInstanceBuffer& InstanceBuffer = InstancedRenderData.PerInstanceRenderData->InstanceBuffer;
+		FIBMInstanceBuffer& InstanceBuffer = InstancedRenderData.PerInstanceRenderData->InstanceBuffer;
 		const int32 NumInstances = InstanceBuffer.GetNumInstances();
 		
 		for (int32 InstanceIndex = 0; InstanceIndex < NumInstances; ++InstanceIndex)
