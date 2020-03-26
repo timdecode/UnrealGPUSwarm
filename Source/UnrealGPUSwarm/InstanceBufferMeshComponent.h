@@ -372,7 +372,7 @@ protected:
 	void CreateHitProxyData(TArray<TRefCountPtr<HHitProxy>>& HitProxies);
 
     /** Build instance buffer for rendering from current component data. */
-	void BuildRenderData(FIBMInstanceData& OutData, TArray<TRefCountPtr<HHitProxy>>& OutHitProxies);
+	void BuildRenderData(FIBMStaticMeshInstanceData& OutData, TArray<TRefCountPtr<HHitProxy>>& OutHitProxies);
 	
     /** Serialize instance buffer that is used for rendering. Only for cooked content */
 	void SerializeRenderData(FArchive& Ar);

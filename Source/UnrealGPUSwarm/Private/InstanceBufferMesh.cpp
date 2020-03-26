@@ -1387,7 +1387,7 @@ FPrimitiveSceneProxy* UInstanceBufferMeshComponent::CreateSceneProxy()
 		{
 			InstanceUpdateCmdBuffer.Reset();
 
-			FIBMInstanceData RenderInstanceData = FIBMInstanceData(GVertexElementTypeSupport.IsSupported(VET_Half2));
+			FIBMStaticMeshInstanceData RenderInstanceData = FIBMStaticMeshInstanceData(GVertexElementTypeSupport.IsSupported(VET_Half2));
 			BuildRenderData(RenderInstanceData, PerInstanceRenderData->HitProxies);
 			PerInstanceRenderData->UpdateFromPreallocatedData(RenderInstanceData);
 		}
@@ -1421,7 +1421,7 @@ void UInstanceBufferMeshComponent::CreateHitProxyData(TArray<TRefCountPtr<HHitPr
 	}
 }
 
-void UInstanceBufferMeshComponent::BuildRenderData(FIBMInstanceData& OutData, TArray<TRefCountPtr<HHitProxy>>& OutHitProxies)
+void UInstanceBufferMeshComponent::BuildRenderData(FIBMStaticMeshInstanceData& OutData, TArray<TRefCountPtr<HHitProxy>>& OutHitProxies)
 {
 	LLM_SCOPE(ELLMTag::InstancedMesh);
 	QUICK_SCOPE_CYCLE_COUNTER(STAT_UInstancedStaticMeshComponent_BuildRenderData);
@@ -1753,101 +1753,103 @@ void UInstanceBufferMeshComponent::GetStaticLightingInfo(FStaticLightingPrimitiv
 
 void UInstanceBufferMeshComponent::ApplyLightMapping(FStaticLightingTextureMapping_InstanceBufferMesh* InMapping, ULevel* LightingScenario)
 {
-	static const auto CVar = IConsoleManager::Get().FindTConsoleVariableDataInt(TEXT("r.VirtualTexturedLightmaps"));
-	const bool bUseVirtualTextures = (CVar->GetValueOnAnyThread() != 0) && UseVirtualTexturing(GMaxRHIFeatureLevel);
+	// Tim: There are more classes we have to port to support this. We don't bake our lighting anyways.
 
-	NumPendingLightmaps--;
+	//static const auto CVar = IConsoleManager::Get().FindTConsoleVariableDataInt(TEXT("r.VirtualTexturedLightmaps"));
+	//const bool bUseVirtualTextures = (CVar->GetValueOnAnyThread() != 0) && UseVirtualTexturing(GMaxRHIFeatureLevel);
 
-	if (NumPendingLightmaps == 0)
-	{
-		// Calculate the range of each coefficient in this light-map and repack the data to have the same scale factor and bias across all instances
-		// TODO: Per instance scale?
+	//NumPendingLightmaps--;
 
-		// generate the final lightmaps for all the mappings for this component
-		TArray<TUniquePtr<FQuantizedLightmapData>> AllQuantizedData;
-		for (auto& MappingInfo : CachedMappings)
-		{
-			FStaticLightingTextureMapping_InstanceBufferMesh* Mapping = MappingInfo.Mapping;
-			AllQuantizedData.Add(MoveTemp(Mapping->QuantizedData));
-		}
+	//if (NumPendingLightmaps == 0)
+	//{
+	//	// Calculate the range of each coefficient in this light-map and repack the data to have the same scale factor and bias across all instances
+	//	// TODO: Per instance scale?
 
-		bool bNeedsShadowMap = false;
-		TArray<TMap<ULightComponent*, TUniquePtr<FShadowMapData2D>>> AllShadowMapData;
-		for (auto& MappingInfo : CachedMappings)
-		{
-			FStaticLightingTextureMapping_InstanceBufferMesh* Mapping = MappingInfo.Mapping;
-			bNeedsShadowMap = bNeedsShadowMap || (Mapping->ShadowMapData.Num() > 0);
-			AllShadowMapData.Add(MoveTemp(Mapping->ShadowMapData));
-		}
+	//	// generate the final lightmaps for all the mappings for this component
+	//	TArray<TUniquePtr<FQuantizedLightmapData>> AllQuantizedData;
+	//	for (auto& MappingInfo : CachedMappings)
+	//	{
+	//		FStaticLightingTextureMapping_InstanceBufferMesh* Mapping = MappingInfo.Mapping;
+	//		AllQuantizedData.Add(MoveTemp(Mapping->QuantizedData));
+	//	}
 
-		UStaticMesh* ResolvedMesh = GetStaticMesh();
-		if (LODData.Num() != ResolvedMesh->GetNumLODs())
-		{
-			MarkPackageDirty();
-		}
+	//	bool bNeedsShadowMap = false;
+	//	TArray<TMap<ULightComponent*, TUniquePtr<FShadowMapData2D>>> AllShadowMapData;
+	//	for (auto& MappingInfo : CachedMappings)
+	//	{
+	//		FStaticLightingTextureMapping_InstanceBufferMesh* Mapping = MappingInfo.Mapping;
+	//		bNeedsShadowMap = bNeedsShadowMap || (Mapping->ShadowMapData.Num() > 0);
+	//		AllShadowMapData.Add(MoveTemp(Mapping->ShadowMapData));
+	//	}
 
-		// Ensure LODData has enough entries in it, free not required.
-		SetLODDataCount(ResolvedMesh->GetNumLODs(), ResolvedMesh->GetNumLODs());
+	//	UStaticMesh* ResolvedMesh = GetStaticMesh();
+	//	if (LODData.Num() != ResolvedMesh->GetNumLODs())
+	//	{
+	//		MarkPackageDirty();
+	//	}
 
-		ULevel* StorageLevel = LightingScenario ? LightingScenario : GetOwner()->GetLevel();
-		UMapBuildDataRegistry* Registry = StorageLevel->GetOrCreateMapBuildData();
-		FMeshMapBuildData& MeshBuildData = Registry->AllocateMeshBuildData(LODData[0].MapBuildDataId, true);
+	//	// Ensure LODData has enough entries in it, free not required.
+	//	SetLODDataCount(ResolvedMesh->GetNumLODs(), ResolvedMesh->GetNumLODs());
 
-		MeshBuildData.PerInstanceLightmapData.Empty(AllQuantizedData.Num());
-		MeshBuildData.PerInstanceLightmapData.AddZeroed(AllQuantizedData.Num());
+	//	ULevel* StorageLevel = LightingScenario ? LightingScenario : GetOwner()->GetLevel();
+	//	UMapBuildDataRegistry* Registry = StorageLevel->GetOrCreateMapBuildData();
+	//	FMeshMapBuildData& MeshBuildData = Registry->AllocateMeshBuildData(LODData[0].MapBuildDataId, true);
 
-		// Create a light-map for the primitive.
-		// When using VT, shadow map data is included with lightmap allocation
-		const ELightMapPaddingType PaddingType = GAllowLightmapPadding ? LMPT_NormalPadding : LMPT_NoPadding;
-		TArray<TMap<ULightComponent*, TUniquePtr<FShadowMapData2D>>> EmptyShadowMapData;
-		TRefCountPtr<FLightMap2D> NewLightMap = FLightMap2D::AllocateInstancedLightMap(Registry, this,
-			MoveTemp(AllQuantizedData),
-			bUseVirtualTextures ? MoveTemp(AllShadowMapData) : MoveTemp(EmptyShadowMapData),
-			Registry, LODData[0].MapBuildDataId, Bounds, PaddingType, LMF_Streamed);
+	//	MeshBuildData.PerInstanceLightmapData.Empty(AllQuantizedData.Num());
+	//	MeshBuildData.PerInstanceLightmapData.AddZeroed(AllQuantizedData.Num());
 
-		// Create a shadow-map for the primitive, only needed when not using VT
-		TRefCountPtr<FShadowMap2D> NewShadowMap = (bNeedsShadowMap && !bUseVirtualTextures)
-			? FShadowMap2D::AllocateInstancedShadowMap(Registry, this, MoveTemp(AllShadowMapData), Registry, LODData[0].MapBuildDataId, Bounds, PaddingType, SMF_Streamed)
-			: nullptr;
+	//	// Create a light-map for the primitive.
+	//	// When using VT, shadow map data is included with lightmap allocation
+	//	const ELightMapPaddingType PaddingType = GAllowLightmapPadding ? LMPT_NormalPadding : LMPT_NoPadding;
+	//	TArray<TMap<ULightComponent*, TUniquePtr<FShadowMapData2D>>> EmptyShadowMapData;
+	//	TRefCountPtr<FLightMap2D> NewLightMap = FLightMap2D::AllocateInstancedLightMap(Registry, this,
+	//		MoveTemp(AllQuantizedData),
+	//		bUseVirtualTextures ? MoveTemp(AllShadowMapData) : MoveTemp(EmptyShadowMapData),
+	//		Registry, LODData[0].MapBuildDataId, Bounds, PaddingType, LMF_Streamed);
 
-		MeshBuildData.LightMap = NewLightMap;
-		MeshBuildData.ShadowMap = NewShadowMap;
+	//	// Create a shadow-map for the primitive, only needed when not using VT
+	//	TRefCountPtr<FShadowMap2D> NewShadowMap = (bNeedsShadowMap && !bUseVirtualTextures)
+	//		? FShadowMap2D::AllocateInstancedShadowMap(Registry, this, MoveTemp(AllShadowMapData), Registry, LODData[0].MapBuildDataId, Bounds, PaddingType, SMF_Streamed)
+	//		: nullptr;
 
-		// Build the list of statically irrelevant lights.
-		// TODO: This should be stored per LOD.
-		TSet<FGuid> RelevantLights;
-		TSet<FGuid> PossiblyIrrelevantLights;
-		for (auto& MappingInfo : CachedMappings)
-		{
-			for (const ULightComponent* Light : MappingInfo.Mapping->Mesh->RelevantLights)
-			{
-				// Check if the light is stored in the light-map.
-				const bool bIsInLightMap = MeshBuildData.LightMap && MeshBuildData.LightMap->LightGuids.Contains(Light->LightGuid);
+	//	MeshBuildData.LightMap = NewLightMap;
+	//	MeshBuildData.ShadowMap = NewShadowMap;
 
-				// Check if the light is stored in the shadow-map.
-				const bool bIsInShadowMap = MeshBuildData.ShadowMap && MeshBuildData.ShadowMap->LightGuids.Contains(Light->LightGuid);
+	//	// Build the list of statically irrelevant lights.
+	//	// TODO: This should be stored per LOD.
+	//	TSet<FGuid> RelevantLights;
+	//	TSet<FGuid> PossiblyIrrelevantLights;
+	//	for (auto& MappingInfo : CachedMappings)
+	//	{
+	//		for (const ULightComponent* Light : MappingInfo.Mapping->Mesh->RelevantLights)
+	//		{
+	//			// Check if the light is stored in the light-map.
+	//			const bool bIsInLightMap = MeshBuildData.LightMap && MeshBuildData.LightMap->LightGuids.Contains(Light->LightGuid);
 
-				// If the light isn't already relevant to another mapping, add it to the potentially irrelevant list
-				if (!bIsInLightMap && !bIsInShadowMap && !RelevantLights.Contains(Light->LightGuid))
-				{
-					PossiblyIrrelevantLights.Add(Light->LightGuid);
-				}
+	//			// Check if the light is stored in the shadow-map.
+	//			const bool bIsInShadowMap = MeshBuildData.ShadowMap && MeshBuildData.ShadowMap->LightGuids.Contains(Light->LightGuid);
 
-				// Light is relevant
-				if (bIsInLightMap || bIsInShadowMap)
-				{
-					RelevantLights.Add(Light->LightGuid);
-					PossiblyIrrelevantLights.Remove(Light->LightGuid);
-				}
-			}
-		}
+	//			// If the light isn't already relevant to another mapping, add it to the potentially irrelevant list
+	//			if (!bIsInLightMap && !bIsInShadowMap && !RelevantLights.Contains(Light->LightGuid))
+	//			{
+	//				PossiblyIrrelevantLights.Add(Light->LightGuid);
+	//			}
 
-		MeshBuildData.IrrelevantLights = PossiblyIrrelevantLights.Array();
+	//			// Light is relevant
+	//			if (bIsInLightMap || bIsInShadowMap)
+	//			{
+	//				RelevantLights.Add(Light->LightGuid);
+	//				PossiblyIrrelevantLights.Remove(Light->LightGuid);
+	//			}
+	//		}
+	//	}
 
-		// Force recreation of the render data
-		InstanceUpdateCmdBuffer.Edit();
-		MarkRenderStateDirty();
-	}
+	//	MeshBuildData.IrrelevantLights = PossiblyIrrelevantLights.Array();
+
+	//	// Force recreation of the render data
+	//	InstanceUpdateCmdBuffer.Edit();
+	//	MarkRenderStateDirty();
+	//}
 }
 #endif
 
