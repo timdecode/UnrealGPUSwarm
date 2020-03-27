@@ -107,16 +107,11 @@ class FIBMStaticMeshInstanceData
 	};
 
 public:
-	FIBMStaticMeshInstanceData()
-	{
-	}
 
 	/**
-	 * Constructor
-	 * @param bInUseHalfFloat - true if device has support for half float in vertex arrays
+	 * Constructor - we support 32-bit floats only
 	 */
-	FIBMStaticMeshInstanceData(bool bInUseHalfFloat)
-		: bUseHalfFloat(PLATFORM_BUILTIN_VERTEX_HALF_FLOAT || bInUseHalfFloat)
+	FIBMStaticMeshInstanceData()
 	{
 		AllocateBuffers(0);
 	}
@@ -161,14 +156,8 @@ public:
 	FORCEINLINE_DEBUGGABLE void GetInstanceTransform(int32 InstanceIndex, FMatrix& Transform) const
 	{
 		FVector4 TransformVec[3];
-		if (bUseHalfFloat)
-		{
-			GetInstanceTransformInternal<FFloat16>(InstanceIndex, TransformVec);
-		}
-		else
-		{
-			GetInstanceTransformInternal<float>(InstanceIndex, TransformVec);
-		}
+
+		GetInstanceTransformInternal<float>(InstanceIndex, TransformVec);
 
 		Transform.M[0][0] = TransformVec[0][0];
 		Transform.M[0][1] = TransformVec[0][1];
@@ -196,14 +185,7 @@ public:
 
 	FORCEINLINE_DEBUGGABLE void GetInstanceShaderValues(int32 InstanceIndex, FVector4(&InstanceTransform)[3], FVector4& InstanceLightmapAndShadowMapUVBias, FVector4& InstanceOrigin) const
 	{
-		if (bUseHalfFloat)
-		{
-			GetInstanceTransformInternal<FFloat16>(InstanceIndex, InstanceTransform);
-		}
-		else
-		{
-			GetInstanceTransformInternal<float>(InstanceIndex, InstanceTransform);
-		}
+		GetInstanceTransformInternal<float>(InstanceIndex, InstanceTransform);
 		GetInstanceLightMapDataInternal(InstanceIndex, InstanceLightmapAndShadowMapUVBias);
 		GetInstanceOriginInternal(InstanceIndex, InstanceOrigin);
 	}
@@ -218,15 +200,7 @@ public:
 		InstanceTransform[1] = FVector4(Transform.M[1][0], Transform.M[1][1], Transform.M[1][2], 0.0f);
 		InstanceTransform[2] = FVector4(Transform.M[2][0], Transform.M[2][1], Transform.M[2][2], 0.0f);
 
-		if (bUseHalfFloat)
-		{
-			SetInstanceTransformInternal<FFloat16>(InstanceIndex, InstanceTransform);
-		}
-		else
-		{
-			SetInstanceTransformInternal<float>(InstanceIndex, InstanceTransform);
-		}
-
+		SetInstanceTransformInternal<float>(InstanceIndex, InstanceTransform);
 		SetInstanceLightMapDataInternal(InstanceIndex, FVector4(0, 0, 0, 0));
 	}
 
@@ -240,15 +214,7 @@ public:
 		InstanceTransform[1] = FVector4(Transform.M[1][0], Transform.M[1][1], Transform.M[1][2], 0.0f);
 		InstanceTransform[2] = FVector4(Transform.M[2][0], Transform.M[2][1], Transform.M[2][2], 0.0f);
 
-		if (bUseHalfFloat)
-		{
-			SetInstanceTransformInternal<FFloat16>(InstanceIndex, InstanceTransform);
-		}
-		else
-		{
-			SetInstanceTransformInternal<float>(InstanceIndex, InstanceTransform);
-		}
-
+		SetInstanceTransformInternal<float>(InstanceIndex, InstanceTransform);
 		SetInstanceLightMapDataInternal(InstanceIndex, FVector4(LightmapUVBias.X, LightmapUVBias.Y, ShadowmapUVBias.X, ShadowmapUVBias.Y));
 	}
 
@@ -265,15 +231,7 @@ public:
 		InstanceTransform[1] = FVector4(Transform.M[1][0], Transform.M[1][1], Transform.M[1][2], 0.0f);
 		InstanceTransform[2] = FVector4(Transform.M[2][0], Transform.M[2][1], Transform.M[2][2], 0.0f);
 
-		if (bUseHalfFloat)
-		{
-			SetInstanceTransformInternal<FFloat16>(InstanceIndex, InstanceTransform);
-		}
-		else
-		{
-			SetInstanceTransformInternal<float>(InstanceIndex, InstanceTransform);
-		}
-
+		SetInstanceTransformInternal<float>(InstanceIndex, InstanceTransform);
 		SetInstanceLightMapDataInternal(InstanceIndex, FVector4(LightmapUVBias.X, LightmapUVBias.Y, ShadowmapUVBias.X, ShadowmapUVBias.Y));
 	}
 
@@ -291,76 +249,33 @@ public:
 		InstanceTransform[1] = FVector4(0, 0, 0, 0);
 		InstanceTransform[2] = FVector4(0, 0, 0, 0);
 
-		if (bUseHalfFloat)
-		{
-			SetInstanceTransformInternal<FFloat16>(InstanceIndex, InstanceTransform);
-		}
-		else
-		{
-			SetInstanceTransformInternal<float>(InstanceIndex, InstanceTransform);
-		}
-
+		SetInstanceTransformInternal<float>(InstanceIndex, InstanceTransform);
 		SetInstanceLightMapDataInternal(InstanceIndex, FVector4(0, 0, 0, 0));
 	}
 
 	FORCEINLINE_DEBUGGABLE void SetInstanceEditorData(int32 InstanceIndex, FColor HitProxyColor, bool bSelected)
 	{
 		FVector4 InstanceTransform[3];
-		if (bUseHalfFloat)
-		{
-			GetInstanceTransformInternal<FFloat16>(InstanceIndex, InstanceTransform);
-			InstanceTransform[0][3] = ((float)HitProxyColor.R) + (bSelected ? 256.f : 0.0f);
-			InstanceTransform[1][3] = (float)HitProxyColor.G;
-			InstanceTransform[2][3] = (float)HitProxyColor.B;
-			SetInstanceTransformInternal<FFloat16>(InstanceIndex, InstanceTransform);
-		}
-		else
-		{
-			GetInstanceTransformInternal<float>(InstanceIndex, InstanceTransform);
-			InstanceTransform[0][3] = ((float)HitProxyColor.R) + (bSelected ? 256.f : 0.0f);
-			InstanceTransform[1][3] = (float)HitProxyColor.G;
-			InstanceTransform[2][3] = (float)HitProxyColor.B;
-			SetInstanceTransformInternal<float>(InstanceIndex, InstanceTransform);
-		}
+
+		GetInstanceTransformInternal<float>(InstanceIndex, InstanceTransform);
+		InstanceTransform[0][3] = ((float)HitProxyColor.R) + (bSelected ? 256.f : 0.0f);
+		InstanceTransform[1][3] = (float)HitProxyColor.G;
+		InstanceTransform[2][3] = (float)HitProxyColor.B;
+		SetInstanceTransformInternal<float>(InstanceIndex, InstanceTransform);
 	}
 
 	FORCEINLINE_DEBUGGABLE void ClearInstanceEditorData(int32 InstanceIndex)
 	{
 		FVector4 InstanceTransform[3];
-		if (bUseHalfFloat)
-		{
-			GetInstanceTransformInternal<FFloat16>(InstanceIndex, InstanceTransform);
-			InstanceTransform[0][3] = 0.0f;
-			InstanceTransform[1][3] = 0.0f;
-			InstanceTransform[2][3] = 0.0f;
-			SetInstanceTransformInternal<FFloat16>(InstanceIndex, InstanceTransform);
-		}
-		else
-		{
-			GetInstanceTransformInternal<float>(InstanceIndex, InstanceTransform);
-			InstanceTransform[0][3] = 0.0f;
-			InstanceTransform[1][3] = 0.0f;
-			InstanceTransform[2][3] = 0.0f;
-			SetInstanceTransformInternal<float>(InstanceIndex, InstanceTransform);
-		}
+		GetInstanceTransformInternal<float>(InstanceIndex, InstanceTransform);
+		InstanceTransform[0][3] = 0.0f;
+		InstanceTransform[1][3] = 0.0f;
+		InstanceTransform[2][3] = 0.0f;
+		SetInstanceTransformInternal<float>(InstanceIndex, InstanceTransform);
 	}
 
 	FORCEINLINE_DEBUGGABLE void SwapInstance(int32 Index1, int32 Index2)
 	{
-		if (bUseHalfFloat)
-		{
-			FInstanceTransformMatrix<FFloat16>* ElementData = reinterpret_cast<FInstanceTransformMatrix<FFloat16>*>(InstanceTransformDataPtr);
-			uint32 CurrentSize = InstanceTransformData->Num() * InstanceTransformData->GetStride();
-			check((void*)((&ElementData[Index1]) + 1) <= (void*)(InstanceTransformDataPtr + CurrentSize));
-			check((void*)((&ElementData[Index1]) + 0) >= (void*)(InstanceTransformDataPtr));
-			check((void*)((&ElementData[Index2]) + 1) <= (void*)(InstanceTransformDataPtr + CurrentSize));
-			check((void*)((&ElementData[Index2]) + 0) >= (void*)(InstanceTransformDataPtr));
-
-			FInstanceTransformMatrix<FFloat16> TempStore = ElementData[Index1];
-			ElementData[Index1] = ElementData[Index2];
-			ElementData[Index2] = TempStore;
-		}
-		else
 		{
 			FInstanceTransformMatrix<float>* ElementData = reinterpret_cast<FInstanceTransformMatrix<float>*>(InstanceTransformDataPtr);
 			uint32 CurrentSize = InstanceTransformData->Num() * InstanceTransformData->GetStride();
@@ -423,7 +338,7 @@ public:
 
 	FORCEINLINE_DEBUGGABLE bool GetTranslationUsesHalfs() const
 	{
-		return bUseHalfFloat;
+		return false;
 	}
 
 	FORCEINLINE_DEBUGGABLE FResourceArrayInterface* GetOriginResourceArray()
@@ -576,14 +491,8 @@ private:
 		InstanceOriginData->ResizeBuffer(InNumInstances, BufferFlags);
 		InstanceLightmapData = new TStaticMeshVertexData<FInstanceLightMapVector>();
 		InstanceLightmapData->ResizeBuffer(InNumInstances, BufferFlags);
-		if (bUseHalfFloat)
-		{
-			InstanceTransformData = new TStaticMeshVertexData<FInstanceTransformMatrix<FFloat16>>();
-		}
-		else
-		{
-			InstanceTransformData = new TStaticMeshVertexData<FInstanceTransformMatrix<float>>();
-		}
+
+		InstanceTransformData = new TStaticMeshVertexData<FInstanceTransformMatrix<float>>();
 		InstanceTransformData->ResizeBuffer(InNumInstances, BufferFlags);
 	}
 
@@ -597,7 +506,6 @@ private:
 	uint8* InstanceLightmapDataPtr = nullptr;
 
 	int32 NumInstances = 0;
-	bool bUseHalfFloat = false;
 };
 
 

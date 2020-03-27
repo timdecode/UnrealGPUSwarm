@@ -446,18 +446,6 @@ void FIBMInstanceBuffer::BindInstanceVertexBuffer(const class FVertexFactory* Ve
 
 void FIBMStaticMeshInstanceData::Serialize(FArchive& Ar)
 {
-	const bool bCookConvertTransformsToFullFloat = Ar.IsCooking() && bUseHalfFloat && !Ar.CookingTarget()->SupportsFeature(ETargetPlatformFeatures::HalfFloatVertexFormat);
-
-	if (bCookConvertTransformsToFullFloat)
-	{
-		bool bSaveUseHalfFloat = false;
-		Ar << bSaveUseHalfFloat;
-	}
-	else
-	{
-		Ar << bUseHalfFloat;
-	}
-
 	Ar << NumInstances;
 
 	if (Ar.IsLoading())
@@ -468,37 +456,8 @@ void FIBMStaticMeshInstanceData::Serialize(FArchive& Ar)
 	InstanceOriginData->Serialize(Ar);
 	InstanceLightmapData->Serialize(Ar);
 
-	if (bCookConvertTransformsToFullFloat)
-	{
-		TStaticMeshVertexData<FInstanceTransformMatrix<float>> FullInstanceTransformData;
-		FullInstanceTransformData.ResizeBuffer(NumInstances);
 
-		FInstanceTransformMatrix<FFloat16>* Src = (FInstanceTransformMatrix<FFloat16>*)InstanceTransformData->GetDataPointer();
-		FInstanceTransformMatrix<float>* Dest = (FInstanceTransformMatrix<float>*)FullInstanceTransformData.GetDataPointer();
-		for (int32 Idx = 0; Idx < NumInstances; Idx++)
-		{
-			Dest->InstanceTransform1[0] = Src->InstanceTransform1[0];
-			Dest->InstanceTransform1[1] = Src->InstanceTransform1[1];
-			Dest->InstanceTransform1[2] = Src->InstanceTransform1[2];
-			Dest->InstanceTransform1[3] = Src->InstanceTransform1[3];
-			Dest->InstanceTransform2[0] = Src->InstanceTransform2[0];
-			Dest->InstanceTransform2[1] = Src->InstanceTransform2[1];
-			Dest->InstanceTransform2[2] = Src->InstanceTransform2[2];
-			Dest->InstanceTransform2[3] = Src->InstanceTransform2[3];
-			Dest->InstanceTransform3[0] = Src->InstanceTransform3[0];
-			Dest->InstanceTransform3[1] = Src->InstanceTransform3[1];
-			Dest->InstanceTransform3[2] = Src->InstanceTransform3[2];
-			Dest->InstanceTransform3[3] = Src->InstanceTransform3[3];
-			Src++;
-			Dest++;
-		}
-
-		FullInstanceTransformData.Serialize(Ar);
-	}
-	else
-	{
-		InstanceTransformData->Serialize(Ar);
-	}
+	InstanceTransformData->Serialize(Ar);
 
 	if (Ar.IsLoading())
 	{
@@ -1394,7 +1353,7 @@ FPrimitiveSceneProxy* UInstanceBufferMeshComponent::CreateSceneProxy()
 		{
 			InstanceUpdateCmdBuffer.Reset();
 
-			FIBMStaticMeshInstanceData RenderInstanceData = FIBMStaticMeshInstanceData(GVertexElementTypeSupport.IsSupported(VET_Half2));
+			FIBMStaticMeshInstanceData RenderInstanceData = FIBMStaticMeshInstanceData();
 			BuildRenderData(RenderInstanceData, PerInstanceRenderData->HitProxies);
 			PerInstanceRenderData->UpdateFromPreallocatedData(RenderInstanceData);
 		}
@@ -1973,7 +1932,7 @@ void UInstanceBufferMeshComponent::SerializeRenderData(FArchive& Ar)
 				{
 					InstanceUpdateCmdBuffer.Reset();
 
-					FIBMStaticMeshInstanceData RenderInstanceData = FIBMStaticMeshInstanceData(GVertexElementTypeSupport.IsSupported(VET_Half2));
+					FIBMStaticMeshInstanceData RenderInstanceData = FIBMStaticMeshInstanceData();
 					BuildRenderData(RenderInstanceData, PerInstanceRenderData->HitProxies);
 					PerInstanceRenderData->UpdateFromPreallocatedData(RenderInstanceData);
 					MarkRenderStateDirty();
@@ -2617,7 +2576,7 @@ void UInstanceBufferMeshComponent::InitPerInstanceRenderData(bool InitializeFrom
 	else
 	{
 		TArray<TRefCountPtr<HHitProxy>> HitProxies;
-		FIBMStaticMeshInstanceData InstanceBufferData = FIBMStaticMeshInstanceData(GVertexElementTypeSupport.IsSupported(VET_Half2));
+		FIBMStaticMeshInstanceData InstanceBufferData = FIBMStaticMeshInstanceData();
 		
 		if (InitializeFromCurrentData)
 		{
