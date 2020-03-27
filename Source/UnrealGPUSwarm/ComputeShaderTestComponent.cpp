@@ -265,6 +265,22 @@ UComputeShaderTestComponent::UComputeShaderTestComponent()
 	// ...
 }
 
+static FVector unitVectorInSphere(FRandomStream& r)
+{
+	FVector s;
+	float dSqrd = 1.0f;
+
+	do 
+	{
+		s.X = r.GetFraction() * 2.f - 1.f;
+		s.Y = r.GetFraction() * 2.f - 1.f;
+		s.Z = r.GetFraction() * 2.f - 1.f;
+
+		dSqrd = s.SizeSquared();
+	} while (dSqrd > 1.0f);
+
+	return s;
+}
 
 // Called when the game starts
 void UComputeShaderTestComponent::BeginPlay()
@@ -285,7 +301,7 @@ void UComputeShaderTestComponent::BeginPlay()
 
 		for (FVector4& position : resourceArray)
 		{
-			position = rng.GetUnitVector() * rng.GetFraction() * spawnRadius;
+			position = unitVectorInSphere(rng) * spawnRadius;
 		}
 
 		FRHIResourceCreateInfo createInfo;
