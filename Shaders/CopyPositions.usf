@@ -16,10 +16,10 @@ float4x4 look_at_matrix(float3 at, float3 eye, float3 up)
     float3 yaxis = cross(zaxis, xaxis);
 
     return float4x4(
-        xaxis.x, yaxis.x, zaxis.x, 0,
-        xaxis.y, yaxis.y, zaxis.y, 0,
-        xaxis.z, yaxis.z, zaxis.z, 0,
-        0, 0, 0, particleScale
+        xaxis.x * particleScale, yaxis.x, zaxis.x, 0,
+        xaxis.y, yaxis.y * particleScale, zaxis.y, 0,
+        xaxis.z, yaxis.z, zaxis.z * particleScale, 0,
+        0, 0, 0, 1.0f
     );
 }
 
