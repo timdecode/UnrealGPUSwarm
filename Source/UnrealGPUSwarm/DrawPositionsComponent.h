@@ -36,5 +36,6 @@ public:
 protected:
 	TArray<FTransform> _instanceTransforms;
 
-	FUnorderedAccessViewRHIRef _positionsUAV;
+	FUnorderedAccessViewRHIRef _positionsUAV; // float4
+	FUnorderedAccessViewRHIRef _transformsUAV; // float4x4
 };

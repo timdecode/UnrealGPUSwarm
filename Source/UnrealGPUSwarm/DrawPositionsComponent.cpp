@@ -149,8 +149,6 @@ void UDrawPositionsComponent::_updateInstanceBuffers()
 
 	for (int i = 0; i < toAdd; ++i)
 	{
-
-
 		ismc->AddInstance(transform);
 	}
 
@@ -174,20 +172,27 @@ void UDrawPositionsComponent::_updateInstanceBuffers()
 
 			_positionsUAV = RHICreateUnorderedAccessView(positionsVertexBuffer, theFormat);
 		}
-		
-		
 
+		if (!_transformsUAV)
+		{
+			FRHIVertexBuffer * positionsVertexBuffer = renderData->InstanceBuffer.InstanceTransformBuffer.VertexBufferRHI.GetReference();
+
+			uint8 theFormat = PF_A32B32G32R32F;;
+
+			_transformsUAV = RHICreateUnorderedAccessView(positionsVertexBuffer, theFormat);
+		}
 
 		FBoids_copyPositions_CS::FParameters parameters;
 		parameters.positions = boidsComponent->currentPositionsBuffer();
 		parameters.positions_other = _positionsUAV;
+		parameters.directions = boidsComponent->currentDirectionsBuffer();
+		parameters.transforms_other = _transformsUAV;
 		parameters.numParticles = numParticles;
+		parameters.particleScale = size;
 
 		ENQUEUE_RENDER_COMMAND(FComputeShaderRunner)(
 			[&, parameters, numParticles](FRHICommandListImmediate& RHICommands)
 		{
-
-
 			TShaderMapRef<FBoids_copyPositions_CS> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
 			FComputeShaderUtils::Dispatch(
 				RHICommands,
@@ -195,8 +200,6 @@ void UDrawPositionsComponent::_updateInstanceBuffers()
 				parameters,
 				groupSize(numParticles)
 			);
-
-
 		});
 	}
 	else

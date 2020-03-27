@@ -35,6 +35,11 @@ public:
 		return _positionBufferUAV[dualBufferCount];
 	}
 
+	FUnorderedAccessViewRHIRef currentDirectionsBuffer()
+	{
+		return _directionsBufferUAV[dualBufferCount];
+	}
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int numBoids = 1000;
