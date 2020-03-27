@@ -34,8 +34,6 @@ public:
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
 		SHADER_PARAMETER(uint32, numParticles)
-		SHADER_PARAMETER(float, instanceSize)
-
 
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, positions)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, positions_other)
@@ -180,7 +178,6 @@ void UDrawPositionsComponent::_updateInstanceBuffers()
 		parameters.positions = boidsComponent->currentPositionsBuffer();
 		parameters.positions_other = _positionsUAV;
 		parameters.numParticles = numParticles;
-		parameters.instanceSize = size;
 
 		ENQUEUE_RENDER_COMMAND(FComputeShaderRunner)(
 			[&, parameters, numParticles](FRHICommandListImmediate& RHICommands)

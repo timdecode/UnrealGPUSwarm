@@ -1,7 +1,6 @@
 #include "/Engine/Private/Common.ush"
 
 int numParticles;
-float instanceSize;
 
 RWStructuredBuffer<float4> positions;
 RWStructuredBuffer<float4> positions_other;
@@ -15,5 +14,4 @@ void copyPositions(uint3 ThreadId : SV_DispatchThreadID)
         return;
     
     positions_other[index] = positions[index];
-    positions_other[index].w = instanceSize;
 }
