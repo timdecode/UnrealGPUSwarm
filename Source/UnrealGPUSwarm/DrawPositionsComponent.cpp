@@ -34,7 +34,7 @@ public:
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
 		SHADER_PARAMETER(uint32, numParticles)
-		SHADER_PARAMETER(uint32, particleScale)
+		SHADER_PARAMETER(float, particleScale)
 
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, positions)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, positions_other)

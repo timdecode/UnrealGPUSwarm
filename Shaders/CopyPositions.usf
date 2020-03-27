@@ -20,7 +20,7 @@ float4x4 look_at_matrix(float3 at, float3 eye, float3 up)
         xaxis.y, yaxis.y, zaxis.y, 0,
         xaxis.z, yaxis.z, zaxis.z, 0,
         0, 0, 0, 1.0f
-    );
+    ) * particleScale;
 }
 
 [numthreads(256, 1, 1)]
