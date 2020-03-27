@@ -6,7 +6,7 @@ RWStructuredBuffer<float4> positions;
 RWStructuredBuffer<float4> positions_other;
 
 RWStructuredBuffer<float4> directions;
-RWStructuredBuffer<float4x4> transformMatrices;
+RWStructuredBuffer<float4x4> transforms_other;
 
 float4x4 look_at_matrix(float3 at, float3 eye, float3 up)
 {
@@ -32,7 +32,7 @@ void copyPositions(uint3 ThreadId : SV_DispatchThreadID)
    
     positions_other[index] = positions[index];
     
-    transformMatrices[index] = look_at_matrix(
+    transforms_other[index] = look_at_matrix(
         positions[index].xyz,
         positions[index].xyz - directions[index].xyz,
         float3(0.0f, 0.0f, 0.0f)

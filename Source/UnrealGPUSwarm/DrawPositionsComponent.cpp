@@ -39,8 +39,7 @@ public:
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, positions_other)
 
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, directions)
-		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4x4>, transformMatrices)
-
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4x4>, transforms_other)
 	END_SHADER_PARAMETER_STRUCT()
 
 public:
