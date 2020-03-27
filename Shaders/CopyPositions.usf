@@ -1,7 +1,7 @@
 #include "/Engine/Private/Common.ush"
 
-int numParticles;
-float particleScale;
+int numParticles; 
+float particleScale; 
 
 RWStructuredBuffer<float4> positions;
 RWStructuredBuffer<float4> positions_other;
