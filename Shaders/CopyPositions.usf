@@ -37,5 +37,4 @@ void copyPositions(uint3 ThreadId : SV_DispatchThreadID)
         positions[index].xyz - directions[index].xyz,
         float3(0.0f, 0.0f, 0.0f)
     );
-
 }
