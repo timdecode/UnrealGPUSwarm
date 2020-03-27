@@ -5,13 +5,37 @@ int numParticles;
 RWStructuredBuffer<float4> positions;
 RWStructuredBuffer<float4> positions_other;
 
+RWStructuredBuffer<float4> directions;
+RWStructuredBuffer<float4x4> transformMatrices;
+
+float4x4 look_at_matrix(float3 at, float3 eye, float3 up)
+{
+    float3 zaxis = normalize(at - eye);
+    float3 xaxis = normalize(cross(up, zaxis));
+    float3 yaxis = cross(zaxis, xaxis);
+
+    return float4x4(
+        xaxis.x, yaxis.x, zaxis.x, 0,
+        xaxis.y, yaxis.y, zaxis.y, 0,
+        xaxis.z, yaxis.z, zaxis.z, 0,
+        0, 0, 0, particleScale
+    );
+}
+
 [numthreads(256, 1, 1)]
 void copyPositions(uint3 ThreadId : SV_DispatchThreadID)
 {
     int index = ThreadId.x;
 
     if (index >= numParticles)
-        return;
-    
+        return;    
+   
     positions_other[index] = positions[index];
+    
+    transformMatrices[index] = look_at_matrix(
+        positions[index].xyz,
+        positions[index].xyz - directions[index].xyz,
+        float3(0.0f, 0.0f, 0.0f)
+    );
+
 }
