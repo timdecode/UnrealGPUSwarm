@@ -1640,7 +1640,7 @@ bool UInstanceBufferMeshComponent::CanEditSimulatePhysics()
 
 FBoxSphereBounds UInstanceBufferMeshComponent::CalcBounds(const FTransform& BoundTransform) const
 {
-	return FBoxSphereBounds(BoundTransform.GetLocation(), FVector::ZeroVector, 10000.f);
+	return FBoxSphereBounds(BoundTransform.GetLocation(), FVector(1000.0f), 10000.f);
 
 	//if(GetStaticMesh() && PerInstanceSMData.Num() > 0)
 	//{
