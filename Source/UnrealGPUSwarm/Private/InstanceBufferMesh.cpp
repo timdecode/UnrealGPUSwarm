@@ -2079,12 +2079,6 @@ int32 UInstanceBufferMeshComponent::AddInstance(const FTransform& InstanceTransf
 	return AddInstanceInternal(PerInstanceSMData.Num(), nullptr, InstanceTransform);
 }
 
-int32 UInstanceBufferMeshComponent::AddInstanceWorldSpace(const FTransform& WorldTransform)
- {
-	// Transform from world space to local space
-	FTransform RelativeTM = WorldTransform.GetRelativeTransform(GetComponentTransform());
-	return AddInstance(RelativeTM);
-}
 
 bool UInstanceBufferMeshComponent::RemoveInstanceInternal(int32 InstanceIndex, bool InstanceAlreadyRemoved)
 {
@@ -2135,23 +2129,6 @@ bool UInstanceBufferMeshComponent::RemoveInstance(int32 InstanceIndex)
 	return RemoveInstanceInternal(InstanceIndex, false);
 }
 
-bool UInstanceBufferMeshComponent::GetInstanceTransform(int32 InstanceIndex, FTransform& OutInstanceTransform, bool bWorldSpace) const
-{
-	if (!PerInstanceSMData.IsValidIndex(InstanceIndex))
-	{
-		return false;
-	}
-
-	const FIBMInstanceData& InstanceData = PerInstanceSMData[InstanceIndex];
-
-	OutInstanceTransform = FTransform(InstanceData.Transform);
-	if (bWorldSpace)
-	{
-		OutInstanceTransform = OutInstanceTransform * GetComponentTransform();
-	}
-
-	return true;
-}
 
 void UInstanceBufferMeshComponent::OnUpdateTransform(EUpdateTransformFlags UpdateTransformFlags, ETeleportType Teleport)
 {
@@ -2205,190 +2182,8 @@ void UInstanceBufferMeshComponent::UpdateInstanceBodyTransform(int32 InstanceInd
 #endif //WITH_PHYSX
 }
 
-bool UInstanceBufferMeshComponent::UpdateInstanceTransform(int32 InstanceIndex, const FTransform& NewInstanceTransform, bool bWorldSpace, bool bMarkRenderStateDirty, bool bTeleport)
-{
-	if (!PerInstanceSMData.IsValidIndex(InstanceIndex))
-	{
-		return false;
-	}
 
-	Modify();
 
-	FIBMInstanceData& InstanceData = PerInstanceSMData[InstanceIndex];
-
-    // TODO: Computing LocalTransform is useless when we're updating the world location for the entire mesh.
-	// Should find some way around this for performance.
-    
-	// Render data uses local transform of the instance
-	FTransform LocalTransform = bWorldSpace ? NewInstanceTransform.GetRelativeTransform(GetComponentTransform()) : NewInstanceTransform;
-	InstanceData.Transform = LocalTransform.ToMatrixWithScale();
-
-	if (bPhysicsStateCreated)
-	{
-		// Physics uses world transform of the instance
-		FTransform WorldTransform = bWorldSpace ? NewInstanceTransform : (LocalTransform * GetComponentTransform());
-		UpdateInstanceBodyTransform(InstanceIndex, WorldTransform, bTeleport);
-	}
-
-	// Request navigation update
-	PartialNavigationUpdate(InstanceIndex);
-
-	// Force recreation of the render data when proxy is created
-	InstanceUpdateCmdBuffer.Edit();
-
-	if (bMarkRenderStateDirty)
-	{
-		MarkRenderStateDirty();
-	}
-
-	return true;
-}
-
-bool UInstanceBufferMeshComponent::BatchUpdateInstancesTransforms(int32 StartInstanceIndex, const TArray<FTransform>& NewInstancesTransforms, bool bWorldSpace, bool bMarkRenderStateDirty, bool bTeleport)
-{
-	if (!PerInstanceSMData.IsValidIndex(StartInstanceIndex) || !PerInstanceSMData.IsValidIndex(StartInstanceIndex + NewInstancesTransforms.Num() - 1))
-	{
-		return false;
-	}
-
-	Modify();
-
-	int32 InstanceIndex = StartInstanceIndex;
-	for (const FTransform& NewInstanceTransform : NewInstancesTransforms)
-	{
-		FIBMInstanceData& InstanceData = PerInstanceSMData[InstanceIndex];
-
-		// TODO: Computing LocalTransform is useless when we're updating the world location for the entire mesh.
-		// Should find some way around this for performance.
-
-		// Render data uses local transform of the instance
-		FTransform LocalTransform = bWorldSpace ? NewInstanceTransform.GetRelativeTransform(GetComponentTransform()) : NewInstanceTransform;
-		InstanceData.Transform = LocalTransform.ToMatrixWithScale();
-
-		if(bPhysicsStateCreated)
-		{
-			// Physics uses world transform of the instance
-			FTransform WorldTransform = bWorldSpace ? NewInstanceTransform : (LocalTransform * GetComponentTransform());
-			UpdateInstanceBodyTransform(InstanceIndex, WorldTransform, bTeleport);
-		}
-
-		InstanceIndex++;
-	}
-
-	// Request navigation update - Execute on a single index as it updates everything anyway
-	PartialNavigationUpdate(StartInstanceIndex);
-
-	// Force recreation of the render data when proxy is created
-	InstanceUpdateCmdBuffer.Edit();
-
-	if (bMarkRenderStateDirty)
-	{
-		MarkRenderStateDirty();
-	}
-
-	return true;
-}
-
-bool UInstanceBufferMeshComponent::BatchUpdateInstancesTransform(int32 StartInstanceIndex, int32 NumInstances, const FTransform& NewInstancesTransform, bool bWorldSpace, bool bMarkRenderStateDirty, bool bTeleport)
-{
-	if(!PerInstanceSMData.IsValidIndex(StartInstanceIndex) || !PerInstanceSMData.IsValidIndex(StartInstanceIndex + NumInstances - 1))
-	{
-		return false;
-	}
-
-	Modify();
-
-	int32 EndInstanceIndex = StartInstanceIndex + NumInstances;
-	for(int32 InstanceIndex = StartInstanceIndex; InstanceIndex < EndInstanceIndex; ++InstanceIndex)
-	{
-		FIBMInstanceData& InstanceData = PerInstanceSMData[InstanceIndex];
-
-		// TODO: Computing LocalTransform is useless when we're updating the world location for the entire mesh.
-		// Should find some way around this for performance.
-
-		// Render data uses local transform of the instance
-		FTransform LocalTransform = bWorldSpace ? NewInstancesTransform.GetRelativeTransform(GetComponentTransform()) : NewInstancesTransform;
-		InstanceData.Transform = LocalTransform.ToMatrixWithScale();
-
-		if(bPhysicsStateCreated)
-		{
-			// Physics uses world transform of the instance
-			FTransform WorldTransform = bWorldSpace ? NewInstancesTransform : (LocalTransform * GetComponentTransform());
-			UpdateInstanceBodyTransform(InstanceIndex, WorldTransform, bTeleport);
-		}
-	}
-
-	// Request navigation update - Execute on a single index as it updates everything anyway
-	PartialNavigationUpdate(StartInstanceIndex);
-
-	// Force recreation of the render data when proxy is created
-	InstanceUpdateCmdBuffer.Edit();
-
-	if(bMarkRenderStateDirty)
-	{
-		MarkRenderStateDirty();
-	}
-
-	return true;
-}
-
-TArray<int32> UInstanceBufferMeshComponent::GetInstancesOverlappingSphere(const FVector& Center, float Radius, bool bSphereInWorldSpace) const
-{
-	TArray<int32> Result;
-
-	if (UStaticMesh* Mesh = GetStaticMesh())
-	{
-		FSphere Sphere(Center, Radius);
-		if (bSphereInWorldSpace)
-		{
-			Sphere = Sphere.TransformBy(GetComponentTransform().Inverse());
-		}
-
-		const float StaticMeshBoundsRadius = Mesh->GetBounds().SphereRadius;
-
-		for (int32 Index = 0; Index < PerInstanceSMData.Num(); Index++)
-		{
-			const FMatrix& Matrix = PerInstanceSMData[Index].Transform;
-			const FSphere InstanceSphere(Matrix.GetOrigin(), StaticMeshBoundsRadius * Matrix.GetScaleVector().GetMax());
-
-			if (Sphere.Intersects(InstanceSphere))
-			{
-				Result.Add(Index);
-			}
-		}
-	}
-
-	return Result;
-}
-
-TArray<int32> UInstanceBufferMeshComponent::GetInstancesOverlappingBox(const FBox& InBox, bool bBoxInWorldSpace) const
-{
-	TArray<int32> Result;
-
-	if (UStaticMesh* Mesh = GetStaticMesh())
-	{
-		FBox Box(InBox);
-		if (bBoxInWorldSpace)
-		{
-			Box = Box.TransformBy(GetComponentTransform().Inverse());
-		}
-
-		const FVector StaticMeshBoundsExtent = Mesh->GetBounds().BoxExtent;
-
-		for (int32 Index = 0; Index < PerInstanceSMData.Num(); Index++)
-		{
-			const FMatrix& Matrix = PerInstanceSMData[Index].Transform;
-			FBox InstanceBox(Matrix.GetOrigin() - StaticMeshBoundsExtent, Matrix.GetOrigin() + StaticMeshBoundsExtent);
-
-			if (Box.Intersect(InstanceBox))
-			{
-				Result.Add(Index);
-			}
-		}
-	}
-
-	return Result;
-}
 
 bool UInstanceBufferMeshComponent::ShouldCreatePhysicsState() const
 {
