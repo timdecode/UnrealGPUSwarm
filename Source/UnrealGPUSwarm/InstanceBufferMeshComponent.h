@@ -212,8 +212,7 @@ public:
 	/** One bit per instance if the instance is selected. */
 	TBitArray<> SelectedInstances;
 #endif
-	/** Physics representation of the instance bodies. */
-	TArray<FBodyInstance*> InstanceBodies;
+
 
 	//~ Begin UActorComponent Interface
 	virtual TStructOnScope<FActorComponentInstanceData> GetComponentInstanceData() const override;
@@ -282,15 +281,9 @@ private:
 	/** Sets up new instance data to sensible defaults, creates physics counterparts if possible. */
 	void SetupNewInstanceData(FIBMInstanceData& InOutNewInstanceData, int32 InInstanceIndex, const FTransform& InInstanceTransform);
 
-	/** Update instance body with a new transform */
-	void UpdateInstanceBodyTransform(int32 InstanceIndex, const FTransform& WorldSpaceInstanceTransform, bool bTeleport);
 
 protected:
-	/** Creates body instances for all instances owned by this component. */
-	void CreateAllInstanceBodies();
 
-	/** Terminate all body instances owned by this component. */
-	void ClearAllInstanceBodies();
 
 	/** Request to navigation system to update only part of navmesh occupied by specified instance. */
 	virtual void PartialNavigationUpdate(int32 InstanceIdx);
@@ -304,8 +297,6 @@ protected:
 	/** Handles request from navigation system to gather instance transforms in a specific area box. */
 	virtual void GetNavigationPerInstanceTransforms(const FBox& AreaBox, TArray<FTransform>& InstanceData) const;
 
-	/** Initializes the body instance for the specified instance of the static mesh. */
-	void InitInstanceBody(int32 InstanceIdx, FBodyInstance* InBodyInstance);
 
 	/** Number of pending lightmaps still to be calculated (Apply()'d). */
 	UPROPERTY(Transient, DuplicateTransient, TextExportTransient)

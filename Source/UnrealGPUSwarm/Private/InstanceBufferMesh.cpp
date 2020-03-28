@@ -1450,136 +1450,10 @@ void UInstanceBufferMeshComponent::BuildRenderData(FIBMStaticMeshInstanceData& O
 	}
 }
 
-void UInstanceBufferMeshComponent::InitInstanceBody(int32 InstanceIdx, FBodyInstance* InstanceBodyInstance)
-{
-	if (!GetStaticMesh())
-	{
-		UE_LOG(LogStaticMesh, Warning, TEXT("Unabled to create a body instance for %s in Actor %s. No StaticMesh set."), *GetName(), GetOwner() ? *GetOwner()->GetName() : TEXT("?"));
-		return;
-	}
-
-	check(InstanceIdx < PerInstanceSMData.Num());
-	check(InstanceIdx < InstanceBodies.Num());
-	check(InstanceBodyInstance);
-
-	UBodySetup* BodySetup = GetBodySetup();
-	check(BodySetup);
-
-	// Get transform of the instance
-	FTransform InstanceTransform = FTransform(PerInstanceSMData[InstanceIdx].Transform) * GetComponentTransform();
-	
-	InstanceBodyInstance->CopyBodyInstancePropertiesFrom(&BodyInstance);
-	InstanceBodyInstance->InstanceBodyIndex = InstanceIdx; // Set body index 
-
-	// make sure we never enable bSimulatePhysics for ISMComps
-	InstanceBodyInstance->bSimulatePhysics = false;
-
-#if WITH_PHYSX
-	// Create physics body instance.
-	InstanceBodyInstance->bAutoWeld = false;	//We don't support this for instanced meshes.
-	InstanceBodyInstance->InitBody(BodySetup, InstanceTransform, this, GetWorld()->GetPhysicsScene(), nullptr);
-#endif //WITH_PHYSX
-}
-
-void UInstanceBufferMeshComponent::CreateAllInstanceBodies()
-{
-	QUICK_SCOPE_CYCLE_COUNTER(STAT_UInstancedStaticMeshComponent_CreateAllInstanceBodies);
-
-	const int32 NumBodies = PerInstanceSMData.Num();
-	check(InstanceBodies.Num() == 0);
-
-	if (UBodySetup* BodySetup = GetBodySetup())
-	{
-		FPhysScene* PhysScene = GetWorld()->GetPhysicsScene();
-
-		if (!BodyInstance.GetOverrideWalkableSlopeOnInstance())
-		{
-			BodyInstance.SetWalkableSlopeOverride(BodySetup->WalkableSlopeOverride, false);
-		}
-
-		InstanceBodies.SetNumUninitialized(NumBodies);
-
-		// Sanitized array does not contain any nulls
-		TArray<FBodyInstance*> InstanceBodiesSanitized;
-		InstanceBodiesSanitized.Reserve(NumBodies);
-
-		TArray<FTransform> Transforms;
-	    Transforms.Reserve(NumBodies);
-	    for (int32 i = 0; i < NumBodies; ++i)
-	    {
-			const FTransform InstanceTM = FTransform(PerInstanceSMData[i].Transform) * GetComponentTransform();
-			if (InstanceTM.GetScale3D().IsNearlyZero())
-			{
-				InstanceBodies[i] = nullptr;
-			}
-			else
-			{
-				FBodyInstance* Instance = new FBodyInstance;
-
-				InstanceBodiesSanitized.Add(Instance);
-				InstanceBodies[i] = Instance;
-				Instance->CopyBodyInstancePropertiesFrom(&BodyInstance);
-				Instance->InstanceBodyIndex = i; // Set body index 
-				Instance->bAutoWeld = false;
-
-				// make sure we never enable bSimulatePhysics for ISMComps
-				Instance->bSimulatePhysics = false;
-
-				if (Mobility == EComponentMobility::Movable)
-				{
-					Instance->InitBody(BodySetup, InstanceTM, this, PhysScene, nullptr );
-				}
-				else
-				{
-					Transforms.Add(InstanceTM);
-				}
-			}
-	    }
-
-		if (InstanceBodiesSanitized.Num() > 0 && Mobility != EComponentMobility::Movable)
-		{
-			FBodyInstance::InitStaticBodies(InstanceBodiesSanitized, Transforms, BodySetup, this, GetWorld()->GetPhysicsScene());
-		}
-	}
-	else
-	{
-		// In case we get into some bad state where the BodySetup is invalid but bPhysicsStateCreated is true,
-		// issue a warning and add nullptrs to InstanceBodies.
-		UE_LOG(LogStaticMesh, Warning, TEXT("Instance Static Mesh Component unable to create InstanceBodies!"));
-		InstanceBodies.AddZeroed(NumBodies);
-	}
-}
-
-void UInstanceBufferMeshComponent::ClearAllInstanceBodies()
-{
-	QUICK_SCOPE_CYCLE_COUNTER(STAT_UInstancedStaticMeshComponent_ClearAllInstanceBodies);
-	for (int32 i = 0; i < InstanceBodies.Num(); i++)
-	{
-		if (InstanceBodies[i])
-		{
-			InstanceBodies[i]->TermBody();
-			delete InstanceBodies[i];
-		}
-	}
-
-	InstanceBodies.Empty();
-}
 
 
 void UInstanceBufferMeshComponent::OnCreatePhysicsState()
 {
-	check(InstanceBodies.Num() == 0);
-
-	FPhysScene* PhysScene = GetWorld()->GetPhysicsScene();
-
-	if (!PhysScene)
-	{
-		return;
-	}
-
-	// Create all the bodies.
-	CreateAllInstanceBodies();
-
 	USceneComponent::OnCreatePhysicsState();
 }
 
@@ -1587,8 +1461,7 @@ void UInstanceBufferMeshComponent::OnDestroyPhysicsState()
 {
 	USceneComponent::OnDestroyPhysicsState();
 
-	// Release all physics representations
-	ClearAllInstanceBodies();
+
 }
 
 bool UInstanceBufferMeshComponent::CanEditSimulatePhysics()
@@ -2099,25 +1972,6 @@ bool UInstanceBufferMeshComponent::RemoveInstanceInternal(int32 InstanceIndex, b
 	}
 #endif
 
-	// update the physics state
-	if (bPhysicsStateCreated && InstanceBodies.IsValidIndex(InstanceIndex))
-	{
-		if (FBodyInstance*& InstanceBody = InstanceBodies[InstanceIndex])
-		{
-			InstanceBody->TermBody();
-			delete InstanceBody;
-			InstanceBody = nullptr;
-
-			InstanceBodies.RemoveAt(InstanceIndex);
-
-			// Re-target instance indices for shifting of array.
-			for (int32 i = InstanceIndex; i < InstanceBodies.Num(); ++i)
-			{
-				InstanceBodies[i]->InstanceBodyIndex = i;
-			}
-		}
-	}
-
 	// Force recreation of the render data
 	InstanceUpdateCmdBuffer.Edit();
 	MarkRenderStateDirty();
@@ -2134,53 +1988,8 @@ void UInstanceBufferMeshComponent::OnUpdateTransform(EUpdateTransformFlags Updat
 {
 	// We are handling the physics move below, so don't handle it at higher levels
 	Super::OnUpdateTransform(UpdateTransformFlags | EUpdateTransformFlags::SkipPhysicsUpdate, Teleport);
-
-	const bool bTeleport = TeleportEnumToFlag(Teleport);
-
-	// Always send new transform to physics
-	if (bPhysicsStateCreated && !(EUpdateTransformFlags::SkipPhysicsUpdate & UpdateTransformFlags))
-	{
-		for (int32 i = 0; i < PerInstanceSMData.Num(); i++)
-		{
-			const FTransform InstanceTransform(PerInstanceSMData[i].Transform);
-			UpdateInstanceBodyTransform(i, InstanceTransform * GetComponentTransform(), bTeleport);
-		}
-	}
 }
 
-void UInstanceBufferMeshComponent::UpdateInstanceBodyTransform(int32 InstanceIndex, const FTransform& WorldSpaceInstanceTransform, bool bTeleport)
-{
-	check(bPhysicsStateCreated);
-
-	FBodyInstance*& InstanceBodyInstance = InstanceBodies[InstanceIndex];
-#if WITH_PHYSX
-	if (WorldSpaceInstanceTransform.GetScale3D().IsNearlyZero())
-	{
-		if (InstanceBodyInstance)
-		{
-			// delete BodyInstance
-			InstanceBodyInstance->TermBody();
-			delete InstanceBodyInstance;
-			InstanceBodyInstance = nullptr;
-		}
-	}
-	else
-	{
-		if (InstanceBodyInstance)
-		{
-			// Update existing BodyInstance
-			InstanceBodyInstance->SetBodyTransform(WorldSpaceInstanceTransform, TeleportFlagToEnum(bTeleport));
-			InstanceBodyInstance->UpdateBodyScale(WorldSpaceInstanceTransform.GetScale3D());
-		}
-		else
-		{
-			// create new BodyInstance
-			InstanceBodyInstance = new FBodyInstance();
-			InitInstanceBody(InstanceIndex, InstanceBodyInstance);
-		}
-	}
-#endif //WITH_PHYSX
-}
 
 
 
@@ -2261,9 +2070,6 @@ void UInstanceBufferMeshComponent::ClearInstances()
 
 	ProxySize = 0;
 
-	// Release any physics representations
-	ClearAllInstanceBodies();
-
 	// Force recreation of the render data
 	InstanceUpdateCmdBuffer.Reset();
 	InstanceUpdateCmdBuffer.Edit();
@@ -2287,21 +2093,6 @@ void UInstanceBufferMeshComponent::SetCullDistances(int32 StartCullDistance, int
 void UInstanceBufferMeshComponent::SetupNewInstanceData(FIBMInstanceData& InOutNewInstanceData, int32 InInstanceIndex, const FTransform& InInstanceTransform)
 {
 	InOutNewInstanceData.Transform = InInstanceTransform.ToMatrixWithScale();
-
-	if (bPhysicsStateCreated)
-	{
-		if (InInstanceTransform.GetScale3D().IsNearlyZero())
-		{
-			InstanceBodies.Insert(nullptr, InInstanceIndex);
-		}
-		else
-		{
-			FBodyInstance* NewBodyInstance = new FBodyInstance();
-			int32 BodyIndex = InstanceBodies.Insert(NewBodyInstance, InInstanceIndex);
-			check(InInstanceIndex == BodyIndex);
-			InitInstanceBody(BodyIndex, NewBodyInstance);
-		}
-	}
 }
 
 static bool ComponentRequestsCPUAccess(UInstanceBufferMeshComponent* InComponent, ERHIFeatureLevel::Type FeatureLevel)
@@ -2519,14 +2310,6 @@ void UInstanceBufferMeshComponent::GetResourceSizeEx(FResourceSizeEx& Cumulative
 	}
 	
 	// component stuff
-	CumulativeResourceSize.AddDedicatedSystemMemoryBytes(InstanceBodies.GetAllocatedSize());
-	for (int32 i=0; i < InstanceBodies.Num(); ++i)
-	{
-		if (InstanceBodies[i] != NULL && InstanceBodies[i]->IsValidBodyInstance())
-		{
-			InstanceBodies[i]->GetBodyInstanceResourceSizeEx(CumulativeResourceSize);
-		}
-	}
 	CumulativeResourceSize.AddDedicatedSystemMemoryBytes(PerInstanceSMData.GetAllocatedSize());
 	CumulativeResourceSize.AddDedicatedSystemMemoryBytes(InstanceReorderTable.GetAllocatedSize());
 	CumulativeResourceSize.AddDedicatedSystemMemoryBytes(InstanceUpdateCmdBuffer.Cmds.GetAllocatedSize());
