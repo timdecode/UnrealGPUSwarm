@@ -206,47 +206,4 @@ void UDrawPositionsComponent::_updateInstanceBuffers()
 		ismc->MarkRenderStateDirty();
 }
 
-void UDrawPositionsComponent::_updateInstanceTransforms()
-{
-	UInstanceBufferMeshComponent * ismc = GetOwner()->FindComponentByClass<UInstanceBufferMeshComponent>();
-
-	if (!ismc) return;
-
-	UComputeShaderTestComponent * boidsComponent = GetOwner()->FindComponentByClass<UComputeShaderTestComponent>();
-
-	if (!boidsComponent) return;
-
-	TArray<FVector4>& positions = boidsComponent->outputPositions;
-	TArray<FVector4>& directions = boidsComponent->outputDirections;
-
-	// resize up/down the ismc
-	int toAdd = FMath::Max(0, positions.Num() - ismc->GetInstanceCount());
-	int toRemove = FMath::Max(0, ismc->GetInstanceCount() - positions.Num());
-
-	for (int i = 0; i < toAdd; ++i)
-		ismc->AddInstance(FTransform::Identity);
-	for (int i = 0; i < toRemove; ++i)
-		ismc->RemoveInstance(ismc->GetInstanceCount() - 1);
-
-	// update the transforms
-	_instanceTransforms.SetNum(positions.Num());
-
-	for (int i = 0; i < positions.Num(); ++i)
-	{
-		FTransform& transform = _instanceTransforms[i];
-
-		transform.SetTranslation(FVector(positions[i]));
-		transform.SetScale3D(FVector(size));
-
-		FQuat quat = FQuat::FindBetweenVectors(FVector::UpVector, FVector(directions[i]));
-		transform.SetRotation(quat);
-	}
-
-	ismc->BatchUpdateInstancesTransforms(0, _instanceTransforms, false, false, true);
-
-	if (toAdd == 0)
-		ismc->MarkRenderDynamicDataDirty();
-	else
-		ismc->MarkRenderStateDirty();
-}
 

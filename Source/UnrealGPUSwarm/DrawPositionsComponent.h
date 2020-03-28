@@ -27,7 +27,6 @@ public:
 protected:
 	void _initISMC();
 	void _updateInstanceBuffers();
-	void _updateInstanceTransforms();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
