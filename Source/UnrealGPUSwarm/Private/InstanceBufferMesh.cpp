@@ -731,7 +731,7 @@ FIBMPerInstanceRenderData::~FIBMPerInstanceRenderData()
 
 UNREALGPUSWARM_API void FIBMPerInstanceRenderData::UpdateWithNumInstance(int numInstances)
 {
-	InstanceBuffer.
+	InstanceBuffer.UpdateWithNumInstances_Concurrent(numInstances);
 }
 
 void FIBMPerInstanceRenderData::UpdateFromPreallocatedData(FIBMStaticMeshInstanceData& InOther)
@@ -1391,7 +1391,7 @@ void UInstanceBufferMeshComponent::SetNumInstances(int numInstances)
 
 int UInstanceBufferMeshComponent::GetNumInstancesCurrentlyAllocated()
 {
-	return PerInstanceRenderData->InstanceBuffer._numInstances;
+	return PerInstanceRenderData->InstanceBuffer.NumInstances();
 }
 
 

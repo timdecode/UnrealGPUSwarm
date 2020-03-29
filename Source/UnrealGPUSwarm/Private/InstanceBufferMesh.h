@@ -582,6 +582,8 @@ public:
 
 	void BindInstanceVertexBuffer(const class FVertexFactory* VertexFactory, struct FInstanceBufferMeshDataType& InstancedStaticMeshData) const;
 
+	int NumInstances() { return _numInstances; }
+
 protected:
 	int _numInstances = 0;
 

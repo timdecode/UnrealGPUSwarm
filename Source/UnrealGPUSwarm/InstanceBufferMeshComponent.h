@@ -155,17 +155,17 @@ class UNREALGPUSWARM_API UInstanceBufferMeshComponent : public UStaticMeshCompon
 	UFUNCTION(BlueprintCallable, Category="Components|InstancedStaticMesh")
 	virtual int32 AddInstance(const FTransform& InstanceTransform);
 
-	/** Preallocated memory to include the new added instances count, to prevent reallloc during the add operation. */
+	/** Preallocated memory to include the new added instances count, to prevent reallocate during the add operation. */
 	virtual void PreAllocateInstancesMemory(int32 AddedInstanceCount);
 
 
 	virtual void OnUpdateTransform(EUpdateTransformFlags UpdateTransformFlags, ETeleportType Teleport) override;
 
-	/** Get the scale comming form the component, when computing StreamingTexture data. Used to support instanced meshes. */
+	/** Get the scale coming form the component, when computing StreamingTexture data. Used to support instanced meshes. */
 	virtual float GetTextureStreamingTransformScale() const override;
 	/** Get material, UV density and bounds for a given material index. */
 	virtual bool GetMaterialStreamingData(int32 MaterialIndex, FPrimitiveMaterialInfo& MaterialData) const override;
-	/** Build the data to compute accuracte StreaminTexture data. */
+	/** Build the data to compute accurate StreaminTexture data. */
 	virtual bool BuildTextureStreamingData(ETextureStreamingBuildType BuildType, EMaterialQualityLevel::Type QualityLevel, ERHIFeatureLevel::Type FeatureLevel, TSet<FGuid>& DependentResources) override;
 	/** Get the StreaminTexture data. */
 	virtual void GetStreamingRenderAssetInfo(FStreamingTextureLevelContext& LevelContext, TArray<FStreamingRenderAssetPrimitiveInfo>& OutStreamingRenderAssets) const override;
@@ -188,7 +188,7 @@ class UNREALGPUSWARM_API UInstanceBufferMeshComponent : public UStaticMeshCompon
 	void SetCullDistances(int32 StartCullDistance, int32 EndCullDistance);
 
 	void SetNumInstances(int numInstances);
-	void GetNumInstancesCurrentlyAllocated();
+	int GetNumInstancesCurrentlyAllocated();
 
 	virtual bool ShouldCreatePhysicsState() const override;
 
