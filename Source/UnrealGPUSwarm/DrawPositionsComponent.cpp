@@ -147,13 +147,15 @@ void UDrawPositionsComponent::_updateInstanceBuffers()
 
 	transform.SetScale3D(FVector(size));
 
-	for (int i = 0; i < toAdd; ++i)
+	ismc->SetNumInstances(boidsComponent->numBoids);
+
+	/*for (int i = 0; i < toAdd; ++i)
 	{
 		ismc->AddInstance(transform);
 	}
 
 	for (int i = 0; i < toRemove; ++i)
-		ismc->RemoveInstance(ismc->GetInstanceCount() - 1);
+		ismc->RemoveInstance(ismc->GetInstanceCount() - 1);*/
 
 	// directly update the buffer
 	if (toAdd == 0)
