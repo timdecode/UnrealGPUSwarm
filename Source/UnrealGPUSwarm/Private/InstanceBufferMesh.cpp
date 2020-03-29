@@ -1379,8 +1379,22 @@ void UInstanceBufferMeshComponent::ApplyComponentInstanceData(FIBMComponentInsta
 
 void UInstanceBufferMeshComponent::SetNumInstances(int numInstances)
 {
+	check(numInstances > 0);
+
 	// this will trigger a rebuild of the scene proxy
+
+	_numInstances = numInstances;
+
+	// Force recreation of the render data
+	MarkRenderStateDirty();
 }
+
+int UInstanceBufferMeshComponent::GetNumInstancesCurrentlyAllocated()
+{
+	return PerInstanceRenderData->InstanceBuffer._numInstances;
+}
+
+
 
 FPrimitiveSceneProxy* UInstanceBufferMeshComponent::CreateSceneProxy()
 {
@@ -1411,7 +1425,10 @@ FPrimitiveSceneProxy* UInstanceBufferMeshComponent::CreateSceneProxy()
 			// this eventually triggers the ReInit of the FIBMInstanceBuffer
 			FIBMStaticMeshInstanceData RenderInstanceData = FIBMStaticMeshInstanceData();
 			BuildRenderData(RenderInstanceData, PerInstanceRenderData->HitProxies);
-			PerInstanceRenderData->UpdateFromPreallocatedData(RenderInstanceData);
+
+			PerInstanceRenderData->UpdateWithNumInstance(_numInstances);
+			
+			//PerInstanceRenderData->UpdateFromPreallocatedData(RenderInstanceData);
 		}
 		
 		ProxySize = PerInstanceRenderData->ResourceSize;

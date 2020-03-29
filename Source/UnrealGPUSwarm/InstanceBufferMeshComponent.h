@@ -188,7 +188,7 @@ class UNREALGPUSWARM_API UInstanceBufferMeshComponent : public UStaticMeshCompon
 	void SetCullDistances(int32 StartCullDistance, int32 EndCullDistance);
 
 	void SetNumInstances(int numInstances);
-
+	void GetNumInstancesCurrentlyAllocated();
 
 	virtual bool ShouldCreatePhysicsState() const override;
 
@@ -213,6 +213,8 @@ public:
 	/** One bit per instance if the instance is selected. */
 	TBitArray<> SelectedInstances;
 #endif
+
+	uint32_t _numInstances = 0;
 
 
 	//~ Begin UActorComponent Interface
