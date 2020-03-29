@@ -1381,6 +1381,9 @@ void UInstanceBufferMeshComponent::SetNumInstances(int numInstances)
 {
 	check(numInstances > 0);
 
+	if (numInstances == _numInstances)
+		return;
+
 	// this will trigger a rebuild of the scene proxy
 
 	_numInstances = numInstances;
