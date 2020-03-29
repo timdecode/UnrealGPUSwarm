@@ -544,6 +544,8 @@ public:
 	UNREALGPUSWARM_API void InitFromPreallocatedData(FIBMStaticMeshInstanceData& Other);
 	UNREALGPUSWARM_API void UpdateFromCommandBuffer_Concurrent(FIBMInstanceUpdateCmdBuffer& CmdBuffer);
 
+	UNREALGPUSWARM_API void UpdateWithNumInstances_Concurrent(unsigned int numInstances);
+
 	/**
 	 * Specialized assignment operator, only used when importing LOD's. 
 	 */
@@ -580,6 +582,9 @@ public:
 
 	void BindInstanceVertexBuffer(const class FVertexFactory* VertexFactory, struct FInstanceBufferMeshDataType& InstancedStaticMeshData) const;
 
+protected:
+	int _numInstances = 0;
+
 public:
 	/** The vertex data storage type */
 	TSharedPtr<FIBMStaticMeshInstanceData, ESPMode::ThreadSafe> InstanceData;
@@ -611,8 +616,12 @@ public:
 
 	void CreateVertexBuffer(FResourceArrayInterface* InResourceArray, uint32 InUsage, uint32 InStride, uint8 InFormat, FVertexBufferRHIRef& OutVertexBufferRHI, FShaderResourceViewRHIRef& OutInstanceSRV);
 	
+	void CreateVertexBuffer(unsigned int numInstances, uint32 InUsage, uint32 InStride, uint8 InFormat, FVertexBufferRHIRef& OutVertexBufferRHI, FShaderResourceViewRHIRef& OutInstanceSRV);
+
 	/**  */
 	void UpdateFromCommandBuffer_RenderThread(FIBMInstanceUpdateCmdBuffer& CmdBuffer);
+	void UpdateWithNumInstances_RenderThread(unsigned int numInstances);
+
 };
 
 /*-----------------------------------------------------------------------------
@@ -893,6 +902,12 @@ struct FIBMPerInstanceRenderData
 	// Should be always constructed on main thread
 	FIBMPerInstanceRenderData(FIBMStaticMeshInstanceData& Other, ERHIFeatureLevel::Type InFeaureLevel, bool InRequireCPUAccess);
 	~FIBMPerInstanceRenderData();
+
+	/** 
+	 * Call to reallocate the instance buffer to contain numInstances.
+	 * @param numInstances The number of instances stored in the instance buffer.
+	 */ 
+	UNREALGPUSWARM_API void UpdateWithNumInstance(int numInstances);
 
 	/**
 	 * Call to update the Instance buffer with pre allocated data without recreating the FIBMPerInstanceRenderData

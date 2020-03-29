@@ -187,6 +187,7 @@ class UNREALGPUSWARM_API UInstanceBufferMeshComponent : public UStaticMeshCompon
 	UFUNCTION(BlueprintCallable, Category = "Components|InstancedStaticMesh")
 	void SetCullDistances(int32 StartCullDistance, int32 EndCullDistance);
 
+	void SetNumInstances(int numInstances);
 
 
 	virtual bool ShouldCreatePhysicsState() const override;

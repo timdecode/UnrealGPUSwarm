@@ -264,6 +264,9 @@ void FIBMInstanceBuffer::UpdateFromCommandBuffer_Concurrent(FIBMInstanceUpdateCm
 		});
 }
 
+
+
+
 void FIBMInstanceBuffer::UpdateFromCommandBuffer_RenderThread(FIBMInstanceUpdateCmdBuffer& CmdBuffer)
 {
 	QUICK_SCOPE_CYCLE_COUNTER(STAT_FStaticMeshInstanceBuffer_UpdateFromCommandBuffer_RenderThread);
@@ -307,6 +310,27 @@ void FIBMInstanceBuffer::UpdateFromCommandBuffer_RenderThread(FIBMInstanceUpdate
 	UpdateRHI();
 }
 
+void FIBMInstanceBuffer::UpdateWithNumInstances_Concurrent(unsigned int numInstances)
+{
+	QUICK_SCOPE_CYCLE_COUNTER(STAT_FIBMInstanceBuffer_UpdateWithNumInstances_Concurrent);
+
+	FIBMInstanceBuffer* InstanceBuffer = this;
+
+	ENQUEUE_RENDER_COMMAND(InstanceBuffer_UpdateFromPreallocatedData)(
+		[InstanceBuffer, numInstances](FRHICommandListImmediate& RHICmdList)
+	{
+		InstanceBuffer->UpdateWithNumInstances_RenderThread(numInstances);
+	});
+}
+
+void FIBMInstanceBuffer::UpdateWithNumInstances_RenderThread(unsigned int numInstances)
+{
+	_numInstances = numInstances;
+
+	UpdateRHI();
+}
+
+
 /**
  * Specialized assignment operator, only used when importing LOD's.  
  */
@@ -318,16 +342,21 @@ void FIBMInstanceBuffer::operator=(const FIBMInstanceBuffer &Other)
 void FIBMInstanceBuffer::InitRHI()
 {
 	check(InstanceData);
-	if (InstanceData->GetNumInstances() > 0)
+
+	if (_numInstances > 0)
 	{
 		QUICK_SCOPE_CYCLE_COUNTER(STAT_FStaticMeshInstanceBuffer_InitRHI);
 		LLM_SCOPE(ELLMTag::InstancedMesh);
 
 		// Tim: We want to write to this buffer GPU side. So it should not be static.
-		auto AccessFlags = BUF_UnorderedAccess | BUF_ShaderResource; // BUF_Static;
-		CreateVertexBuffer(InstanceData->GetOriginResourceArray(), AccessFlags, 16, PF_A32B32G32R32F, InstanceOriginBuffer.VertexBufferRHI, InstanceOriginSRV);
-		CreateVertexBuffer(InstanceData->GetTransformResourceArray(), AccessFlags, InstanceData->GetTranslationUsesHalfs() ? 8 : 16, InstanceData->GetTranslationUsesHalfs() ? PF_FloatRGBA : PF_A32B32G32R32F, InstanceTransformBuffer.VertexBufferRHI, InstanceTransformSRV);
-		CreateVertexBuffer(InstanceData->GetLightMapResourceArray(), AccessFlags, 8, PF_R16G16B16A16_SNORM, InstanceLightmapBuffer.VertexBufferRHI, InstanceLightmapSRV);
+		auto AccessFlags = BUF_UnorderedAccess | BUF_ShaderResource; 
+		//CreateVertexBuffer(InstanceData->GetOriginResourceArray(), AccessFlags, 16, PF_A32B32G32R32F, InstanceOriginBuffer.VertexBufferRHI, InstanceOriginSRV);
+		//CreateVertexBuffer(InstanceData->GetTransformResourceArray(), AccessFlags, InstanceData->GetTranslationUsesHalfs() ? 8 : 16, InstanceData->GetTranslationUsesHalfs() ? PF_FloatRGBA : PF_A32B32G32R32F, InstanceTransformBuffer.VertexBufferRHI, InstanceTransformSRV);
+		//CreateVertexBuffer(InstanceData->GetLightMapResourceArray(), AccessFlags, 8, PF_R16G16B16A16_SNORM, InstanceLightmapBuffer.VertexBufferRHI, InstanceLightmapSRV);
+
+		CreateVertexBuffer(_numInstances, AccessFlags, 16, PF_A32B32G32R32F, InstanceOriginBuffer.VertexBufferRHI, InstanceOriginSRV);
+		CreateVertexBuffer(_numInstances, AccessFlags, InstanceData->GetTranslationUsesHalfs() ? 8 : 16, InstanceData->GetTranslationUsesHalfs() ? PF_FloatRGBA : PF_A32B32G32R32F, InstanceTransformBuffer.VertexBufferRHI, InstanceTransformSRV);
+		CreateVertexBuffer(_numInstances, AccessFlags, 8, PF_R16G16B16A16_SNORM, InstanceLightmapBuffer.VertexBufferRHI, InstanceLightmapSRV);
 	}
 }
 
@@ -376,6 +405,21 @@ void FIBMInstanceBuffer::CreateVertexBuffer(FResourceArrayInterface* InResourceA
 	FRHIResourceCreateInfo CreateInfo(InResourceArray);
 	OutVertexBufferRHI = RHICreateVertexBuffer(InResourceArray->GetResourceDataSize(), InUsage, CreateInfo);
 	
+	if (RHISupportsManualVertexFetch(GMaxRHIShaderPlatform))
+	{
+		OutInstanceSRV = RHICreateShaderResourceView(OutVertexBufferRHI, InStride, InFormat);
+	}
+}
+
+
+void FIBMInstanceBuffer::CreateVertexBuffer(unsigned int numInstances, uint32 InUsage, uint32 InStride, uint8 InFormat, FVertexBufferRHIRef& OutVertexBufferRHI, FShaderResourceViewRHIRef& OutInstanceSRV)
+{
+	FRHIResourceCreateInfo CreateInfo;
+
+	uint32_t resourceSize = numInstances * InStride;
+
+	OutVertexBufferRHI = RHICreateVertexBuffer(resourceSize, InUsage, CreateInfo);
+
 	if (RHISupportsManualVertexFetch(GMaxRHIShaderPlatform))
 	{
 		OutInstanceSRV = RHICreateShaderResourceView(OutVertexBufferRHI, InStride, InFormat);
@@ -682,6 +726,12 @@ FIBMPerInstanceRenderData::~FIBMPerInstanceRenderData()
 	InstanceBuffer_GameThread.Reset();
 	// Should be always destructed on rendering thread
 	InstanceBuffer.ReleaseResource();
+}
+
+
+UNREALGPUSWARM_API void FIBMPerInstanceRenderData::UpdateWithNumInstance(int numInstances)
+{
+	InstanceBuffer.
 }
 
 void FIBMPerInstanceRenderData::UpdateFromPreallocatedData(FIBMStaticMeshInstanceData& InOther)
@@ -1327,6 +1377,11 @@ void UInstanceBufferMeshComponent::ApplyComponentInstanceData(FIBMComponentInsta
 #endif
 }
 
+void UInstanceBufferMeshComponent::SetNumInstances(int numInstances)
+{
+	// this will trigger a rebuild of the scene proxy
+}
+
 FPrimitiveSceneProxy* UInstanceBufferMeshComponent::CreateSceneProxy()
 {
 	LLM_SCOPE(ELLMTag::InstancedMesh);
@@ -1353,6 +1408,7 @@ FPrimitiveSceneProxy* UInstanceBufferMeshComponent::CreateSceneProxy()
 		{
 			InstanceUpdateCmdBuffer.Reset();
 
+			// this eventually triggers the ReInit of the FIBMInstanceBuffer
 			FIBMStaticMeshInstanceData RenderInstanceData = FIBMStaticMeshInstanceData();
 			BuildRenderData(RenderInstanceData, PerInstanceRenderData->HitProxies);
 			PerInstanceRenderData->UpdateFromPreallocatedData(RenderInstanceData);
