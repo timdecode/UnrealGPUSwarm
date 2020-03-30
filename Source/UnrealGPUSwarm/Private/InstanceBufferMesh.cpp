@@ -1407,7 +1407,7 @@ FPrimitiveSceneProxy* UInstanceBufferMeshComponent::CreateSceneProxy()
 	// Verify that the mesh is valid before using it.
 	const bool bMeshIsValid = 
 		// make sure we have instances
-		PerInstanceSMData.Num() > 0 &&
+		_numInstances > 0 &&
 		// make sure we have an actual staticmesh
 		GetStaticMesh() &&
 		GetStaticMesh()->HasValidRenderData() &&
@@ -1419,20 +1419,11 @@ FPrimitiveSceneProxy* UInstanceBufferMeshComponent::CreateSceneProxy()
 	{
 		check(InstancingRandomSeed != 0);
 		
-		// if instance data was modified, update GPU copy
-		// generally happens only in editor 
-		if (InstanceUpdateCmdBuffer.NumTotalCommands() != 0)
-		{
-			InstanceUpdateCmdBuffer.Reset();
+		// this eventually triggers the ReInit of the FIBMInstanceBuffer
+		FIBMStaticMeshInstanceData RenderInstanceData = FIBMStaticMeshInstanceData();
+		BuildRenderData(RenderInstanceData, PerInstanceRenderData->HitProxies);
 
-			// this eventually triggers the ReInit of the FIBMInstanceBuffer
-			FIBMStaticMeshInstanceData RenderInstanceData = FIBMStaticMeshInstanceData();
-			BuildRenderData(RenderInstanceData, PerInstanceRenderData->HitProxies);
-
-			PerInstanceRenderData->UpdateWithNumInstance(_numInstances);
-			
-			//PerInstanceRenderData->UpdateFromPreallocatedData(RenderInstanceData);
-		}
+		PerInstanceRenderData->UpdateWithNumInstance(_numInstances);
 		
 		ProxySize = PerInstanceRenderData->ResourceSize;
 		return ::new FInstanceBufferMeshSceneProxy(this, GetWorld()->FeatureLevel);
