@@ -1539,7 +1539,7 @@ void UInstanceBufferMeshComponent::GetLightAndShadowMapMemoryUsage( int32& Light
 {
 	Super::GetLightAndShadowMapMemoryUsage(LightMapMemoryUsage, ShadowMapMemoryUsage);
 
-	int32 NumInstances = PerInstanceSMData.Num();
+	int32 NumInstances = GetNumInstancesCurrentlyAllocated();
 
 	// Scale lighting demo by number of instances
 	LightMapMemoryUsage *= NumInstances;
@@ -1579,59 +1579,7 @@ static bool NeedRenderDataForTargetPlatform(const ITargetPlatform* TargetPlatfor
 
 void UInstanceBufferMeshComponent::SerializeRenderData(FArchive& Ar)
 {
-	if (Ar.IsLoading())
-	{
-		uint64 RenderDataSizeBytes = 0;
-		Ar << RenderDataSizeBytes; // TODO: can skip serialization if we know that data will be discarded
 
-		if (RenderDataSizeBytes > 0)
-		{
-			InstanceDataBuffers = MakeUnique<FIBMStaticMeshInstanceData>();
-			InstanceDataBuffers->Serialize(Ar);
-		}
-	}
-	else if (Ar.IsSaving())
-	{
-		uint64 RenderDataSizePos = Ar.Tell();
-		
-		// write render data size, will write real size later
-		uint64 RenderDataSizeBytes = 0;
-		Ar << RenderDataSizeBytes;
-
-		bool bSaveRenderData = NeedRenderDataForTargetPlatform(Ar.CookingTarget());
-		if (bSaveRenderData && !HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject))
-		{
-			uint64 RenderDataPos = Ar.Tell();
-
-			if (PerInstanceSMData.Num() > 0)
-			{
-				check(PerInstanceRenderData.IsValid());
-
-				// This will usually happen when having a BP adding instance through the construct script
-				if (PerInstanceRenderData->InstanceBuffer.GetNumInstances() != PerInstanceSMData.Num() || InstanceUpdateCmdBuffer.NumTotalCommands() > 0)
-				{
-					InstanceUpdateCmdBuffer.Reset();
-
-					CreateHitProxyData(PerInstanceRenderData->HitProxies);
-
-					PerInstanceRenderData->UpdateFromPreallocatedData(RenderInstanceData);
-					MarkRenderStateDirty();
-				}
-			}
-		
-			if (PerInstanceRenderData.IsValid())
-			{
-
-			}
-
-			// save render data real size
-			uint64 CurPos = Ar.Tell();
-			RenderDataSizeBytes = CurPos - RenderDataPos;
-			Ar.Seek(RenderDataSizePos);
-			Ar << RenderDataSizeBytes;
-			Ar.Seek(CurPos);
-		}
-	}
 }
 
 void UInstanceBufferMeshComponent::Serialize(FArchive& Ar)
@@ -1649,52 +1597,18 @@ void UInstanceBufferMeshComponent::Serialize(FArchive& Ar)
 		Ar << bCooked;
 	}
 
-#if WITH_EDITOR
-	if (Ar.IsLoading() && Ar.CustomVer(FMobileObjectVersion::GUID) < FMobileObjectVersion::InstancedStaticMeshLightmapSerialization)
-	{
-		TArray<FInstancedStaticMeshInstanceData_DEPRECATED> DeprecatedData;
-		DeprecatedData.BulkSerialize(Ar);
-		PerInstanceSMData.Reset(DeprecatedData.Num());
-		Algo::Transform(DeprecatedData, PerInstanceSMData, [](const FInstancedStaticMeshInstanceData_DEPRECATED& OldData){ 
-			return FIBMInstanceData(OldData.Transform);
-		});
-	}
-	else
-#endif //WITH_EDITOR
-	{
-		PerInstanceSMData.BulkSerialize(Ar);
-	}
-
 	if (bCooked && (Ar.CustomVer(FFortniteMainBranchObjectVersion::GUID) >= FFortniteMainBranchObjectVersion::SerializeInstancedStaticMeshRenderData || Ar.CustomVer(FEditorObjectVersion::GUID) >= FEditorObjectVersion::SerializeInstancedStaticMeshRenderData))
 	{
 		SerializeRenderData(Ar);
 	}
-	
-#if WITH_EDITOR
-	if( Ar.IsTransacting() )
-	{
-		Ar << SelectedInstances;
-	}
-#endif
+
 }
-
-void UInstanceBufferMeshComponent::PreAllocateInstancesMemory(int32 AddedInstanceCount)
-{
-	PerInstanceSMData.Reserve(PerInstanceSMData.Num() + AddedInstanceCount);
-}
-
-
-
 
 void UInstanceBufferMeshComponent::OnUpdateTransform(EUpdateTransformFlags UpdateTransformFlags, ETeleportType Teleport)
 {
 	// We are handling the physics move below, so don't handle it at higher levels
 	Super::OnUpdateTransform(UpdateTransformFlags | EUpdateTransformFlags::SkipPhysicsUpdate, Teleport);
 }
-
-
-
-
 
 bool UInstanceBufferMeshComponent::ShouldCreatePhysicsState() const
 {
@@ -1708,26 +1622,26 @@ float UInstanceBufferMeshComponent::GetTextureStreamingTransformScale() const
 	// In those cases, we assume the instance are spreaded across the bounds with a scale of 1.
 	float TransformScale = 1.f; 
 
-	if (PerInstanceSMData.Num() > 0)
-	{
-		TransformScale = Super::GetTextureStreamingTransformScale();
+	//if (PerInstanceSMData.Num() > 0)
+	//{
+	//	TransformScale = Super::GetTextureStreamingTransformScale();
 
-		float WeightedAxisScaleSum = 0;
-		float WeightSum = 0;
+	//	float WeightedAxisScaleSum = 0;
+	//	float WeightSum = 0;
 
-		for (int32 InstanceIndex = 0; InstanceIndex < PerInstanceSMData.Num(); InstanceIndex++)
-		{
-			const float AxisScale = PerInstanceSMData[InstanceIndex].Transform.GetMaximumAxisScale();
-			const float Weight = AxisScale; // The weight is the axis scale since we want to weight by surface coverage.
-			WeightedAxisScaleSum += AxisScale * Weight;
-			WeightSum += Weight;
-		}
+	//	for (int32 InstanceIndex = 0; InstanceIndex < PerInstanceSMData.Num(); InstanceIndex++)
+	//	{
+	//		const float AxisScale = PerInstanceSMData[InstanceIndex].Transform.GetMaximumAxisScale();
+	//		const float Weight = AxisScale; // The weight is the axis scale since we want to weight by surface coverage.
+	//		WeightedAxisScaleSum += AxisScale * Weight;
+	//		WeightSum += Weight;
+	//	}
 
-		if (WeightSum > SMALL_NUMBER)
-		{
-			TransformScale *= WeightedAxisScaleSum / WeightSum;
-		}
-	}
+	//	if (WeightSum > SMALL_NUMBER)
+	//	{
+	//		TransformScale *= WeightedAxisScaleSum / WeightSum;
+	//	}
+	//}
 	return TransformScale;
 }
 
@@ -1795,28 +1709,13 @@ static bool ComponentRequestsCPUAccess(UInstanceBufferMeshComponent* InComponent
 
 void UInstanceBufferMeshComponent::GetInstancesMinMaxScale(FVector& MinScale, FVector& MaxScale) const
 {
-	if (PerInstanceSMData.Num() > 0)
-	{
-		MinScale = FVector(MAX_flt);
-		MaxScale = FVector(-MAX_flt);
+	MinScale = FVector(1.0f);
+	MaxScale = FVector(1.0f);
 
-		for (int32 i = 0; i < PerInstanceSMData.Num(); ++i)
-		{
-			const FIBMInstanceData& InstanceData = PerInstanceSMData[i];
-			FVector ScaleVector = InstanceData.Transform.GetScaleVector();
-
-			MinScale = MinScale.ComponentMin(ScaleVector);
-			MaxScale = MaxScale.ComponentMax(ScaleVector);
-		}
-	}
-	else
-	{
-		MinScale = FVector(1.0f);
-		MaxScale = FVector(1.0f);
-	}
+	// Tim: We should read this from the GPU
 }
 
-void UInstanceBufferMeshComponent::InitPerInstanceRenderData(bool InitializeFromCurrentData, FIBMStaticMeshInstanceData* InSharedInstanceBufferData, bool InRequireCPUAccess)
+void UInstanceBufferMeshComponent::InitPerInstanceRenderData()
 {
 	if (PerInstanceRenderData.IsValid())
 	{
@@ -1836,25 +1735,12 @@ void UInstanceBufferMeshComponent::InitPerInstanceRenderData(bool InitializeFrom
 	UWorld* World = GetWorld();
 	ERHIFeatureLevel::Type FeatureLevel = World != nullptr ? World->FeatureLevel.GetValue() : GMaxRHIFeatureLevel;
 
-	bool KeepInstanceBufferCPUAccess = GIsEditor || InRequireCPUAccess || ComponentRequestsCPUAccess(this, FeatureLevel);
-
-	if (InSharedInstanceBufferData != nullptr)
-	{
-		PerInstanceRenderData = MakeShareable(new FIBMPerInstanceRenderData(*InSharedInstanceBufferData, FeatureLevel, KeepInstanceBufferCPUAccess));
-	}
-	else
 	{
 		TArray<TRefCountPtr<HHitProxy>> HitProxies;
-		FIBMStaticMeshInstanceData InstanceBufferData = FIBMStaticMeshInstanceData();
 		
-		if (InitializeFromCurrentData)
-		{
-			// since we recreate data, all pending edits will be uploaded
-			InstanceUpdateCmdBuffer.Reset(); 
-			BuildRenderData(InstanceBufferData, HitProxies);
-		}
+		CreateHitProxyData(HitProxies);
 			
-		PerInstanceRenderData = MakeShareable(new FIBMPerInstanceRenderData(InstanceBufferData, FeatureLevel, KeepInstanceBufferCPUAccess));
+		PerInstanceRenderData = MakeShareable(new FIBMPerInstanceRenderData(FeatureLevel));
 		PerInstanceRenderData->HitProxies = MoveTemp(HitProxies);
 	}
 }
@@ -1868,8 +1754,7 @@ void UInstanceBufferMeshComponent::OnComponentCreated()
 		// if we are pasting/duplicating this component, it may be created with some instances already in place
 		// in this case, need to ensure that the instance render data is properly created
 		// We only need to only init from current data if the reorder table == per instance data, but only for the HISM Component, in the case of ISM, the reorder table is never used.
-		const bool InitializeFromCurrentData = PerInstanceSMData.Num() > 0 && (InstanceReorderTable.Num() == PerInstanceSMData.Num() || InstanceReorderTable.Num() == 0);
-		InitPerInstanceRenderData(InitializeFromCurrentData);
+		InitPerInstanceRenderData();
 	}
 }
 
@@ -1886,11 +1771,10 @@ void UInstanceBufferMeshComponent::OnPostLoadPerInstanceData()
 	if (!HasAnyFlags(RF_ClassDefaultObject|RF_ArchetypeObject))
 	{
 		// create PerInstanceRenderData and pass InstanceDataBuffers ownership to it
-		InitPerInstanceRenderData(true, InstanceDataBuffers.Release());
+		InitPerInstanceRenderData();
 	}
 
 	// release InstanceDataBuffers
-	InstanceDataBuffers.Reset();
 
 	if (PerInstanceRenderData.IsValid())
 	{
@@ -1972,15 +1856,7 @@ FBox UInstanceBufferMeshComponent::GetNavigationBounds() const
 
 void UInstanceBufferMeshComponent::GetNavigationPerInstanceTransforms(const FBox& AreaBox, TArray<FTransform>& InstanceData) const
 {
-	for (const auto& InstancedData : PerInstanceSMData)
-	{
-		//TODO: Is it worth doing per instance bounds check here ?
-		const FTransform InstanceToComponent(InstancedData.Transform);
-		if (!InstanceToComponent.GetScale3D().IsZero())
-		{
-			InstanceData.Add(InstanceToComponent*GetComponentTransform());
-		}
-	}
+
 }
 
 void UInstanceBufferMeshComponent::GetResourceSizeEx(FResourceSizeEx& CumulativeResourceSize)
@@ -1993,7 +1869,6 @@ void UInstanceBufferMeshComponent::GetResourceSizeEx(FResourceSizeEx& Cumulative
 	}
 	
 	// component stuff
-	CumulativeResourceSize.AddDedicatedSystemMemoryBytes(PerInstanceSMData.GetAllocatedSize());
 	CumulativeResourceSize.AddDedicatedSystemMemoryBytes(InstanceReorderTable.GetAllocatedSize());
 	CumulativeResourceSize.AddDedicatedSystemMemoryBytes(InstanceUpdateCmdBuffer.Cmds.GetAllocatedSize());
 }
@@ -2010,7 +1885,7 @@ void UInstanceBufferMeshComponent::PostDuplicate(bool bDuplicateForPIE)
 
 	if (!HasAnyFlags(RF_ClassDefaultObject|RF_ArchetypeObject) && bDuplicateForPIE)
 	{
-		InitPerInstanceRenderData(true);		
+		InitPerInstanceRenderData();		
 	}
 }
 

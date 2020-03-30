@@ -122,9 +122,6 @@ class UNREALGPUSWARM_API UInstanceBufferMeshComponent : public UStaticMeshCompon
 	/** Tracks outstanding proxysize, as this is a bit hard to do with the fire-and-forget grass. */
 	SIZE_T ProxySize;
 
-	/** Preallocated memory to include the new added instances count, to prevent reallocate during the add operation. */
-	virtual void PreAllocateInstancesMemory(int32 AddedInstanceCount);
-
 
 	virtual void OnUpdateTransform(EUpdateTransformFlags UpdateTransformFlags, ETeleportType Teleport) override;
 
@@ -161,12 +158,7 @@ public:
 	/** Recorded modifications to per-instance data */
 	FIBMInstanceUpdateCmdBuffer InstanceUpdateCmdBuffer;
 
-	/** 
-	 *  Buffers with per-instance data laid out for rendering. 
-	 *  Serialized for cooked content. Used to create PerInstanceRenderData. 
-	 *  Alive between Serialize and PostLoad calls 
-	 */
-	TUniquePtr<FIBMStaticMeshInstanceData> InstanceDataBuffers;
+
 
 #if WITH_EDITOR
 	/** One bit per instance if the instance is selected. */
@@ -227,7 +219,7 @@ public:
 	void ClearInstanceSelection();
 
 	/** Initialize the Per Instance Render Data */
-	void InitPerInstanceRenderData(bool InitializeFromCurrentData, FIBMStaticMeshInstanceData* InSharedInstanceBufferData = nullptr, bool InRequireCPUAccess = false);
+	void InitPerInstanceRenderData();
 
 	/** Transfers ownership of instance render data to a render thread. Instance render data will be released in scene proxy destructor or on render thread task. */
 	void ReleasePerInstanceRenderData();
