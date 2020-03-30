@@ -1613,7 +1613,7 @@ void UInstanceBufferMeshComponent::OnUpdateTransform(EUpdateTransformFlags Updat
 
 bool UInstanceBufferMeshComponent::ShouldCreatePhysicsState() const
 {
-	return IsRegistered() && !IsBeingDestroyed() && GetStaticMesh() && (bAlwaysCreatePhysicsState || IsCollisionEnabled());
+	return false;
 }
 
 float UInstanceBufferMeshComponent::GetTextureStreamingTransformScale() const
