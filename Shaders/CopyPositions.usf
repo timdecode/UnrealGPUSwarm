@@ -15,12 +15,16 @@ float4x4 look_at_matrix(float3 at, float3 eye, float3 up)
     float3 xaxis = normalize(cross(up, zaxis));
     float3 yaxis = cross(zaxis, xaxis);
 
-    return float4x4(
+    float4x4 mat = float4x4(
         xaxis.x, yaxis.x, zaxis.x, 0,
         xaxis.y, yaxis.y, zaxis.y, 0,
         xaxis.z, yaxis.z, zaxis.z, 0,
         0, 0, 0, 1.0f
     ) * particleScale;
+    
+    mat[3][3] = 1.0f;
+    
+    return mat;
 }
 
 [numthreads(256, 1, 1)]
@@ -53,6 +57,4 @@ void copyPositions(uint3 ThreadId : SV_DispatchThreadID)
     transforms_other[index * 3 + 2][1] = mat[1][2];
     transforms_other[index * 3 + 2][2] = mat[2][2];
     transforms_other[index * 3 + 2][3] = mat[3][2];
-
-
 }
