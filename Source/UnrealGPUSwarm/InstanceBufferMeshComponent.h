@@ -122,9 +122,7 @@ public:
 
 	//~ Begin UPrimitiveComponent Interface
 	virtual FPrimitiveSceneProxy* CreateSceneProxy() override;
-protected:
-	virtual void OnCreatePhysicsState() override;
-	virtual void OnDestroyPhysicsState() override;
+
 public:
 	virtual bool CanEditSimulatePhysics() override;
 

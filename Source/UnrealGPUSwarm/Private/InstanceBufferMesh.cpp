@@ -674,6 +674,10 @@ void FInstanceBufferMeshSceneProxy::SetupProxy(UInstanceBufferMeshComponent* InC
 void FInstanceBufferMeshSceneProxy::SetupInstancedMeshBatch(int32 LODIndex, int32 BatchIndex, FMeshBatch& OutMeshBatch) const
 {
 	const bool bInstanced = GRHISupportsInstancing;
+
+	// we only support hardware with instancing
+	check(bInstanced);
+
 	OutMeshBatch.VertexFactory = &InstancedRenderData.VertexFactories[LODIndex];
 	const uint32 NumInstances = InstancedRenderData.PerInstanceRenderData->InstanceBuffer.GetNumInstances();
 	FMeshBatchElement& BatchElement0 = OutMeshBatch.Elements[0];
@@ -683,38 +687,6 @@ void FInstanceBufferMeshSceneProxy::SetupInstancedMeshBatch(int32 LODIndex, int3
 	BatchElement0.UserIndex = 0;
 	BatchElement0.bIsInstancedMesh = bInstanced;
 	BatchElement0.PrimitiveUniformBuffer = GetUniformBuffer();
-
-	if (bInstanced)
-	{
-		BatchElement0.NumInstances = NumInstances;
-	}
-	else
-	{
-		const uint32 MaxInstancesPerBatch = FInstanceBufferMeshVertexFactory::NumBitsForVisibilityMask();
-		const uint32 NumBatches = FMath::DivideAndRoundUp(NumInstances, MaxInstancesPerBatch);
-		uint32 InstanceIndex = BatchIndex * MaxInstancesPerBatch;
-		uint32 NumInstancesThisBatch = FMath::Min(NumInstances - InstanceIndex, MaxInstancesPerBatch);
-				
-		if (NumInstancesThisBatch > 0)
-		{
-			OutMeshBatch.Elements.Reserve(NumInstancesThisBatch);
-						
-			// BatchElement0 is already inside the array; but Reserve() might have shifted it
-			OutMeshBatch.Elements[0].UserIndex = InstanceIndex;
-			--NumInstancesThisBatch;
-			++InstanceIndex;
-
-			// Add remaining BatchElements 1..n-1
-			while (NumInstancesThisBatch > 0)
-			{
-				auto* NewBatchElement = new(OutMeshBatch.Elements) FMeshBatchElement();
-				*NewBatchElement = BatchElement0;
-				NewBatchElement->UserIndex = InstanceIndex;
-				++InstanceIndex;
-				--NumInstancesThisBatch;
-			}
-		}
-	}
 }
 
 void FInstanceBufferMeshSceneProxy::GetLightRelevance(const FLightSceneProxy* LightSceneProxy, bool& bDynamic, bool& bRelevant, bool& bLightMapped, bool& bShadowMapped) const
@@ -1140,23 +1112,8 @@ void UInstanceBufferMeshComponent::BuildRenderData(TArray<TRefCountPtr<HHitProxy
 	CreateHitProxyData(OutHitProxies);
 }
 
-
-
-void UInstanceBufferMeshComponent::OnCreatePhysicsState()
-{
-	USceneComponent::OnCreatePhysicsState();
-}
-
-void UInstanceBufferMeshComponent::OnDestroyPhysicsState()
-{
-	USceneComponent::OnDestroyPhysicsState();
-
-
-}
-
 bool UInstanceBufferMeshComponent::CanEditSimulatePhysics()
 {
-	// if instancedstaticmeshcomponent, we will never allow it
 	return false;
 }
 
