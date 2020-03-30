@@ -76,32 +76,7 @@ struct FIBMInstanceUpdateCmdBuffer
 	int32 NumEdits;
 };
 
-USTRUCT()
-struct FIBMInstanceData
-{
-	GENERATED_USTRUCT_BODY()
 
-	UPROPERTY(EditAnywhere, Category=Instances)
-	FMatrix Transform;
-
-	FIBMInstanceData()
-		: Transform(FMatrix::Identity)
-	{
-	}
-
-	FIBMInstanceData(const FMatrix& InTransform)
-		: Transform(InTransform)
-	{
-	}
-
-	friend FArchive& operator<<(FArchive& Ar, FIBMInstanceData& InstanceData)
-	{
-		// @warning BulkSerialize: FIBMInstanceData is serialized as memory dump
-		// See TArray::BulkSerialize for detailed description of implied limitations.
-		Ar << InstanceData.Transform;
-		return Ar;
-	}
-};
 
 USTRUCT()
 struct FInstanceBufferMeshMappingInfo
@@ -125,10 +100,6 @@ class UNREALGPUSWARM_API UInstanceBufferMeshComponent : public UStaticMeshCompon
 	/** Needs implementation in InstancedStaticMesh.cpp to compile UniquePtr for forward declared class */
 	UInstanceBufferMeshComponent(FVTableHelper& Helper);
 	virtual ~UInstanceBufferMeshComponent();
-	
-	/** Array of instances, bulk serialized. */
-	UPROPERTY(EditAnywhere, SkipSerialization, DisplayName="Instances", Category=Instances, meta=(MakeEditWidget=true, EditFixedOrder))
-	TArray<FIBMInstanceData> PerInstanceSMData;
 
 	/** Value used to seed the random number stream that generates random numbers for each of this mesh's instances.
 	The random number is stored in a buffer accessible to materials through the PerInstanceRandom expression. If
@@ -151,10 +122,6 @@ class UNREALGPUSWARM_API UInstanceBufferMeshComponent : public UStaticMeshCompon
 	/** Tracks outstanding proxysize, as this is a bit hard to do with the fire-and-forget grass. */
 	SIZE_T ProxySize;
 
-	/** Add an instance to this component. Transform is given in local space of this component. */
-	UFUNCTION(BlueprintCallable, Category="Components|InstancedStaticMesh")
-	virtual int32 AddInstance(const FTransform& InstanceTransform);
-
 	/** Preallocated memory to include the new added instances count, to prevent reallocate during the add operation. */
 	virtual void PreAllocateInstancesMemory(int32 AddedInstanceCount);
 
@@ -171,14 +138,6 @@ class UNREALGPUSWARM_API UInstanceBufferMeshComponent : public UStaticMeshCompon
 	virtual void GetStreamingRenderAssetInfo(FStreamingTextureLevelContext& LevelContext, TArray<FStreamingRenderAssetPrimitiveInfo>& OutStreamingRenderAssets) const override;
 
 
-	/** Remove the instance specified. Returns True on success. Note that this will leave the array in order, but may shrink it. */
-	UFUNCTION(BlueprintCallable, Category = "Components|InstancedStaticMesh")
-	virtual bool RemoveInstance(int32 InstanceIndex);
-
-	/** Clear all instances being rendered by this component. */
-	UFUNCTION(BlueprintCallable, Category="Components|InstancedStaticMesh")
-	virtual void ClearInstances();
-
 	/** Get the number of instances in this component. */
 	UFUNCTION(BlueprintCallable, Category = "Components|InstancedStaticMesh")
 	int32 GetInstanceCount() const;
@@ -188,7 +147,7 @@ class UNREALGPUSWARM_API UInstanceBufferMeshComponent : public UStaticMeshCompon
 	void SetCullDistances(int32 StartCullDistance, int32 EndCullDistance);
 
 	void SetNumInstances(int numInstances);
-	int GetNumInstancesCurrentlyAllocated();
+	int32 GetNumInstancesCurrentlyAllocated() const;
 
 	virtual bool ShouldCreatePhysicsState() const override;
 
@@ -274,15 +233,13 @@ public:
 	void ReleasePerInstanceRenderData();
 	
 	// Number of instances in the render-side instance buffer
-	virtual int32 GetNumRenderInstances() const { return PerInstanceSMData.Num(); }
+	virtual int32 GetNumRenderInstances() const { return GetNumInstancesCurrentlyAllocated(); }
 
 	virtual void PropagateLightingScenarioChange() override;
 
 	void GetInstancesMinMaxScale(FVector& MinScale, FVector& MaxScale) const;
 private:
 
-	/** Sets up new instance data to sensible defaults, creates physics counterparts if possible. */
-	void SetupNewInstanceData(FIBMInstanceData& InOutNewInstanceData, int32 InInstanceIndex, const FTransform& InInstanceTransform);
 
 
 protected:
@@ -290,12 +247,6 @@ protected:
 
 	/** Request to navigation system to update only part of navmesh occupied by specified instance. */
 	virtual void PartialNavigationUpdate(int32 InstanceIdx);
-
-	/** Internal version of AddInstance */
-	int32 AddInstanceInternal(int32 InstanceIndex, FIBMInstanceData* InNewInstanceData, const FTransform& InstanceTransform);
-
-	/** Internal version of RemoveInstance */	
-	bool RemoveInstanceInternal(int32 InstanceIndex, bool InstanceAlreadyRemoved);
 
 	/** Handles request from navigation system to gather instance transforms in a specific area box. */
 	virtual void GetNavigationPerInstanceTransforms(const FBox& AreaBox, TArray<FTransform>& InstanceData) const;
@@ -314,7 +265,7 @@ protected:
 	void CreateHitProxyData(TArray<TRefCountPtr<HHitProxy>>& HitProxies);
 
     /** Build instance buffer for rendering from current component data. */
-	void BuildRenderData(FIBMStaticMeshInstanceData& OutData, TArray<TRefCountPtr<HHitProxy>>& OutHitProxies);
+	void BuildRenderData(TArray<TRefCountPtr<HHitProxy>>& OutHitProxies);
 	
     /** Serialize instance buffer that is used for rendering. Only for cooked content */
 	void SerializeRenderData(FArchive& Ar);
@@ -397,8 +348,7 @@ public:
 	// Static lighting info
 	UPROPERTY()
 	FInstanceBufferMeshLightMapInstanceData CachedStaticLighting;
-	UPROPERTY()
-	TArray<FIBMInstanceData> PerInstanceSMData;
+
 
 	/** The cached selected instances */
 	TBitArray<> SelectedInstances;
