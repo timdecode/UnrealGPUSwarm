@@ -298,38 +298,6 @@ private:
 	FDataType Data;
 };
 
-
-struct FEmulatedInstanceBufferMeshVertexFactory : public FInstanceBufferMeshVertexFactory
-{
-	DECLARE_VERTEX_FACTORY_TYPE(FEmulatedInstanceBufferMeshVertexFactory);
-public:
-	FEmulatedInstanceBufferMeshVertexFactory(ERHIFeatureLevel::Type InFeatureLevel)
-		: FInstanceBufferMeshVertexFactory(InFeatureLevel)
-	{
-	}
-
-	/**
-	 * Should we cache the material's shadertype on this platform with this vertex factory? 
-	 */
-	static bool ShouldCompilePermutation(EShaderPlatform Platform, const class FMaterial* Material, const class FShaderType* ShaderType)
-	{
-		// Android may not support on old devices
-		return	(Platform == SP_OPENGL_ES2_ANDROID)
-				&& (Material->IsUsedWithInstancedStaticMeshes() || Material->IsSpecialEngineMaterial())
-				&& FLocalVertexFactory::ShouldCompilePermutation(Platform, Material, ShaderType);
-	}
-
-	/**
-	 * Modify compile environment to enable instancing
-	 * @param OutEnvironment - shader compile environment to modify
-	 */
-	static void ModifyCompilationEnvironment(const FVertexFactoryType* Type, EShaderPlatform Platform, const FMaterial* Material, FShaderCompilerEnvironment& OutEnvironment)
-	{
-		FInstanceBufferMeshVertexFactory::ModifyCompilationEnvironment(Type, Platform, Material, OutEnvironment);
-		OutEnvironment.SetDefine(TEXT("USE_INSTANCING_EMULATED"), TEXT("1"));
-	}
-};
-
 class FInstanceBufferMeshVertexFactoryShaderParameters : public FVertexFactoryShaderParameters
 {
 	virtual void Bind(const FShaderParameterMap& ParameterMap) override
@@ -411,7 +379,6 @@ private:
 	FShaderParameter InstanceOffset;
 };
 
-struct FIBMInstanceUpdateCmdBuffer;
 /*-----------------------------------------------------------------------------
 	FIBMPerInstanceRenderData
 	Holds render data that can persist between scene proxy reconstruction
@@ -714,45 +681,6 @@ private:
 };
 
 #endif
-
-// Tim: I don't think these structures are even used.
-
-/**
- * Structure that maps a component to it's lighting/instancing specific data which must be the same
- * between all instances that are bound to that component.
- */
-// struct FComponentInstanceSharingData
-// {
-// 	/** The component that is associated (owns) this data */
-// 	UInstanceBufferMeshComponent* Component;
-
-// 	/** Light map texture */
-// 	UTexture* LightMapTexture;
-
-// 	/** Shadow map texture (or NULL if no shadow map) */
-// 	UTexture* ShadowMapTexture;
-
-
-// 	FComponentInstanceSharingData()
-// 		: Component( NULL ),
-// 		  LightMapTexture( NULL ),
-// 		  ShadowMapTexture( NULL )
-// 	{
-// 	}
-// };
-
-
-// /**
-//  * Helper struct to hold information about what components use what lightmap textures
-//  */
-// struct FComponentInstancedLightmapData
-// {
-// 	/** List of all original components and their original instances containing */
-// 	TMap<UInstanceBufferMeshComponent*, TArray<FIBMInstanceData> > ComponentInstances;
-
-// 	/** List of new components */
-// 	TArray< FComponentInstanceSharingData > SharingData;
-// };
 
 
 
