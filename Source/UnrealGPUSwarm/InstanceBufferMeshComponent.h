@@ -133,13 +133,10 @@ public:
 #endif
 	virtual void GetLightAndShadowMapMemoryUsage( int32& LightMapMemoryUsage, int32& ShadowMapMemoryUsage ) const override;
 
-	virtual bool DoCustomNavigableGeometryExport(FNavigableGeometryExport& GeomExport) const override;
+	virtual bool DoCustomNavigableGeometryExport(FNavigableGeometryExport& GeomExport) const override { return false; }; // we don't support navigation
+
 	//~ End UPrimitiveComponent Interface
 
-	//~ Begin UNavRelevantInterface Interface
-	virtual void GetNavigationData(FNavigationRelevantData& Data) const override;
-	virtual FBox GetNavigationBounds() const override;
-	//~ End UPrimitiveComponent Interface
 
 	//~ Begin UObject Interface
 	virtual void Serialize(FArchive& Ar) override;
@@ -182,12 +179,6 @@ private:
 
 protected:
 
-
-	/** Request to navigation system to update only part of navmesh occupied by specified instance. */
-	virtual void PartialNavigationUpdate(int32 InstanceIdx);
-
-	/** Handles request from navigation system to gather instance transforms in a specific area box. */
-	virtual void GetNavigationPerInstanceTransforms(const FBox& AreaBox, TArray<FTransform>& InstanceData) const;
 
 
 	/** Number of pending lightmaps still to be calculated (Apply()'d). */

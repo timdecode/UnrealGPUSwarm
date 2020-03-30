@@ -427,16 +427,17 @@ FVertexFactoryShaderParameters* FInstanceBufferMeshVertexFactory::ConstructShade
 }
 
 IMPLEMENT_VERTEX_FACTORY_TYPE_EX(FInstanceBufferMeshVertexFactory,"/Engine/Private/LocalVertexFactory.ush",true,true,true,true,true,true,false);
-IMPLEMENT_VERTEX_FACTORY_TYPE_EX(FEmulatedInstanceBufferMeshVertexFactory,"/Engine/Private/LocalVertexFactory.ush",true,true,true,true,true,true,false);
 
 void FInstanceBufferMeshRenderData::InitVertexFactories()
 {
 	const bool bInstanced = GRHISupportsInstancing;
 
+	check(bInstanced);
+
 	// Allocate the vertex factories for each LOD
 	for (int32 LODIndex = 0; LODIndex < LODModels.Num(); LODIndex++)
 	{
-		VertexFactories.Add(bInstanced ? new FInstanceBufferMeshVertexFactory(FeatureLevel) : new FEmulatedInstanceBufferMeshVertexFactory(FeatureLevel));
+		VertexFactories.Add(new FInstanceBufferMeshVertexFactory(FeatureLevel));
 	}
 
 	const int32 LightMapCoordinateIndex = Component->GetStaticMesh()->LightMapCoordinateIndex;
@@ -1602,73 +1603,6 @@ void UInstanceBufferMeshComponent::OnPostLoadPerInstanceData()
 	}
 }
 
-void UInstanceBufferMeshComponent::PartialNavigationUpdate(int32 InstanceIdx)
-{
-	// Just update everything
-	FNavigationSystem::UpdateComponentData(*this);
-}
-
-bool UInstanceBufferMeshComponent::DoCustomNavigableGeometryExport(FNavigableGeometryExport& GeomExport) const
-{
-	if (GetStaticMesh() && GetStaticMesh()->NavCollision)
-	{
-		UNavCollisionBase* NavCollision = GetStaticMesh()->NavCollision;
-		if (GetStaticMesh()->NavCollision->IsDynamicObstacle())
-		{
-			return false;
-		}
-		
-		if (NavCollision->HasConvexGeometry())
-		{
-			GeomExport.ExportCustomMesh(NavCollision->GetConvexCollision().VertexBuffer.GetData(), NavCollision->GetConvexCollision().VertexBuffer.Num(),
-				NavCollision->GetConvexCollision().IndexBuffer.GetData(), NavCollision->GetConvexCollision().IndexBuffer.Num(), FTransform::Identity);
-
-			GeomExport.ExportCustomMesh(NavCollision->GetTriMeshCollision().VertexBuffer.GetData(), NavCollision->GetTriMeshCollision().VertexBuffer.Num(),
-				NavCollision->GetTriMeshCollision().IndexBuffer.GetData(), NavCollision->GetTriMeshCollision().IndexBuffer.Num(), FTransform::Identity);
-		}
-		else
-		{
-			UBodySetup* BodySetup = GetStaticMesh()->BodySetup;
-			if (BodySetup)
-			{
-				GeomExport.ExportRigidBodySetup(*BodySetup, FTransform::Identity);
-			}
-		}
-
-		// Hook per instance transform delegate
-		GeomExport.SetNavDataPerInstanceTransformDelegate(FNavDataPerInstanceTransformDelegate::CreateUObject(this, &UInstanceBufferMeshComponent::GetNavigationPerInstanceTransforms));
-	}
-
-	// we don't want "regular" collision export for this component
-	return false;
-}
-
-void UInstanceBufferMeshComponent::GetNavigationData(FNavigationRelevantData& Data) const
-{
-	if (GetStaticMesh() && GetStaticMesh()->NavCollision)
-	{
-		UNavCollisionBase* NavCollision = GetStaticMesh()->NavCollision;
-		if (NavCollision->IsDynamicObstacle())
-		{
-			Data.Modifiers.MarkAsPerInstanceModifier();
-			NavCollision->GetNavigationModifier(Data.Modifiers, FTransform::Identity);
-
-			// Hook per instance transform delegate
-			Data.NavDataPerInstanceTransformDelegate = FNavDataPerInstanceTransformDelegate::CreateUObject(this, &UInstanceBufferMeshComponent::GetNavigationPerInstanceTransforms);
-		}
-	}
-}
-
-FBox UInstanceBufferMeshComponent::GetNavigationBounds() const
-{
-	return CalcBounds(GetComponentTransform()).GetBox();
-}
-
-void UInstanceBufferMeshComponent::GetNavigationPerInstanceTransforms(const FBox& AreaBox, TArray<FTransform>& InstanceData) const
-{
-
-}
-
 void UInstanceBufferMeshComponent::GetResourceSizeEx(FResourceSizeEx& CumulativeResourceSize)
 {
 	Super::GetResourceSizeEx(CumulativeResourceSize);
@@ -1702,7 +1636,6 @@ void UInstanceBufferMeshComponent::PostEditChangeChainProperty(FPropertyChangedC
 	{
 		if (PropertyChangedEvent.Property->GetFName() == "Transform")
 		{
-			PartialNavigationUpdate(-1);
 			// Force recreation of the render data
 			MarkRenderStateDirty();
 		}
