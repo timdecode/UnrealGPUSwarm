@@ -158,7 +158,7 @@ void UDrawPositionsComponent::_updateInstanceBuffers()
 		ismc->RemoveInstance(ismc->GetInstanceCount() - 1);*/
 
 	// directly update the buffer
-	if (toAdd == 0)
+	if (ismc->GetNumInstancesCurrentlyAllocated() == boidsComponent->numBoids)
 	{
 		auto renderData = ismc->PerInstanceRenderData;
 
@@ -204,8 +204,6 @@ void UDrawPositionsComponent::_updateInstanceBuffers()
 			);
 		});
 	}
-	else
-		ismc->MarkRenderStateDirty();
 }
 
 
