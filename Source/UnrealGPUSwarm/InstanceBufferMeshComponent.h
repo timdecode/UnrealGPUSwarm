@@ -30,51 +30,7 @@ class FInstancedLightMap2D;
 class FInstancedShadowMap2D;
 class FIBMStaticMeshInstanceData;
 
-struct FIBMInstanceUpdateCmdBuffer
-{
-	enum EUpdateCommandType
-	{
-		Add,
-		Update,
-		Hide,
-		EditorData,
-		LightmapData,
-	};
-	
-	struct FInstanceUpdateCommand
-	{
-		int32 InstanceIndex;
-		EUpdateCommandType Type;
-		FMatrix XForm;
-		
-		FColor HitProxyColor;
-		bool bSelected;
 
-		FVector2D LightmapUVBias;
-		FVector2D ShadowmapUVBias;
-	};
-	
-	FIBMInstanceUpdateCmdBuffer();
-	
-	// Commands that can modify render data in place
-	void HideInstance(int32 RenderIndex);
-	void AddInstance(const FMatrix& InTransform);
-	void UpdateInstance(int32 RenderIndex, const FMatrix& InTransform);
-	void SetEditorData(int32 RenderIndex, const FColor& Color, bool bSelected);
-	void SetLightMapData(int32 RenderIndex, const FVector2D& LightmapUVBias);
-	void SetShadowMapData(int32 RenderIndex, const FVector2D& ShadowmapUVBias);
-	void ResetInlineCommands();
-	int32 NumInlineCommands() const { return Cmds.Num(); }
-
-	// Command that can't be in-lined and should cause full buffer rebuild
-	void Edit();
-	void Reset();
-	int32 NumTotalCommands() const { return NumEdits; };
-	
-	TArray<FInstanceUpdateCommand> Cmds;
-	int32 NumAdds;
-	int32 NumEdits;
-};
 
 
 
