@@ -687,6 +687,8 @@ void FInstanceBufferMeshSceneProxy::SetupInstancedMeshBatch(int32 LODIndex, int3
 	BatchElement0.UserIndex = 0;
 	BatchElement0.bIsInstancedMesh = bInstanced;
 	BatchElement0.PrimitiveUniformBuffer = GetUniformBuffer();
+
+	BatchElement0.NumInstances = NumInstances;
 }
 
 void FInstanceBufferMeshSceneProxy::GetLightRelevance(const FLightSceneProxy* LightSceneProxy, bool& bDynamic, bool& bRelevant, bool& bLightMapped, bool& bShadowMapped) const
