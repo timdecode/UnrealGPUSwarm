@@ -719,22 +719,22 @@ int32 FInstanceBufferMeshSceneProxy::GetNumMeshBatches() const
 
 int32 FInstanceBufferMeshSceneProxy::CollectOccluderElements(FOccluderElementsCollector& Collector) const
 {
-	//if (OccluderData)
-	//{	
-	//	FIBMInstanceBuffer& InstanceBuffer = InstancedRenderData.PerInstanceRenderData->InstanceBuffer;
-	//	const int32 NumInstances = InstanceBuffer.GetNumInstances();
-	//	
-	//	for (int32 InstanceIndex = 0; InstanceIndex < NumInstances; ++InstanceIndex)
-	//	{
-	//		FMatrix InstanceToLocal;
-	//		InstanceBuffer.GetInstanceTransform(InstanceIndex, InstanceToLocal);	
-	//		InstanceToLocal.M[3][3] = 1.0f;
-	//					
-	//		Collector.AddElements(OccluderData->VerticesSP, OccluderData->IndicesSP, InstanceToLocal * GetLocalToWorld());
-	//	}
-	//	
-	//	return NumInstances;
-	//}
+	if (OccluderData)
+	{	
+		FIBMInstanceBuffer& InstanceBuffer = InstancedRenderData.PerInstanceRenderData->InstanceBuffer;
+		const int32 NumInstances = InstanceBuffer.GetNumInstances();
+		
+		for (int32 InstanceIndex = 0; InstanceIndex < NumInstances; ++InstanceIndex)
+		{
+			FMatrix InstanceToLocal;
+			;	
+			InstanceToLocal.M[3][3] = 1.0f;
+						
+			Collector.AddElements(OccluderData->VerticesSP, OccluderData->IndicesSP, InstanceToLocal * GetLocalToWorld());
+		}
+		
+		return NumInstances;
+	}
 	
 	return 0;
 }
@@ -879,40 +879,41 @@ bool FInstanceBufferMeshSceneProxy::GetWireframeMeshElement(int32 LODIndex, int3
 
 void FInstanceBufferMeshSceneProxy::GetDistancefieldAtlasData(FBox& LocalVolumeBounds, FVector2D& OutDistanceMinMax, FIntVector& OutBlockMin, FIntVector& OutBlockSize, bool& bOutBuiltAsIfTwoSided, bool& bMeshWasPlane, float& SelfShadowBias, TArray<FMatrix>& ObjectLocalToWorldTransforms, bool& bOutThrottled) const
 {
-	//FStaticMeshSceneProxy::GetDistancefieldAtlasData(LocalVolumeBounds, OutDistanceMinMax, OutBlockMin, OutBlockSize, bOutBuiltAsIfTwoSided, bMeshWasPlane, SelfShadowBias, ObjectLocalToWorldTransforms, bOutThrottled);
+	FStaticMeshSceneProxy::GetDistancefieldAtlasData(LocalVolumeBounds, OutDistanceMinMax, OutBlockMin, OutBlockSize, bOutBuiltAsIfTwoSided, bMeshWasPlane, SelfShadowBias, ObjectLocalToWorldTransforms, bOutThrottled);
 
-	//ObjectLocalToWorldTransforms.Reset();
+	ObjectLocalToWorldTransforms.Reset();
 
-	//const uint32 NumInstances = InstancedRenderData.PerInstanceRenderData->InstanceBuffer.GetNumInstances();
-	//for (uint32 InstanceIndex = 0; InstanceIndex < NumInstances; InstanceIndex++)
-	//{
-	//	FMatrix InstanceToLocal;
-	//	InstancedRenderData.PerInstanceRenderData->InstanceBuffer.GetInstanceTransform(InstanceIndex, InstanceToLocal);	
-	//	InstanceToLocal.M[3][3] = 1.0f;
+	const uint32 NumInstances = InstancedRenderData.PerInstanceRenderData->InstanceBuffer.GetNumInstances();
+	for (uint32 InstanceIndex = 0; InstanceIndex < NumInstances; InstanceIndex++)
+	{
+		FMatrix InstanceToLocal;
 
-	//	ObjectLocalToWorldTransforms.Add(InstanceToLocal * GetLocalToWorld());
-	//}
+		// Tim: Hack, we need the position
+		InstanceToLocal.M[3][3] = 1.0f;
+
+		ObjectLocalToWorldTransforms.Add(InstanceToLocal * GetLocalToWorld());
+	}
 }
 
 void FInstanceBufferMeshSceneProxy::GetDistanceFieldInstanceInfo(int32& NumInstances, float& BoundsSurfaceArea) const
 {
-	//NumInstances = DistanceFieldData ? InstancedRenderData.PerInstanceRenderData->InstanceBuffer.GetNumInstances() : 0;
+	NumInstances = DistanceFieldData ? InstancedRenderData.PerInstanceRenderData->InstanceBuffer.GetNumInstances() : 0;
 
-	//if (NumInstances > 0)
-	//{
-	//	FMatrix InstanceToLocal;
-	//	const int32 InstanceIndex = 0;
-	//	InstancedRenderData.PerInstanceRenderData->InstanceBuffer.GetInstanceTransform(InstanceIndex, InstanceToLocal);
-	//	InstanceToLocal.M[3][3] = 1.0f;
+	if (NumInstances > 0)
+	{
+		FMatrix InstanceToLocal;
+		const int32 InstanceIndex = 0;
 
-	//	const FMatrix InstanceTransform = InstanceToLocal * GetLocalToWorld();
-	//	const FVector AxisScales = InstanceTransform.GetScaleVector();
-	//	const FVector BoxDimensions = RenderData->Bounds.BoxExtent * AxisScales * 2;
+		InstanceToLocal.M[3][3] = 1.0f;
 
-	//	BoundsSurfaceArea = 2 * BoxDimensions.X * BoxDimensions.Y
-	//		+ 2 * BoxDimensions.Z * BoxDimensions.Y
-	//		+ 2 * BoxDimensions.X * BoxDimensions.Z;
-	//}
+		const FMatrix InstanceTransform = InstanceToLocal * GetLocalToWorld();
+		const FVector AxisScales = InstanceTransform.GetScaleVector();
+		const FVector BoxDimensions = RenderData->Bounds.BoxExtent * AxisScales * 2;
+
+		BoundsSurfaceArea = 2 * BoxDimensions.X * BoxDimensions.Y
+			+ 2 * BoxDimensions.Z * BoxDimensions.Y
+			+ 2 * BoxDimensions.X * BoxDimensions.Z;
+	}
 }
 
 HHitProxy* FInstanceBufferMeshSceneProxy::CreateHitProxies(UPrimitiveComponent* Component,TArray<TRefCountPtr<HHitProxy> >& OutHitProxies)
@@ -1279,7 +1280,7 @@ bool UInstanceBufferMeshComponent::CanEditSimulatePhysics()
 
 FBoxSphereBounds UInstanceBufferMeshComponent::CalcBounds(const FTransform& BoundTransform) const
 {
-	return FBoxSphereBounds(BoundTransform.GetLocation(), FVector(1000.0f), 10000.f);
+	return FBoxSphereBounds(BoundTransform.GetLocation(), FVector(500000.f), 1000000.f);
 
 	//if(GetStaticMesh() && PerInstanceSMData.Num() > 0)
 	//{
