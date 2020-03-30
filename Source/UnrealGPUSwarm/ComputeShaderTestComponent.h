@@ -45,9 +45,6 @@ public:
 	int numBoids = 1000;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int numNeighbours = 32;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float neighbourDistance = 10.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -104,16 +101,6 @@ public:
 
 	FStructuredBufferRHIRef _newDirectionsBuffer;
 	FUnorderedAccessViewRHIRef _newDirectionsBufferUAV;
-
-	FStructuredBufferRHIRef _neighboursBuffer;
-	FUnorderedAccessViewRHIRef _neighboursBufferUAV;
-
-	FStructuredBufferRHIRef _neighboursBaseIndex;
-	FUnorderedAccessViewRHIRef _neighboursBaseIndexUAV;
-
-	FStructuredBufferRHIRef _neighboursCount;
-	FUnorderedAccessViewRHIRef _neighboursCountUAV;
-
 
 	// Hashed grid data structures
 	FStructuredBufferRHIRef _particleIndexBuffer;

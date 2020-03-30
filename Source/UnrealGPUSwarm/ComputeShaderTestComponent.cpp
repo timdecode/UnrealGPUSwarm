@@ -219,41 +219,6 @@ IMPLEMENT_GLOBAL_SHADER(FHashedGrid_resetCellOffsetBuffer_CS, "/ComputeShaderPlu
 
 
 
-class FNeighboursComputeShader : public FGlobalShader
-{
-public:
-	DECLARE_GLOBAL_SHADER(FNeighboursComputeShader);
-	SHADER_USE_PARAMETER_STRUCT(FNeighboursComputeShader, FGlobalShader);
-
-	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
-		SHADER_PARAMETER(uint32, numNeighbours)
-		SHADER_PARAMETER(float, neighbourDistance)
-
-		SHADER_PARAMETER_UAV(RWStructuredBuffer<float4>, positions)
-		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neigbhours)
-		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neighboursBaseIndex)
-		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, neighboursCount)
-
-		SHADER_PARAMETER(uint32, numParticles)
-		SHADER_PARAMETER(uint32, cellOffsetBufferSize)
-		SHADER_PARAMETER(FIntVector, gridDimensions)
-		SHADER_PARAMETER(float, cellSizeReciprocal)
-
-		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, particleIndexBuffer)
-		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, cellIndexBuffer)
-		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, cellOffsetBuffer)
-
-	END_SHADER_PARAMETER_STRUCT()
-
-public:
-	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
-	{
-		return IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM5);
-	}
-};
-
-IMPLEMENT_GLOBAL_SHADER(FNeighboursComputeShader, "/ComputeShaderPlugin/Neighbours.usf", "MainComputeShader", SF_Compute);
-
 
 // Sets default values for this component's properties
 UComputeShaderTestComponent::UComputeShaderTestComponent() 
@@ -343,53 +308,6 @@ void UComputeShaderTestComponent::BeginPlay()
 
 		_newDirectionsBuffer = RHICreateStructuredBuffer(size, size * numBoids, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
 		_newDirectionsBufferUAV = RHICreateUnorderedAccessView(_newDirectionsBuffer, false, false);
-	}
-
-	// neighbours
-	{
-		TResourceArray<uint32_t> resourceArray;
-		resourceArray.Init(0, numBoids * numNeighbours);
-
-		FRHIResourceCreateInfo createInfo;
-		createInfo.ResourceArray = &resourceArray;
-
-		const size_t size = sizeof(uint32_t);
-
-		_neighboursBuffer = RHICreateStructuredBuffer(size, size * numBoids * numNeighbours, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
-		_neighboursBufferUAV = RHICreateUnorderedAccessView(_neighboursBuffer, false, false);
-	}
-
-	// neighboursBaseIndex
-	{
-		TResourceArray<uint32_t> resourceArray;
-		resourceArray.Init(0, numBoids);
-
-		for (int i = 0; i < numBoids; ++i)
-		{
-			resourceArray[i] = i * numNeighbours;
-		}
-
-		FRHIResourceCreateInfo createInfo;
-		createInfo.ResourceArray = &resourceArray;
-
-		const size_t size = sizeof(uint32_t);
-
-		_neighboursBaseIndex = RHICreateStructuredBuffer(size, size * numBoids, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
-		_neighboursBaseIndexUAV = RHICreateUnorderedAccessView(_neighboursBaseIndex, false, false);
-	}
-
-	// neighboursCount
-	{
-		TResourceArray<uint32_t> resourceArray;
-		resourceArray.Init(0, numBoids);
-
-		FRHIResourceCreateInfo createInfo;
-		createInfo.ResourceArray = &resourceArray;
-
-		const size_t size = sizeof(uint32_t);
-
-		_neighboursCount = RHICreateStructuredBuffer(size, size * numBoids, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
-		_neighboursCountUAV = RHICreateUnorderedAccessView(_neighboursCount, false, false);
 	}
 
 	// particleIndexBuffer
