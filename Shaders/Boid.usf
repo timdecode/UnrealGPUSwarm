@@ -9,7 +9,7 @@
 //--------------------------------------------------------------------------------------
 
 float dt;
-float totalTime;
+float totalTime;  
 
 float boidSpeed;
 float boidSpeedVariation;
