@@ -155,10 +155,6 @@ public:
 	/** Render data will be initialized on PostLoad or on demand. Released on the rendering thread. */
 	TSharedPtr<FIBMPerInstanceRenderData, ESPMode::ThreadSafe> PerInstanceRenderData;
 
-	/** Recorded modifications to per-instance data */
-	FIBMInstanceUpdateCmdBuffer InstanceUpdateCmdBuffer;
-
-
 
 #if WITH_EDITOR
 	/** One bit per instance if the instance is selected. */

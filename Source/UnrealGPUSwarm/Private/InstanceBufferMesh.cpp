@@ -1532,7 +1532,6 @@ void UInstanceBufferMeshComponent::PropagateLightingScenarioChange()
 	FComponentRecreateRenderStateContext Context(this);
 
 	// Force recreation of the render data
-	InstanceUpdateCmdBuffer.Edit();
 	MarkRenderStateDirty();
 }
 
@@ -1774,23 +1773,6 @@ void UInstanceBufferMeshComponent::OnPostLoadPerInstanceData()
 		// create PerInstanceRenderData and pass InstanceDataBuffers ownership to it
 		InitPerInstanceRenderData();
 	}
-
-	// release InstanceDataBuffers
-
-	if (PerInstanceRenderData.IsValid())
-	{
-		if (AActor* Owner = GetOwner())
-		{
-			ULevel* OwnerLevel = Owner->GetLevel();
-			UWorld* OwnerWorld = OwnerLevel ? OwnerLevel->OwningWorld : nullptr;
-
-			if (OwnerWorld && OwnerWorld->GetActiveLightingScenario() != nullptr && OwnerWorld->GetActiveLightingScenario() != OwnerLevel)
-			{
-				//update the instance data if the lighting scenario isn't the owner level
-				InstanceUpdateCmdBuffer.Edit();
-			}
-		}
-	}
 }
 
 void UInstanceBufferMeshComponent::PartialNavigationUpdate(int32 InstanceIdx)
@@ -1871,7 +1853,6 @@ void UInstanceBufferMeshComponent::GetResourceSizeEx(FResourceSizeEx& Cumulative
 	
 	// component stuff
 	CumulativeResourceSize.AddDedicatedSystemMemoryBytes(InstanceReorderTable.GetAllocatedSize());
-	CumulativeResourceSize.AddDedicatedSystemMemoryBytes(InstanceUpdateCmdBuffer.Cmds.GetAllocatedSize());
 }
 
 void UInstanceBufferMeshComponent::BeginDestroy()
@@ -1899,7 +1880,6 @@ void UInstanceBufferMeshComponent::PostEditChangeChainProperty(FPropertyChangedC
 		{
 			PartialNavigationUpdate(-1);
 			// Force recreation of the render data
-			InstanceUpdateCmdBuffer.Edit();
 			MarkRenderStateDirty();
 		}
 	}
