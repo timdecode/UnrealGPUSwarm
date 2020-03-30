@@ -155,9 +155,13 @@ void FIBMInstanceBuffer::InitRHI()
 		// Tim: We want to write to this buffer GPU side. So it should not be static.
 		auto AccessFlags = BUF_UnorderedAccess | BUF_ShaderResource; 
 
-		CreateVertexBuffer(_numInstances, AccessFlags, 16, PF_A32B32G32R32F, InstanceOriginBuffer.VertexBufferRHI, InstanceOriginSRV);
-		CreateVertexBuffer(_numInstances, AccessFlags, 16, PF_A32B32G32R32F, InstanceTransformBuffer.VertexBufferRHI, InstanceTransformSRV);
-		CreateVertexBuffer(_numInstances, AccessFlags, 8, PF_R16G16B16A16_SNORM, InstanceLightmapBuffer.VertexBufferRHI, InstanceLightmapSRV);
+		uint32_t originsSize = _numInstances * uint32_t(sizeof(FVector4));
+		uint32_t transformsSize = _numInstances * uint32_t(sizeof(FVector4) * 3);
+		uint32_t lightmapSize = _numInstances * uint32_t(sizeof(int16) * 4); // see FStaticMeshInstanceData::FInstanceLightMapVector (which is private, hence the manual calculations here)
+
+		CreateVertexBuffer(originsSize, AccessFlags, 16, PF_A32B32G32R32F, InstanceOriginBuffer.VertexBufferRHI, InstanceOriginSRV);
+		CreateVertexBuffer(transformsSize, AccessFlags, 16, PF_A32B32G32R32F, InstanceTransformBuffer.VertexBufferRHI, InstanceTransformSRV);
+		CreateVertexBuffer(lightmapSize, AccessFlags, 8, PF_R16G16B16A16_SNORM, InstanceLightmapBuffer.VertexBufferRHI, InstanceLightmapSRV);
 	}
 }
 
@@ -193,29 +197,11 @@ SIZE_T FIBMInstanceBuffer::GetResourceSize() const
 	return 0;
 }
 
-void FIBMInstanceBuffer::CreateVertexBuffer(FResourceArrayInterface* InResourceArray, uint32 InUsage, uint32 InStride, uint8 InFormat, FVertexBufferRHIRef& OutVertexBufferRHI, FShaderResourceViewRHIRef& OutInstanceSRV)
-{
-	check(InResourceArray);
-	check(InResourceArray->GetResourceDataSize() > 0);
-
-	// TODO: possibility over allocated the vertex buffer when we support partial update for when working in the editor
-	FRHIResourceCreateInfo CreateInfo(InResourceArray);
-	OutVertexBufferRHI = RHICreateVertexBuffer(InResourceArray->GetResourceDataSize(), InUsage, CreateInfo);
-	
-	if (RHISupportsManualVertexFetch(GMaxRHIShaderPlatform))
-	{
-		OutInstanceSRV = RHICreateShaderResourceView(OutVertexBufferRHI, InStride, InFormat);
-	}
-}
-
-
-void FIBMInstanceBuffer::CreateVertexBuffer(unsigned int numInstances, uint32 InUsage, uint32 InStride, uint8 InFormat, FVertexBufferRHIRef& OutVertexBufferRHI, FShaderResourceViewRHIRef& OutInstanceSRV)
+void FIBMInstanceBuffer::CreateVertexBuffer(uint32_t sizeInBytes, uint32 InUsage, uint32 InStride, uint8 InFormat, FVertexBufferRHIRef& OutVertexBufferRHI, FShaderResourceViewRHIRef& OutInstanceSRV)
 {
 	FRHIResourceCreateInfo CreateInfo;
 
-	uint32_t resourceSize = numInstances * InStride;
-
-	OutVertexBufferRHI = RHICreateVertexBuffer(resourceSize, InUsage, CreateInfo);
+	OutVertexBufferRHI = RHICreateVertexBuffer(sizeInBytes, InUsage, CreateInfo);
 
 	if (RHISupportsManualVertexFetch(GMaxRHIShaderPlatform))
 	{
