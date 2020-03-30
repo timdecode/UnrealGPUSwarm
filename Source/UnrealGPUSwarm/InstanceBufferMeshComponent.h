@@ -115,10 +115,6 @@ class UNREALGPUSWARM_API UInstanceBufferMeshComponent : public UStaticMeshCompon
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Culling)
 	int32 InstanceEndCullDistance;
 
-	/** Mapping from PerInstanceSMData order to instance render buffer order. If empty, the PerInstanceSMData order is used. */
-	UPROPERTY()
-	TArray<int32> InstanceReorderTable;
-
 	/** Tracks outstanding proxysize, as this is a bit hard to do with the fire-and-forget grass. */
 	SIZE_T ProxySize;
 

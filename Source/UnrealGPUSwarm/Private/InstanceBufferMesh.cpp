@@ -1850,9 +1850,6 @@ void UInstanceBufferMeshComponent::GetResourceSizeEx(FResourceSizeEx& Cumulative
 	{
 		CumulativeResourceSize.AddDedicatedSystemMemoryBytes(PerInstanceRenderData->ResourceSize); 
 	}
-	
-	// component stuff
-	CumulativeResourceSize.AddDedicatedSystemMemoryBytes(InstanceReorderTable.GetAllocatedSize());
 }
 
 void UInstanceBufferMeshComponent::BeginDestroy()
