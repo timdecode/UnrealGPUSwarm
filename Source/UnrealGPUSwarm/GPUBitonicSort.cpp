@@ -20,10 +20,12 @@ public:
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
 		SHADER_PARAMETER(FIntVector, job_params)
-		SHADER_PARAMETER(uint32_t, itemCount) // the number of particles
+		SHADER_PARAMETER(uint32, itemCount) // the number of particles
 
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint>, comparisonBuffer)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint>, indexBuffer)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, comparisonBuffer)
+		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, indexBuffer)
 	END_SHADER_PARAMETER_STRUCT()
 
 public:
@@ -47,7 +49,7 @@ public:
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
 		SHADER_PARAMETER(FIntVector, job_params)
-		SHADER_PARAMETER(uint32_t, itemCount) // the number of particles
+		SHADER_PARAMETER(uint32, itemCount) // the number of particles
 
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint>, comparisonBuffer)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint>, indexBuffer)
@@ -75,7 +77,7 @@ public:
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
 		SHADER_PARAMETER(FIntVector, job_params)
-		SHADER_PARAMETER(uint32_t, itemCount) // the number of particles
+		SHADER_PARAMETER(uint32, itemCount) // the number of particles
 
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, comparisonBuffer)
 		SHADER_PARAMETER_UAV(RWStructuredBuffer<uint32>, indexBuffer)
