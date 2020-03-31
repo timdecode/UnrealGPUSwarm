@@ -29,7 +29,7 @@ int3 job_params;
 uint itemCount;
 
 RWStructuredBuffer<uint> comparisonBuffer;
-RWStructuredBuffer<uint> indexBuffer;
+RWStructuredBuffer<uint> indexBuffer; 
 
 [numthreads(256, 1, 1)]
 void BitonicSort_sortStep(uint3 Gid	: SV_GroupID,
