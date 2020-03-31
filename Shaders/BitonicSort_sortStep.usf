@@ -32,7 +32,7 @@ RWStructuredBuffer<uint> comparisonBuffer;
 RWStructuredBuffer<uint> indexBuffer;
 
 [numthreads(256, 1, 1)]
-void main(uint3 Gid	: SV_GroupID,
+void BitonicSort_sortStep(uint3 Gid	: SV_GroupID,
 	uint3 GTid : SV_GroupThreadID)
 {
 	uint NumElements = itemCount;
