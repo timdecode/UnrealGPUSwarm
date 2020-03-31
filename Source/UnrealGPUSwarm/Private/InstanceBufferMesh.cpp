@@ -57,40 +57,45 @@ const float TimHackMinSize = 0.000001f;
 const float TimHackLODScale = 1.0f;
 const float TimHackLODRange = 0.0f;
 
-TAutoConsoleVariable<int32> CVarMinLOD(
-	TEXT("foliage.MinLOD"),
-	-1,
-	TEXT("Used to discard the top LODs for performance evaluation. -1: Disable all effects of this cvar."));
+namespace InstanceBuffeStaticMeshNameSpace
+{
+    TAutoConsoleVariable<int32> CVarMinLOD(
+        TEXT("foliage.MinLOD"),
+        -1,
+        TEXT("Used to discard the top LODs for performance evaluation. -1: Disable all effects of this cvar."));
 
-static TAutoConsoleVariable<int32> CVarRayTracingRenderInstances(
-	TEXT("r.RayTracing.InstancedStaticMeshes"),
-	1,
-	TEXT("Include static mesh instances in ray tracing effects (default = 1 (Instances enabled in ray tracing))"));
+    static TAutoConsoleVariable<int32> CVarRayTracingRenderInstances(
+        TEXT("r.RayTracing.InstancedStaticMeshes"),
+        1,
+        TEXT("Include static mesh instances in ray tracing effects (default = 1 (Instances enabled in ray tracing))"));
 
-static TAutoConsoleVariable<int32> CVarRayTracingRenderInstancesCulling(
-	TEXT("r.RayTracing.InstancedStaticMeshes.Culling"),
-	1,
-	TEXT("Enable culling for instances in ray tracing (default = 1 (Culling enabled))"));
+    static TAutoConsoleVariable<int32> CVarRayTracingRenderInstancesCulling(
+        TEXT("r.RayTracing.InstancedStaticMeshes.Culling"),
+        1,
+        TEXT("Enable culling for instances in ray tracing (default = 1 (Culling enabled))"));
 
-static TAutoConsoleVariable<float> CVarRayTracingInstancesCullClusterMaxRadiusMultiplier(
-	TEXT("r.RayTracing.InstancedStaticMeshes.CullClusterMaxRadiusMultiplier"),
-	20.0f, 
-	TEXT("Multiplier for the maximum instance size (default = 20cm)"));
+    static TAutoConsoleVariable<float> CVarRayTracingInstancesCullClusterMaxRadiusMultiplier(
+        TEXT("r.RayTracing.InstancedStaticMeshes.CullClusterMaxRadiusMultiplier"),
+        20.0f,
+        TEXT("Multiplier for the maximum instance size (default = 20cm)"));
 
-static TAutoConsoleVariable<float> CVarRayTracingInstancesCullClusterRadius(
-	TEXT("r.RayTracing.InstancedStaticMeshes.CullClusterRadius"),
-	10000.0f, // 100 m
-	TEXT("Ignore instances outside of this radius in ray tracing effects (default = 10000 (100m))"));
+    static TAutoConsoleVariable<float> CVarRayTracingInstancesCullClusterRadius(
+        TEXT("r.RayTracing.InstancedStaticMeshes.CullClusterRadius"),
+        10000.0f, // 100 m
+        TEXT("Ignore instances outside of this radius in ray tracing effects (default = 10000 (100m))"));
 
-static TAutoConsoleVariable<float> CVarRayTracingInstancesLowScaleThreshold(
-	TEXT("r.RayTracing.InstancedStaticMeshes.LowScaleRadiusThreshold"),
-	50.0f, // Instances with a radius smaller than this threshold get culled after CVarRayTracingInstancesLowScaleCullRadius
-	TEXT("Threshold that classifies instances as small (default = 50cm))"));
+    static TAutoConsoleVariable<float> CVarRayTracingInstancesLowScaleThreshold(
+        TEXT("r.RayTracing.InstancedStaticMeshes.LowScaleRadiusThreshold"),
+        50.0f, // Instances with a radius smaller than this threshold get culled after CVarRayTracingInstancesLowScaleCullRadius
+        TEXT("Threshold that classifies instances as small (default = 50cm))"));
 
-static TAutoConsoleVariable<float> CVarRayTracingInstancesLowScaleCullRadius(
-	TEXT("r.RayTracing.InstancedStaticMeshes.LowScaleCullRadius"),
-	1000.0f, 
-	TEXT("Cull radius for small instances (default = 1000 (10m))"));
+    static TAutoConsoleVariable<float> CVarRayTracingInstancesLowScaleCullRadius(
+        TEXT("r.RayTracing.InstancedStaticMeshes.LowScaleCullRadius"),
+        1000.0f,
+        TEXT("Cull radius for small instances (default = 1000 (10m))"));
+}
+
+
 
 
 /** InstancedStaticMeshInstance hit proxy */
@@ -1771,7 +1776,7 @@ void FInstanceBufferMeshVertexFactoryShaderParameters::GetElementShaderBindings(
 		{
 			int32 FirstLOD = InstancingUserData->MinLOD;
 
-			int32 DebugMin = FMath::Min(CVarMinLOD.GetValueOnRenderThread(), InstancingUserData->MeshRenderData->LODResources.Num() - 1);
+			int32 DebugMin = FMath::Min(InstanceBuffeStaticMeshNameSpace::CVarMinLOD.GetValueOnRenderThread(), InstancingUserData->MeshRenderData->LODResources.Num() - 1);
 			if (DebugMin >= 0)
 			{
 				FirstLOD = FMath::Max(FirstLOD, DebugMin);
