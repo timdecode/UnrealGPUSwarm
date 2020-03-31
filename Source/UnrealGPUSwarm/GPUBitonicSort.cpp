@@ -33,7 +33,7 @@ public:
 	}
 };
 
-IMPLEMENT_GLOBAL_SHADER(FBitonicSort_sort, "/ComputeShaderPlugin/BitonicSort_sort.usf", "main", SF_Compute);
+IMPLEMENT_GLOBAL_SHADER(FBitonicSort_sort, "/ComputeShaderPlugin/BitonicSort_sort.usf", "BitonicSort_sort", SF_Compute);
 
 
 
@@ -60,7 +60,7 @@ public:
 	}
 };
 
-IMPLEMENT_GLOBAL_SHADER(FBitonicSort_sortInner, "/ComputeShaderPlugin/BitonicSort_sortInner.usf", "main", SF_Compute);
+IMPLEMENT_GLOBAL_SHADER(FBitonicSort_sortInner, "/ComputeShaderPlugin/BitonicSort_sortInner.usf", "BitonicSort_sortInner", SF_Compute);
 
 
 
@@ -88,7 +88,7 @@ public:
 	}
 };
 
-IMPLEMENT_GLOBAL_SHADER(FBitonicSort_sortStep, "/ComputeShaderPlugin/BitonicSort_sortStep.usf", "main", SF_Compute);
+IMPLEMENT_GLOBAL_SHADER(FBitonicSort_sortStep, "/ComputeShaderPlugin/BitonicSort_sortStep.usf", "BitonicSort_sortStep", SF_Compute);
 
 
 
