@@ -278,6 +278,10 @@ void UComputeShaderTestComponent::BeginPlay()
 		{
 			_positionBuffer[i] = RHICreateStructuredBuffer(size, size * numBoids, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
 			_positionBufferUAV[i] = RHICreateUnorderedAccessView(_positionBuffer[i], false, false);
+            
+            // On platforms, like iOS, the resource array is discarded during RHICreateStructuredBuffer. Kill it. We only need one
+            // for the first positionBuffer[0].
+            createInfo.ResourceArray = nullptr; 
 		}
 	}
     
@@ -303,6 +307,9 @@ void UComputeShaderTestComponent::BeginPlay()
 		{
 			_directionsBuffer[i] = RHICreateStructuredBuffer(size, size * numBoids, BUF_UnorderedAccess | BUF_ShaderResource, createInfo);
 			_directionsBufferUAV[i] = RHICreateUnorderedAccessView(_directionsBuffer[i], false, false);
+            
+            // only platforms, like iOS, the resource array is discarded during RHICreateStructuredBuffer. Kill it. We only need one.
+            createInfo.ResourceArray = nullptr;
 		}
 
 
