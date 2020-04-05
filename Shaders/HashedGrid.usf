@@ -23,11 +23,6 @@ float timMod(float x, float y)
 
 uint getFlatCellIndex(int3 cellIndex)
 {
-
-    const uint p1 = 73856093; // some large primes
-    const uint p2 = 19349663;
-    const uint p3 = 83492791;
-    //int n = p1 * cellIndex.x ^ p2*cellIndex.y ^ p3*cellIndex.z;
     int n = cellIndex.x + cellIndex.y * gridDimensions.x + cellIndex.z * gridDimensions.x * gridDimensions.y;
     
     n = timMod(n, cellOffsetBufferSize);
@@ -37,15 +32,6 @@ uint getFlatCellIndex(int3 cellIndex)
 
 int3 positionToCellIndex(float3 position)
 {
-    //int3 index;
-    
-    //position *= cellSizeReciprocal;
-    
-    //index.x = position.x < 0.0f ? position.x - 1 : position.x;
-    //index.y = position.y < 0.0f ? position.y - 1 : position.y;
-    //index.z = position.z < 0.0f ? position.z - 1 : position.z;
-    
-    //return index;
     return floor(position * cellSizeReciprocal);
 }
 
