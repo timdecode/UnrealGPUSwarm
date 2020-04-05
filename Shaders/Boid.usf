@@ -84,82 +84,6 @@ float3 safeNormal(float3 vec, float3 safe)
     return l > 0.0f ? vec / l : safe;
 }
 
-
-//--------------------------------------------------------------------------------------
-// Main
-//--------------------------------------------------------------------------------------
-//[numthreads(256, 1, 1)]
-//void MainComputeShader(uint3 ThreadId : SV_DispatchThreadID)
-//{
-//    int index = ThreadId.x;
-
-//    if( index >= numParticles )
-//        return;
-
-//    const float3 position = positions[index];
-//    const float3 direction = directions[index];
-    
-//	float noiseOffset = hash(float(index));
-
-//	float noise = clamp(noise1(totalTime / 100.0 + noiseOffset), -1, 1) * 2.0 - 1.0;
-//	float velocity = boidSpeed * (1.0 + noise * boidSpeedVariation);
-
-//    float3 separation = float3(0.0, 0.0, 0.0);
-//    float3 alignment = float3(0.0, 0.0, 0.0);
-//	float3 neighboursCentre = float3(0.0, 0.0, 0.0);
-
-
-//	uint count = neighboursCount[index];
-//	uint baseIndex = neighboursBaseIndex[index];
-
-//    // positions
-//    for (uint i = baseIndex; i < baseIndex + count; ++i)
-//    {
-//        int otherIndex = neigbhours[i];
-
-//        float3 otherPosition = positions[otherIndex];
-
-//        neighboursCentre += otherPosition;
-		
-//        alignment += directions[otherIndex];
-
-//        float3 dir = otherPosition - position;
-//        float dist = length(dir);
-        
-//        if (dist < separationDistance && dist > 0.0f)
-//            separation -= (dir / dist) * (separationDistance - dist);
-//    }
-
-//    // cohesion
-//    neighboursCentre *= (count > 0 ? (1.0f / float(count)) : 0.0f);
-//    float3 cohesion = neighboursCentre - position;
-
-	
-//    alignment = safeNormal(alignment, direction);
-
-//    // home
-//    float3 home = float3(0.0f, 0.0f, 0.0f);
-    
-//    float distFromHome = distance(home, position);
-    
-//    float3 homeUrge = float3(0.0f, 0.0f, 0.0f);
-
-//    if (distFromHome > homeInnerRadius)
-//        homeUrge = safeNormal(home - position, float3(0.0f, 0.0f, 0.0f));
-
-    
-
-//    float3 newDirection = alignment + separation + 0.2f * cohesion + 0.1f * homeUrge;
-
-//    float ip = exp(-boidRotationSpeed * dt);
-//    newDirection = lerp(newDirection, direction, ip);
-
-//    newDirection = safeNormal(newDirection, direction);
-    
-//    positions[index] = position + newDirection * (velocity * dt);
-//    directions[index] = newDirection;
-//}
-
 [numthreads(256, 1, 1)]
 void GridNeighboursBoidUpdate(uint3 ThreadId : SV_DispatchThreadID)
 {
@@ -302,19 +226,5 @@ void rearrangePositions(uint3 ThreadId : SV_DispatchThreadID)
     
     positions_other[index] = positions[particleIndexBuffer[index]];
     directions_other[index] = directions[particleIndexBuffer[index]];
-    
-    //while( particleIndexBuffer[index] != index )
-    //{
-    //    uint oldIndex = particleIndexBuffer[particleIndexBuffer[index]];
-    //    float4 oldPosition = positions[particleIndexBuffer[index]];
-    //    float4 oldDirection = directions[particleIndexBuffer[index]];
-        
-    //    positions[particleIndexBuffer[index]] = positions[index];
-    //    particleIndexBuffer[particleIndexBuffer[index]] = particleIndexBuffer[index];
-        
-    //    particleIndexBuffer[index] = oldIndex;
-    //    positions[index] = oldPosition;
-    //    directions[index] = oldDirection;
-    //}
 }
 
