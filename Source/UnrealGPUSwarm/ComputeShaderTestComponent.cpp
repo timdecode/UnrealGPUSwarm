@@ -493,38 +493,6 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 		}
 
-		// find our neighbours
-		{
-
-			
-			// FNeighboursComputeShader::FParameters parameters;
-			// parameters.numNeighbours = numNeighbours;
-			// parameters.neighbourDistance = neighbourDistance;
-
-			// parameters.neigbhours = _neighboursBufferUAV;
-			// parameters.neighboursBaseIndex = _neighboursBaseIndexUAV;
-			// parameters.neighboursCount = _neighboursCountUAV;
-
-			// parameters.numParticles = numBoids;
-			// parameters.cellSizeReciprocal = 1.0f / gridCellSize;
-			// parameters.cellOffsetBufferSize = cellOffsetBufferSize;
-			// parameters.gridDimensions = gridDimensions;
-
-			// parameters.positions = positionBufferUAV;
-			// parameters.cellOffsetBuffer = _cellOffsetBufferUAV;
-			// parameters.cellIndexBuffer = _cellIndexBufferUAV;
-			// parameters.particleIndexBuffer = _particleIndexBufferUAV;
-
-
-			// TShaderMapRef<FNeighboursComputeShader> computeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
-			// FComputeShaderUtils::Dispatch(
-			// 	RHICommands,
-			// 	*computeShader,
-			// 	parameters,
-			// 	groupSize(numBoids)
-			// );
-		}
-
 		if (false)
 		{
 			TArray<uint32> cellIndexBuffer;
@@ -633,21 +601,6 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 				parameters,
 				groupSize(numBoids)
 			); 
-
-			//// read back the data
-			//// positions
-			//{
-			//	uint8* data = (uint8*)RHILockStructuredBuffer(_positionBuffer[dualBufferCount], 0, numBoids * sizeof(FVector4), RLM_ReadOnly);
-			//	FMemory::Memcpy(outputPositions.GetData(), data, numBoids * sizeof(FVector4));
-			//	RHIUnlockStructuredBuffer(_positionBuffer[dualBufferCount]);
-			//}
-
-			//// directions
-			//{
-			//	uint8* data = (uint8*)RHILockStructuredBuffer(_directionsBuffer[dualBufferCount], 0, numBoids * sizeof(FVector4), RLM_ReadOnly);
-			//	FMemory::Memcpy(outputDirections.GetData(), data, numBoids * sizeof(FVector4));
-			//	RHIUnlockStructuredBuffer(_directionsBuffer[dualBufferCount]);
-			//}
 
 			// rotate our buffers
 			dualBufferCount = (dualBufferCount + 1) % 2;
