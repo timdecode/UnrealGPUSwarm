@@ -1379,21 +1379,6 @@ void UInstanceBufferMeshComponent::GetLightAndShadowMapMemoryUsage( int32& Light
 	ShadowMapMemoryUsage *= NumInstances;
 }
 
-// Deprecated version of PerInstanceSMData
-struct FInstancedStaticMeshInstanceData_DEPRECATED
-{
-	FMatrix Transform;
-	FVector2D LightmapUVBias;
-	FVector2D ShadowmapUVBias;
-	
-	friend FArchive& operator<<(FArchive& Ar, FInstancedStaticMeshInstanceData_DEPRECATED& InstanceData)
-	{
-		// @warning BulkSerialize: FIBMInstanceData is serialized as memory dump
-		Ar << InstanceData.Transform << InstanceData.LightmapUVBias << InstanceData.ShadowmapUVBias;
-		return Ar;
-	}
-};
-
 static bool NeedRenderDataForTargetPlatform(const ITargetPlatform* TargetPlatform)
 {
 #if WITH_EDITOR
