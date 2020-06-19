@@ -432,7 +432,7 @@ void UComputeShaderTestComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			);
 		}
 
-		// sort the cell index buffer
+		// sort the particle index buffer by cell index
 		{
 		 	FGPUBitonicSort gpuBitonicSort;
 
