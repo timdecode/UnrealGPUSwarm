@@ -1,8 +1,10 @@
-This project is a good starting point for learning how to write compute shaders in Unreal. It implements a boid simulation the GPU. It achieves 0.5 million boids at 45 fps on a GTX 1080.
+This project is a good starting point for learning how to write compute shaders in Unreal. It implements a boid simulation the GPU. It achieves 0.5 million boids at 45 fps on a GTX 1080. 
 
 https://user-images.githubusercontent.com/980432/132757577-500416e4-5f27-4add-9c50-641889336d69.mp4
 
 [Tweet of the above](https://twitter.com/timd_ca/status/1243941167005192192)
+
+This project is for Unreal 4.24. It would probably work in later versions, but a few shader things have changed and you will likely get compile errors.
 
 The compute shader magic happens in [ComputeShaderTestComponent.cpp](Source/UnrealGPUSwarm/ComputeShaderTestComponent.cpp). To work with compute shaders in Unreal you need a few things:
 - the compute shader/kernel source that runs on the GPU (a .usf file)
