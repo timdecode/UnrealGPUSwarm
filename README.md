@@ -17,3 +17,5 @@ This project is also quite heavily optimized from the theoretical side of things
 - I'm using a hashed grid (powered by the bitonic GPU sort algorithm) to massively accelerate boid neighbourhood queries on the GPU
 - I sort the boids by their grid cell every frame to greatly improve cache coherence (it really makes a big difference, try disabling it)
 - I rewrote UInstanceStaticMeshComponent to work directly with GPU side position buffers
+
+The hashed grid implementation was inspired by the one from [Wicked Engine](https://wickedengine.net/page/2/). 
